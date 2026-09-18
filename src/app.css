@@ -1,0 +1,85 @@
+/* Farben als Tokens, damit Themes nur diese Ebene austauschen. */
+:root {
+  --grund: #0e1116;
+  --flaeche: #171b22;
+  --flaeche-hoch: #1f242d;
+  --rand: #2c333e;
+  --text: #e6e9ef;
+  --text-leise: #9aa4b2;
+  --akzent: #5aa9e6;
+  --akzent-text: #06121d;
+  --warn: #e6b45a;
+
+  --radius: 10px;
+  --tap: 48px; /* Mindestgroesse fuer Tippziele – nachts, im Stehen, mit Handschuh */
+
+  color-scheme: dark;
+}
+
+/* Rotlicht: erhaelt die Nachtsicht und faellt Umstehenden weniger auf. */
+:root[data-theme='night'] {
+  --grund: #0b0404;
+  --flaeche: #180808;
+  --flaeche-hoch: #220b0b;
+  --rand: #3a1414;
+  --text: #ff8a7a;
+  --text-leise: #b85c52;
+  --akzent: #ff5a43;
+  --akzent-text: #1a0503;
+  --warn: #ff9d6b;
+}
+
+:root[data-theme='light'] {
+  --grund: #f7f8fa;
+  --flaeche: #ffffff;
+  --flaeche-hoch: #eef1f5;
+  --rand: #d4dae2;
+  --text: #16191f;
+  --text-leise: #5b6572;
+  --akzent: #1b6ca8;
+  --akzent-text: #ffffff;
+  --warn: #8a5b00;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--grund);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Platz fuer Notch und Gestenleiste */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  -webkit-text-size-adjust: 100%;
+}
+
+h1, h2, h3 { line-height: 1.25; }
+
+a { color: var(--akzent); }
+
+button {
+  font: inherit;
+  color: inherit;
+  background: var(--flaeche-hoch);
+  border: 1px solid var(--rand);
+  border-radius: var(--radius);
+  min-height: var(--tap);
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+button:hover { border-color: var(--akzent); }
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--akzent);
+  outline-offset: 2px;
+}
+
+code, pre, .mono {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}

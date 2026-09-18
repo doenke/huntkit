@@ -575,7 +575,7 @@ Push auf main
 
 | Phase | Inhalt | Ergebnis |
 |---|---|---|
-| **0 – Gerüst** | Vite/Svelte/TS, eigener Service Worker, Dark Theme, Actions-Build + Upload auf den Webspace | Installierbare leere App unter huntkit.kanonenwiese.de, offline lauffähig |
+| **0 – Gerüst** ✅ | Vite/Svelte/TS, eigener Service Worker, Dark Theme, Actions-Build + Upload auf den Webspace | Installierbare leere App unter huntkit.kanonenwiese.de, offline lauffähig |
 | **1 – Textcodes** | Codec-Registry, Werkbank, ABC123, ASCII (dez/bin/hex), NATO, Morse, Caesar + Brute-Force-Wand, Zahlensysteme, Element-Attribut-Codec (§5.1) | Bereits die Hälfte von `development.md`, sofort einsetzbar |
 | **2 – Visuelle Codes** | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
 | **3 – Periodensystem & Widerstände** | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
@@ -585,6 +585,10 @@ Push auf main
 Phasen 0–3 liefern das, was in `development.md` steht. 4 und 5 sind der Vorschlag darüber
 hinaus – Phase 1 ist bereits allein benutzbar, jede weitere Phase ist ein eigenständiger
 Zugewinn.
+
+**Stand:** Phase 0 steht – Gerüst, Offline-Betrieb, Themes, Tests und das
+automatische Deployment sind gebaut. Die Elementdaten aus Phase 3 liegen schon vor
+(Abschnitt 5.5).
 
 Das Periodensystem ist bewusst auf zwei Phasen verteilt: Die Schlüsselfunktion (§5.1) ist
 reine Datenarbeit ohne eigene Ansicht und läuft schon in Phase 1 mit; das Gitter mit

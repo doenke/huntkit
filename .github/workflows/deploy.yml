@@ -1,0 +1,62 @@
+name: Bauen und veröffentlichen
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Zwei Deployments gleichzeitig wuerden sich im Zielverzeichnis in die Quere kommen.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  bauen:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Typen prüfen
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Bauen
+        run: npm run build
+
+      # Damit die Veröffentlichung nie an GitHub Actions haengt: jeder Build
+      # liegt zusaetzlich als herunterladbares Archiv bereit.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: huntkit-dist
+          path: dist/
+          retention-days: 90
+
+      - name: lftp installieren
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends lftp
+
+      - name: Auf den Webspace laden
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_PROTOCOL: ${{ secrets.DEPLOY_PROTOCOL }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: tools/deploy.sh dist
