@@ -34,6 +34,12 @@ jobs:
       - name: Tests
         run: npm test
 
+      # Der Deploy-Schritt selbst laeuft bei einem Pull Request nie mit. Diese
+      # Pruefung faengt deshalb nur Syntaxfehler – das Zusammenspiel mit dem
+      # Server bleibt erst beim Lauf auf main sichtbar.
+      - name: Deploy-Skript auf Syntax prüfen
+        run: bash -n tools/deploy.sh
+
       - name: Bauen
         run: npm run build
 

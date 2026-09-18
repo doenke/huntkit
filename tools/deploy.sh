@@ -30,30 +30,45 @@ PROTOKOLL="${DEPLOY_PROTOCOL:-sftp}"
 [ -d "$QUELLE" ] || { echo "Quellverzeichnis '$QUELLE' gibt es nicht." >&2; exit 1; }
 [ -f "$QUELLE/index.html" ] || { echo "In '$QUELLE' liegt keine index.html – Build unvollstaendig?" >&2; exit 1; }
 
-EINSTELLUNGEN="set cmd:fail-exit yes; set net:max-retries 3; set net:timeout 20;"
+# Jede Zeile ist ein lftp-Befehl; sie werden unten ueber die Standardeingabe
+# uebergeben. Nicht ueber "lftp -c": das vertraegt sich nicht mit
+# --env-password, weil beides zur selben impliziten open-Anweisung gehoert.
+EINSTELLUNGEN="set cmd:fail-exit yes
+set net:max-retries 3
+set net:timeout 20"
 
 case "$PROTOKOLL" in
   sftp)
     if [ -n "${DEPLOY_KNOWN_HOSTS:-}" ]; then
-      mkdir -p ~/.ssh && chmod 700 ~/.ssh
-      printf '%s\n' "$DEPLOY_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-      chmod 600 ~/.ssh/known_hosts
-      EINSTELLUNGEN="$EINSTELLUNGEN set sftp:auto-confirm no;"
+      # Bewusst eine eigene Datei statt ~/.ssh/known_hosts: Dort koennten
+      # bereits Eintraege stehen, und dann wuerde ein Server auch dann
+      # akzeptiert, wenn er nicht zu DEPLOY_KNOWN_HOSTS passt – die Pruefung
+      # waere wirkungslos, ohne dass es auffaellt.
+      KNOWN_HOSTS_DATEI="$(mktemp)"
+      trap 'rm -f "$KNOWN_HOSTS_DATEI"' EXIT
+      printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$KNOWN_HOSTS_DATEI"
+      SSH_OPTIONEN="-o UserKnownHostsFile=$KNOWN_HOSTS_DATEI -o StrictHostKeyChecking=yes"
     else
       # Ohne hinterlegten Hostschluessel wird jeder Serverschluessel akzeptiert.
       # Bei Passwort-Anmeldung heisst das: Das Passwort ginge auch an einen
       # untergeschobenen Server.
       echo "::warning::DEPLOY_KNOWN_HOSTS ist nicht gesetzt – der Hostschluessel wird ungeprueft akzeptiert."
-      EINSTELLUNGEN="$EINSTELLUNGEN set sftp:auto-confirm yes;"
+      SSH_OPTIONEN="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
     fi
+    EINSTELLUNGEN="$EINSTELLUNGEN
+set sftp:connect-program \"ssh -a -x $SSH_OPTIONEN\""
     ;;
   ftps)
-    EINSTELLUNGEN="$EINSTELLUNGEN set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true;"
+    EINSTELLUNGEN="$EINSTELLUNGEN
+set ftp:ssl-force true
+set ftp:ssl-protect-data true
+set ssl:verify-certificate true"
     PROTOKOLL="ftp"
     ;;
   ftp)
     echo "::warning::Unverschluesseltes FTP – Passwort und Daten gehen im Klartext ueber die Leitung."
-    EINSTELLUNGEN="$EINSTELLUNGEN set ftp:ssl-force false;"
+    EINSTELLUNGEN="$EINSTELLUNGEN
+set ftp:ssl-force false"
     ;;
   *)
     echo "Unbekanntes Protokoll: $PROTOKOLL (erlaubt: sftp, ftps, ftp)" >&2
@@ -61,17 +76,17 @@ case "$PROTOKOLL" in
     ;;
 esac
 
-PORT_ARG=""
-[ -n "${DEPLOY_PORT:-}" ] && PORT_ARG="-p ${DEPLOY_PORT}"
+ZIEL="${PROTOKOLL}://${DEPLOY_HOST}"
+[ -n "${DEPLOY_PORT:-}" ] && ZIEL="${ZIEL}:${DEPLOY_PORT}"
 
 echo "Lade '$QUELLE' nach ${DEPLOY_PATH} (${DEPLOY_PROTOCOL:-sftp}) ..."
 
 # --env-password: Das Passwort steht in der Umgebung, nicht in der
 # Kommandozeile – sonst waere es in der Prozessliste sichtbar.
-LFTP_PASSWORD="$DEPLOY_PASSWORD" lftp --env-password -c "
-  ${EINSTELLUNGEN}
-  open -u '${DEPLOY_USER}' ${PORT_ARG} ${PROTOKOLL}://${DEPLOY_HOST};
-  mirror --reverse --delete --no-perms --parallel=4 --verbose '${QUELLE}' '${DEPLOY_PATH}';
-"
+LFTP_PASSWORD="$DEPLOY_PASSWORD" lftp -u "$DEPLOY_USER" --env-password "$ZIEL" <<LFTP
+${EINSTELLUNGEN}
+mirror --reverse --delete --no-perms --parallel=4 --verbose '${QUELLE}' '${DEPLOY_PATH}'
+bye
+LFTP
 
 echo "Fertig."
