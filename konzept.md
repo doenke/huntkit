@@ -3,6 +3,15 @@
 Vorschlag für Aufbau, Funktionsumfang und Umsetzung der in [development.md](development.md)
 skizzierten App.
 
+**Getroffene Entscheidungen**
+
+- Oberflächensprache: **nur Deutsch**.
+- Reihenfolge: **visuelle Codes vor dem Periodensystem** (Phase 2 vor Phase 3).
+- Link-Sharing bleibt in **Phase 5**.
+- Das Periodensystem erfüllt **alle drei Rollen** – Schlüssel, Matrix, Zeichenfläche
+  (Abschnitt 5).
+- Offen: Build-Schritt oder nicht – Entscheidungsvorlage in Abschnitt 7.1.
+
 ---
 
 ## 1. Strategische These: womit man Hunts tatsächlich gewinnt
@@ -124,7 +133,7 @@ scharf, funktioniert offline, keine Lizenzfragen.
 | Templercode | SVG-Glyphen + Visual Picker | M |
 | Fingeralphabet | SVG-Handzeichen + Visual Picker (DGS *und* ASL – unterscheiden!) | L |
 | Widerstandscode | eigenes Tool: 4/5/6 Ringe, beide Richtungen, Farbwähler | M |
-| Periodensystem | eigene Ansicht: Zoom, Suche, Filter, Highlight, Detailkarte | L |
+| Periodensystem | Schlüssel + Matrix + Zeichenfläche – siehe Abschnitt 5 | L |
 
 Der Aufwand bei den visuellen Codes steckt fast vollständig im Zeichnen der Glyphen, nicht
 in der Logik.
@@ -138,7 +147,6 @@ Nach Nutzen-pro-Aufwand sortiert – die oberen zahlen sich im Hunt am schnellst
 | **Extraktionshelfer** | jeden n-ten Buchstaben, Indexliste („3,1,4"), Gitter zeilen-/spalten-/diagonal lesen, Spalten sortieren – der Schlussschritt fast jedes Rätsels | S |
 | **Weitere klassische Chiffren** | Atbash, Vigenère, Polybius, Bacon, Rail Fence, Tastatur-Shift, Handy-T9 – tauchen ständig auf | M |
 | **Frequenzanalyse** | Buchstabenhäufigkeit + Koinzidenzindex sagen einem, *welche* Chiffre vorliegt | S |
-| **Element-Symbol-Speller** | „Antwort in Elementsymbolen buchstabiert" ist ein Standard-Trick; fällt fast gratis ab, wenn das Periodensystem schon da ist | S |
 | **Wortmuster-Suche** | Offline-Wörterbuch mit Platzhaltern (`?A??LE`) und Regex – ersetzt Nutrimatic im Funkloch | M |
 | **Anagramm-Löser** | über dasselbe Wörterbuch | S |
 | **QR-/Barcode-Scanner** | Kamera, offline, ohne fremde App mit Werbung | M |
@@ -154,7 +162,110 @@ einen Server erfordern und widerspricht der Vorgabe. Teilen läuft über Links u
 
 ---
 
-## 5. UX-Konzept
+## 5. Periodensystem: Schlüssel, Matrix und Zeichenfläche
+
+Das Periodensystem ist kein Nachschlagewerk am Rand, sondern das aufwendigste Einzelstück
+der App – weil es im Rätsel drei völlig verschiedene Rollen spielt. Alle drei werden
+umgesetzt.
+
+### 5.1 Rolle 1: Schlüssel
+
+Jedes Element trägt ein Bündel von Attributen, und **jedes Attributpaar ist eine mögliche
+Übersetzung**:
+
+Symbol ↔ Ordnungszahl ↔ Name ↔ Atomgewicht ↔ Gruppe/Periode ↔ Block (s/p/d/f) ↔ Kategorie
+↔ Aggregatzustand ↔ Elektronegativität ↔ Schmelz-/Siedepunkt ↔ Dichte ↔ Entdeckungsjahr ↔
+Elektronenkonfiguration
+
+Umgesetzt wird das **nicht** als dreißig Einzelwerkzeuge, sondern als *ein* Codec mit zwei
+Einstellungen: „von Attribut X" → „nach Attribut Y". Damit ist jede Kombination abgedeckt,
+auch die, an die wir vorher nicht gedacht haben – und das Ganze hängt in der
+Werkbank-Kette wie jeder andere Code:
+
+```
+Fe Ca Ba   → [Symbol → Ordnungszahl] →   26 20 56
+26 20 56   → [ABC123]                →   Z T (56 ohne Entsprechung)
+```
+
+Zwei Sonderfunktionen gehen über reines Nachschlagen hinaus:
+
+- **Speller:** Text in Elementsymbolen buchstabieren (`BACON` → Ba-C-O-N).
+- **Zerlegung** – der häufigere und heiklere Fall: eine gegebene Zeichenkette in
+  Elementsymbole zerlegen. Das ist mehrdeutig (`CON` = C-O-N *oder* Co-N), deshalb zeigt
+  die App **alle** gültigen Zerlegungen mit den zugehörigen Ordnungszahlen, statt sich für
+  eine zu entscheiden. Genau hier übersieht man von Hand die richtige Variante.
+
+### 5.2 Rolle 2: Matrix
+
+Das Periodensystem ist ein Gitter mit Koordinaten, und viele Rätsel meinen die Position,
+nicht das Element:
+
+- **Position ↔ Element** in beide Richtungen: Gruppe/Periode als Koordinatenpaar,
+  fortlaufender Zellindex, Position innerhalb des Blocks.
+- **Leserichtungen** wie bei jedem Gitter: zeilenweise, spaltenweise, Diagonalen, Spirale,
+  im Bustrophedon.
+- **Umschaltbare Layouts** – und das ist kein Schönheitsdetail: Ob die Lanthanoide und
+  Actinoide ausgelagert sind (18-Spalten-Standard) oder eingegliedert (32 Spalten),
+  verschiebt sämtliche Koordinaten. Ein Rätsel meint immer eine bestimmte Darstellung.
+  Beide Varianten plus eine lückenlose Kompaktform sind wählbar; Koordinatenanzeige und
+  Leserichtungen folgen der Wahl.
+
+Die Leserichtungen sind dieselbe Funktion wie die Extraktionshelfer aus Abschnitt 4.2 – das
+Gitter wird einfach als deren Eingabe durchgereicht, statt die Logik zweimal zu bauen.
+
+### 5.3 Rolle 3: Zeichenfläche
+
+Man markiert Elemente und liest das entstehende Muster – als Form, als Buchstabenfolge oder
+als beides.
+
+**Markieren** auf mehreren Wegen, weil eine Aufgabe mal Elemente und mal Eigenschaften
+nennt:
+
+- direkt antippen
+- Liste einwerfen: `Fe, Ca, 26, Gold, Au` – gemischt aus Symbol, Name und Ordnungszahl
+- **regelbasiert:** alle Edelgase, alle mit Schmelzpunkt über 1000 °C, alle mit Primzahl
+  als Ordnungszahl, alle deren Name ein „X" enthält. Jeder Suchfilter lässt sich in eine
+  Markierung überführen.
+- Mengenoperationen: hinzufügen, abziehen, schneiden, umkehren
+
+**Mehrere Markierungsebenen** mit eigenen Farben, einzeln ein- und ausblendbar – für
+Rätsel, die zwei Gruppen gegeneinanderstellen.
+
+**Interpretieren** in zwei Richtungen:
+
+- *Grafisch:* Ansicht „nur Markierungen" – der Rest ausgegraut oder leer. Erst so erkennt
+  man die Buchstaben, Pfeile oder Ziffern, die die markierten Zellen bilden. Als Bild
+  exportierbar, damit man es ins Team schicken kann.
+- *Textuell:* die markierten Zellen in wählbarer Reihenfolge ausgelesen – zeilenweise,
+  spaltenweise, nach Ordnungszahl oder in der Reihenfolge des Antippens – und wahlweise
+  als Symbol, Name, Ordnungszahl oder Anfangsbuchstabe ausgegeben. Das Ergebnis geht
+  direkt zurück in die Werkbank.
+
+Markierungssätze lassen sich benennen, speichern und über den Link teilen.
+
+### 5.4 Ansicht und Bedienung
+
+- Zoom und Pan (Pinch, Doppeltipp, `+`/`−`), „einpassen"-Knopf, dazu ein Großzellen-Modus
+  fürs Handy bei Nacht.
+- Suche über Name, Symbol und Ordnungszahl, dazu Eigenschaftssuche (`Schmelzpunkt > 1000`).
+  Treffer werden **im Gitter** hervorgehoben statt in eine Liste herausgerissen – man sieht
+  die Position mit, und genau die ist oft die Antwort.
+- Detailkarte je Element mit allen Attributen, jeder Wert einzeln kopierbar.
+- Vollständig offline; die Elementdaten werden mit ausgeliefert.
+
+Datenbasis: eine freie Quelle (Wikidata/PubChem), einmalig als JSON eingefroren und im Repo
+versioniert – reproduzierbar, prüfbar und ohne Netzabhängigkeit zur Laufzeit.
+
+### 5.5 Konsequenz für die Reihenfolge
+
+Die drei Rollen sind unterschiedlich teuer. Rolle 1 ist **reine Datenarbeit** – sie braucht
+nur die JSON-Tabelle und den generischen Attribut-Codec, keine eigene Ansicht. Sie kann
+deshalb schon in Phase 1 mitlaufen und ist dort sofort nützlich. Das aufwendige Gitter mit
+Zoom, Layouts und Markierungsebenen (Rollen 2 und 3) bleibt wie besprochen Phase 3.
+
+---
+
+## 6. UX-Konzept
 
 **Ein Eingabefeld als Einstieg.** Oben eine Omnibox: Tippt man einen Werkzeugnamen, springt
 man hin. Wirft man Text hinein, läuft sofort Identify. Kein Menü-Suchen.
@@ -177,20 +288,69 @@ neue Eingabe übernehmbar. Nichts geht beim Neuladen verloren.
 
 ---
 
-## 6. Technisches Konzept
+## 7. Technisches Konzept
 
-### 6.1 Stack
+### 7.1 Build-Schritt: Entscheidungsvorlage
 
-- **Vite + TypeScript + Svelte**, Ausgabe als rein statische Dateien.
-  Begründung: kleine Bundles (wichtig fürs Offline-Caching und für schwache Netze),
-  wenig Laufzeit-Overhead, Komponenten ohne Zeremonie. Ein Build-Schritt widerspricht der
-  Vorgabe „statisch, ohne Serverseite" nicht – das Ergebnis ist reines HTML/JS/CSS.
-  *Alternative, falls ausdrücklich gar kein Build gewünscht ist:* Vanilla-ES-Module +
-  Web Components. Kostet Komfort, bleibt aber machbar.
+**Vorweg, weil es leicht zu verwechseln ist:** Ein Build-Schritt verstößt *nicht* gegen die
+Vorgabe „statische App ohne aktive Serverseite". Die Vorgabe betrifft die *Laufzeit* – was
+passiert, wenn jemand die Seite aufruft. Ein Build läuft vorher, einmalig, auf dem eigenen
+Rechner oder in der CI. Heraus kommen HTML-, JS- und CSS-Dateien, die auf GitHub Pages
+liegen. Für den Browser ist das Ergebnis nicht unterscheidbar von handgeschriebenen
+Dateien. Kein Server, keine Datenbank, keine Laufzeitabhängigkeit.
+
+*Ohne* Build sind die Dateien, die man schreibt, exakt die Dateien, die der Browser lädt.
+Man bearbeitet `app.js`, lädt neu, fertig. Kein Node.js, kein `npm`, kein `node_modules`.
+Veröffentlichen heißt: Ordner kopieren.
+
+*Mit* Build schreibt man TypeScript und Svelte-Komponenten, und ein Werkzeug (Vite)
+übersetzt das nach `dist/`. Man braucht Node.js, `npm install`, und im Fehlerfall debuggt
+man Code, der nicht wörtlich der ist, den man geschrieben hat (dafür gibt es Sourcemaps).
+
+**Was der Build hier konkret einbringt:**
+
+| | Nutzen für dieses Projekt |
+|---|---|
+| **Service-Worker-Manifest** | Für „funktioniert offline" braucht der Service Worker eine Liste *aller* Dateien plus Versionsstempel. Die pflegt man entweder von Hand – und vergisst genau die eine SVG-Datei, die dann im Funkloch fehlt – oder man lässt sie erzeugen. Das ist das stärkste Argument. |
+| **TypeScript** | Die Codec-Tabellen sind stumpfe Fleißarbeit und genau da passieren Fehler. Typen fangen einen Teil davon beim Schreiben ab statt nachts vor Ort. |
+| **Komponenten (Svelte)** | Die Werkbank mit Schrittkette, das Periodensystem mit Markierungsebenen – das ist echte Zustandsverwaltung. In reinem JS baut man die von Hand nach. |
+| **Bündeln, Minifizieren, Nachladen** | Kleinere Downloads, und große Daten (Elementdetails, Wörterbuch) landen automatisch in getrennten Paketen, die erst bei Bedarf geladen werden. |
+
+**Was er kostet:** Node.js als Voraussetzung, ein paar hundert MB `node_modules`,
+gelegentliche Werkzeug-Updates – und der ehrlichste Einwand: Ein Projekt ohne Build läuft
+in fünf Jahren noch, wenn man es anfasst. Eines mit Build baut vielleicht nicht mehr, weil
+Abhängigkeiten verrottet sind. Das ist ein reales Argument, kein theoretisches.
+
+**Drei Möglichkeiten, von schlank nach komfortabel:**
+
+- **A – gar kein Build.** Plain JavaScript, ES-Module, Web Components. Dateiliste im
+  Service Worker von Hand gepflegt. Maximale Haltbarkeit, keinerlei Werkzeugkette.
+  Preis: keine Typprüfung, Zustandsverwaltung zu Fuß, und die Offline-Dateiliste ist eine
+  dauerhafte Fehlerquelle.
+- **B – Minimalbuild.** Wie A, aber ein etwa dreißigzeiliges Node-Skript ohne
+  Abhängigkeiten erzeugt die Service-Worker-Dateiliste. Typprüfung optional über JSDoc-
+  Kommentare und `tsc --noEmit` – geprüft wird, ausgeliefert wird trotzdem reines JS.
+  Ein sehr vernünftiger Mittelweg.
+- **C – Vite + TypeScript + Svelte** (ursprünglicher Vorschlag). Voller Komfort,
+  `vite-plugin-pwa` erledigt das Offline-Thema zuverlässig.
+
+**Empfehlung: C.** Nicht wegen des Komforts, sondern weil „funktioniert garantiert
+vollständig offline" ein Abnahmekriterium ist und das der Punkt ist, an dem Handarbeit
+zuverlässig schiefgeht. Wenn Langlebigkeit und Nachvollziehbarkeit schwerer wiegen als
+Tempo beim Bauen, ist **B** die richtige Wahl – der Umfang bleibt derselbe, nur die
+Umsetzung wird mühsamer. **A** würde ich nicht empfehlen, solange Offline-Betrieb
+Pflicht ist.
+
+### 7.2 Stack (bei Variante C)
+
+- **Vite + TypeScript + Svelte**, Ausgabe als rein statische Dateien: kleine Bundles,
+  wenig Laufzeit-Overhead, Komponenten ohne Zeremonie.
 - **Kein UI-Framework-Ballast**, eigenes CSS mit Custom Properties für die Themes.
 - **TypeScript strikt** – die Codec-Tabellen sind fehleranfällig, Typen fangen das früh.
+- **Keine Laufzeit-Abhängigkeit von CDNs** – alles wird mit ausgeliefert, sonst ist die
+  App im Funkloch kaputt.
 
-### 6.2 Projektstruktur
+### 7.3 Projektstruktur
 
 ```
 src/
@@ -208,7 +368,7 @@ src/
   data/            # JSON: Elemente, n-Gramme, Wörterbuch (lazy geladen)
 ```
 
-### 6.3 Die Codec-Schnittstelle
+### 7.4 Die Codec-Schnittstelle
 
 Das ist die eine Abstraktion, an der alles hängt:
 
@@ -243,14 +403,14 @@ Ein Schritt in der Werkbank ist dann nur
 `{ codecId, richtung: "encode" | "decode", opts }` – und der geteilte Link nur eine Liste
 davon.
 
-### 6.4 Zustand und Teilen
+### 7.5 Zustand und Teilen
 
 - Laufender Zustand in `localStorage`, überlebt Neuladen und Akku-Sparmodus.
 - Teilen: Werkbank-Zustand als JSON → komprimieren → **URL-Fragment** (`#w=…`). Das
   Fragment wird nie an einen Server geschickt; die App funktioniert dadurch ohne Backend
   und trotzdem kollaborativ genug fürs Team.
 
-### 6.5 Offline / PWA
+### 7.6 Offline / PWA
 
 - Service Worker mit Precaching der gesamten App-Shell inklusive aller Codec-Tabellen und
   SVGs → **funktioniert im Flugmodus vollständig**, das ist Abnahmekriterium.
@@ -259,7 +419,7 @@ davon.
 - Bewusst **vor** der Veranstaltung einmal „vollständig laden"-Knopf anbieten.
 - Installierbar auf Homescreen und Desktop.
 
-### 6.6 Qualitätssicherung
+### 7.7 Qualitätssicherung
 
 Ein Tippfehler in einer Morse- oder Braille-Tabelle ist im Hunt fatal und fällt nicht auf.
 Deshalb:
@@ -270,21 +430,21 @@ Deshalb:
 - Goldene Testfälle aus bekannten Rätseln.
 - Vitest, CI über GitHub Actions.
 
-### 6.7 Deployment
+### 7.8 Deployment
 
 GitHub Pages, gebaut per GitHub Action bei jedem Push auf `main`. Statisch, kostenlos,
 kein Server – passt exakt zur Vorgabe.
 
 ---
 
-## 7. Roadmap
+## 8. Roadmap
 
 | Phase | Inhalt | Ergebnis |
 |---|---|---|
 | **0 – Gerüst** | Vite/Svelte/TS, PWA-Shell, Dark Theme, GH-Pages-Deployment, CI | Installierbare leere App, offline lauffähig |
-| **1 – Textcodes** | Codec-Registry, Werkbank, ABC123, ASCII (dez/bin/hex), NATO, Morse, Caesar + Brute-Force-Wand, Zahlensysteme | Bereits die Hälfte von `development.md`, sofort einsetzbar |
+| **1 – Textcodes** | Codec-Registry, Werkbank, ABC123, ASCII (dez/bin/hex), NATO, Morse, Caesar + Brute-Force-Wand, Zahlensysteme, Element-Attribut-Codec (§5.1) | Bereits die Hälfte von `development.md`, sofort einsetzbar |
 | **2 – Visuelle Codes** | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
-| **3 – Nachschlagewerke** | Periodensystem (Zoom/Suche/Filter/Details) + Element-Speller, Widerstandscode | `development.md` vollständig abgedeckt |
+| **3 – Periodensystem & Widerstände** | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
 | **4 – Identify** | Sniffer, n-Gramm-Sprachmodell, Rangliste | „Was ist das überhaupt?" in einem Schritt |
 | **5 – Hunt-Extras** | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, QR-Scan, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
 
@@ -292,9 +452,14 @@ Phasen 0–3 liefern das, was in `development.md` steht. 4 und 5 sind der Vorsch
 hinaus – Phase 1 ist bereits allein benutzbar, jede weitere Phase ist ein eigenständiger
 Zugewinn.
 
+Das Periodensystem ist bewusst auf zwei Phasen verteilt: Die Schlüsselfunktion (§5.1) ist
+reine Datenarbeit ohne eigene Ansicht und läuft schon in Phase 1 mit; das Gitter mit
+Markierungen (§5.2/5.3) folgt in Phase 3. So ist die Nachschlagefunktion früh verfügbar,
+ohne die visuellen Codes zu verzögern.
+
 ---
 
-## 8. Risiken und offene Punkte
+## 9. Risiken und offene Punkte
 
 - **Lizenzen bei Daten und Bildern.** Elementdaten aus einer freien Quelle (Wikidata,
   PubChem) übernehmen und die Herkunft dokumentieren. Glyphen selbst zeichnen statt
@@ -313,11 +478,16 @@ Zugewinn.
 - **Regeln der Veranstaltung.** Vor dem Einsatz prüfen, ob und welche Hilfsmittel bei der
   Nachtschicht zugelassen sind. Beim MIT Mystery Hunt sind Werkzeuge üblich und erwünscht.
 
+- **Periodensystem-Layouts.** Rätsel setzen stillschweigend eine bestimmte Darstellung
+  voraus. Die Layoutwahl muss in der Oberfläche sichtbar sein, sonst liest man Koordinaten
+  im falschen Raster ab und merkt es nicht.
+
 ### Zu klären
 
-1. Sind die visuellen Codes in Phase 2 wichtiger als das Periodensystem? (Meine Annahme:
-   ja – das Periodensystem ist umfangreich, aber notfalls durch ein Nachschlagen im Netz
-   ersetzbar, das Ablesen eines Winker-Zeichens vor Ort nicht.)
-2. Deutsch als einzige Oberflächensprache, oder DE/EN zweisprachig wegen des Mystery Hunt?
-3. Build-Schritt (Vite) akzeptiert, oder soll es wirklich buildfrei bleiben?
-4. Wird die App im Team eingesetzt – lohnt sich das Link-Sharing früher als Phase 5?
+1. **Build-Schritt:** Variante A, B oder C aus Abschnitt 7.1? Empfehlung ist C, B ist der
+   vertretbare Mittelweg.
+2. Wie ausführlich sollen die Elementdaten sein – die gängigen zwei Dutzend Attribute oder
+   wirklich alles, was die Quelle hergibt? (Kostet nur Datenmenge, keine Logik.)
+3. Gibt es Rätselbeispiele aus früheren Jahren, an denen wir die Extraktions- und
+   Markierungsfunktionen ausrichten können? Das wäre die beste Prüfung, ob wir richtig
+   liegen.
