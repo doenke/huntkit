@@ -123,6 +123,23 @@ describe('Vollständigkeit der Tabellen', () => {
   });
 });
 
+describe('Eszett', () => {
+  // 'ß'.toUpperCase() ergibt in JavaScript 'SS'. Wer vor dem Nachschlagen blind
+  // großschreibt, verliert das Zeichen – aufgefallen erst beim Braille-Test.
+  it('überlebt in Morse und Braille', () => {
+    expect(codec('morse')!.encode('ß').text).toBe('...--..');
+    expect(codec('morse')!.encode('ß').luecken).toEqual([]);
+    expect(codec('braille')!.encode('ß').text).toBe('⠮');
+    expect(codec('braille')!.decode('⠮').text).toBe('ß');
+  });
+
+  it('bleibt in einem ganzen Wort erhalten', () => {
+    const treffer = codec('braille')!.encode('STRAßE');
+    expect(treffer.luecken).toEqual([]);
+    expect(codec('braille')!.decode(treffer.text).text).toBe('STRAßE');
+  });
+});
+
 describe('Lücken', () => {
   it('meldet unübersetzbare Zeichen, statt sie zu verschlucken', () => {
     const treffer = codec('morse')!.encode('AB§C');

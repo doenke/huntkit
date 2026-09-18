@@ -1,6 +1,7 @@
 import { abc123 } from './abc123';
 import { ascii } from './ascii';
 import { basen } from './basen';
+import { braille } from './braille';
 import { caesar } from './caesar';
 import { elemente } from './elemente';
 import { morse } from './morse';
@@ -17,6 +18,7 @@ export const CODECS: ReadonlyArray<Codec> = [
   abc123,
   ascii,
   nato,
+  braille,
   caesar,
   basen,
   elemente

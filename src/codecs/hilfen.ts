@@ -38,6 +38,13 @@ export interface ZeichenCodec {
 
 export function zeichenCodec(plan: ZeichenCodecPlan): ZeichenCodec {
   const hin = new Map(plan.tabelle.map(([z, d]) => [z, d]));
+
+  /**
+   * Erst das Zeichen selbst, dann die Großschreibung nachschlagen.
+   * Grund: 'ß'.toUpperCase() ist in JavaScript 'SS'. Wer blind großschreibt,
+   * verliert das Eszett – und mit ihm jedes deutsche Wort, das eins enthält.
+   */
+  const nachschlagen = (zeichen: string) => hin.get(zeichen) ?? hin.get(zeichen.toUpperCase());
   // Bei mehrdeutigen Darstellungen gewinnt der erste Eintrag – so bleibt die
   // Rückrichtung vorhersagbar.
   const zurueck = new Map<string, string>();
@@ -55,8 +62,7 @@ export function zeichenCodec(plan: ZeichenCodecPlan): ZeichenCodec {
           teile = [];
           return;
         }
-        const zeichen = rohzeichen.toUpperCase();
-        const darstellung = hin.get(zeichen);
+        const darstellung = nachschlagen(rohzeichen);
         if (darstellung === undefined) luecken.push({ position, zeichen: rohzeichen });
         else teile.push(darstellung);
       });
@@ -73,9 +79,15 @@ export function zeichenCodec(plan: ZeichenCodecPlan): ZeichenCodec {
       let position = 0;
 
       const entschluesselt = woerter.map((wort) => {
-        const stuecke = plan.trenner.trim().length === 0
-          ? wort.split(/\s+/)
-          : wort.split(plan.trenner);
+        // Drei Fälle: gar kein Trenner (Braille – Zeichen stehen direkt
+        // nebeneinander), Leerraum als Trenner (Morse, NATO) oder ein echtes
+        // Trennzeichen.
+        const stuecke =
+          plan.trenner === ''
+            ? [...wort]
+            : plan.trenner.trim().length === 0
+              ? wort.split(/\s+/)
+              : wort.split(plan.trenner);
         return stuecke
           .filter((s) => s.length > 0)
           .map((stueck) => {

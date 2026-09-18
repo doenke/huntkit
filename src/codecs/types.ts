@@ -48,6 +48,17 @@ export interface TabellenEintrag {
   darstellung: string;
 }
 
+/**
+ * Ein gezeichnetes Zeichen. Visuelle Codes liefern ihre Glyphen selbst als SVG,
+ * statt Bilder mitzuliefern: bleibt in jeder Größe scharf, funktioniert offline
+ * und wirft keine Lizenzfragen auf.
+ */
+export interface Glyph {
+  viewBox: string;
+  /** SVG-Inhalt ohne umgebendes <svg>. Stammt ausschließlich aus eigenem Code. */
+  inhalt: string;
+}
+
 export interface Codec {
   id: string;
   name: string;
@@ -57,8 +68,15 @@ export interface Codec {
   encode(eingabe: string, optionen?: OptionWerte): CodecErgebnis;
   decode(eingabe: string, optionen?: OptionWerte): CodecErgebnis;
 
-  /** Referenztabelle zum Nachschlagen; erzeugt auch den späteren Visual Picker. */
+  /** Referenztabelle zum Nachschlagen; erzeugt auch den Visual Picker. */
   tabelle?(optionen?: OptionWerte): ReadonlyArray<TabellenEintrag>;
+
+  /**
+   * Zeichnet ein Zeichen. Sobald ein Codec das kann, bekommt er automatisch den
+   * Visual Picker: Glyphe antippen statt tippen – die einzige Bedienung, die bei
+   * Braille, Winker oder Flaggen am Handy überhaupt praktikabel ist.
+   */
+  zeichne?(zeichen: string): Glyph | null;
 
   /**
    * Wie gut passt die Eingabe strukturell zu diesem Code? 0 bis 1.

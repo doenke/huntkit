@@ -81,6 +81,16 @@ export function ergebnisText(zustand: Werkbankzustand): string {
   return staende[staende.length - 1]?.text ?? '';
 }
 
+/**
+ * Text aus einem anderen Bereich an die Werkbank übergeben – etwa aus dem
+ * Visual Picker. Die Werkbank liest ihren Zustand beim Öffnen, deshalb genügt
+ * es, ihn abzulegen und dorthin zu wechseln.
+ */
+export function anWerkbank(text: string): void {
+  sichern({ eingabe: text, schritte: [] });
+  location.hash = '#/werkbank';
+}
+
 export function laden(): Werkbankzustand {
   try {
     const roh = localStorage.getItem(SPEICHER);

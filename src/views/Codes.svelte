@@ -2,6 +2,7 @@
   import { CODECS } from '../codecs/registry';
   import { standardOptionen } from '../codecs/types';
   import Optionen from '../ui/Optionen.svelte';
+  import VisualPicker from '../ui/VisualPicker.svelte';
 
   let offen = $state<string | null>(null);
   // Optionen je Codec merken, damit die Tabelle z.B. in Hexadezimal bleibt.
@@ -34,6 +35,9 @@
           <div class="optionen">
             <Optionen {codec} werte={werte[codec.id] ?? {}} />
           </div>
+        {/if}
+        {#if codec.zeichne}
+          <VisualPicker {codec} />
         {/if}
         {#if codec.tabelle}
           <div class="tabelle">

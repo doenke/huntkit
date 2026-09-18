@@ -21,8 +21,16 @@ Phase 0 (Gerüst) und Phase 1 (Textcodes) stehen:
 - **Brute-Force-Wand** – alle 26 Caesar-Verschiebungen auf einen Blick, jede
   per Tipp als neue Eingabe übernehmbar.
 
-Als Nächstes Phase 2: die visuellen Codes (Braille, Winkeralphabet, Hexahue,
-Flaggen, Templer, Fingeralphabet) – siehe Roadmap im Konzept.
+Aus Phase 2 (visuelle Codes):
+
+- **Braille** – vollständig, mit Umlauten, Eszett und Zahlzeichen.
+- **Visual Picker** – Glyphe antippen statt tippen, Text sammeln und an die
+  Werkbank übergeben. Jeder Codec, der seine Zeichen zeichnen kann, bekommt ihn
+  automatisch.
+
+Noch offen: Winkeralphabet, Hexahue, Flaggenalphabet, Templercode und
+Fingeralphabet. Dafür fehlt jeweils eine belastbare Vorlage – siehe „Zu klären"
+im Konzept.
 
 ## Entwickeln
 
