@@ -10,7 +10,12 @@ skizzierten App.
 - Link-Sharing bleibt in **Phase 5**.
 - Das Periodensystem erfüllt **alle drei Rollen** – Schlüssel, Matrix, Zeichenfläche
   (Abschnitt 5).
-- Offen: Build-Schritt oder nicht – Entscheidungsvorlage in Abschnitt 7.1.
+- **Build-Schritt: ja**, aber ausschließlich automatisch über GitHub Actions – lokal muss
+  nie jemand etwas bauen (Abschnitt 7.1).
+- **Deployment auf eigenen Webspace** (`https://huntkit.kanonenwiese.de`), gleichzeitig an
+  beliebigem anderem Ort lauffähig (Abschnitt 7.9).
+- **Externe Abhängigkeiten werden strikt kleingehalten** – zur Laufzeit gar keine
+  (Abschnitt 7.2).
 
 ---
 
@@ -253,10 +258,41 @@ Markierungssätze lassen sich benennen, speichern und über den Link teilen.
 - Detailkarte je Element mit allen Attributen, jeder Wert einzeln kopierbar.
 - Vollständig offline; die Elementdaten werden mit ausgeliefert.
 
-Datenbasis: eine freie Quelle (Wikidata/PubChem), einmalig als JSON eingefroren und im Repo
-versioniert – reproduzierbar, prüfbar und ohne Netzabhängigkeit zur Laufzeit.
+### 5.5 Datenbasis
 
-### 5.5 Konsequenz für die Reihenfolge
+Maßgeblich ist die Tabelle
+[`Periodic_table_(German)_EN.svg`](https://de.wikipedia.org/wiki/Datei:Periodic_table_(German)_EN.svg)
+aus der deutschen Wikipedia: Der Attributsatz der App ist genau das, was diese Grafik zeigt.
+
+Umgesetzt wird das über ein **Importskript im Repo**, das die SVG einliest und daraus
+`elements.json` erzeugt. Die Grafik ist eine gezeichnete Tabelle – jede Zelle besteht aus
+Textelementen, die sich maschinell auslesen lassen. Das hat drei Vorteile gegenüber
+Abtippen: Der Attributsatz ergibt sich aus der Quelle statt aus unserer Annahme, das
+Ergebnis ist reproduzierbar und nachprüfbar, und bei einer neuen Version der Grafik lässt
+sich der Import wiederholen.
+
+`elements.json` wird **im Repo eingecheckt**, nicht beim Bauen heruntergeladen – zur
+Laufzeit und zur Bauzeit besteht damit keine Abhängigkeit von Wikipedia. Das Importskript
+läuft nur, wenn wir es bewusst starten.
+
+Zwei Dinge, die dabei zu beachten sind:
+
+- **Ergänzende Attribute.** Was die Grafik nicht in den Zellen zeigt, sondern nur über die
+  Farblegende (Kategorie, Aggregatzustand), wird aus der Legende mitgenommen. Sollten für
+  die Schlüsselfunktion Attribute fehlen, die im Rätsel üblich sind, melde ich das, statt
+  stillschweigend eine zweite Quelle dazuzumischen – sonst weiß hinterher niemand mehr,
+  woher ein Wert stammt.
+- **Lizenz.** Übernommen werden die *Daten*, nicht die Datei. Messwerte und Ordnungszahlen
+  sind Fakten und nicht schutzfähig; die Grafik selbst wird nicht weiterverwendet. Quelle,
+  Abrufdatum, Autor und Lizenz der Vorlage werden trotzdem in `elements.json` und im
+  Impressum vermerkt.
+
+> **Offen:** Der Inhalt der Datei konnte in dieser Arbeitsumgebung nicht geprüft werden –
+> der Zugriff auf Wikimedia ist hier gesperrt. Der genaue Attributsatz steht deshalb erst
+> fest, wenn das Importskript einmal gelaufen ist. Am Aufbau der App ändert das nichts, nur
+> an der Liste der Attribute, die der Schlüssel-Codec anbietet.
+
+### 5.6 Konsequenz für die Reihenfolge
 
 Die drei Rollen sind unterschiedlich teuer. Rolle 1 ist **reine Datenarbeit** – sie braucht
 nur die JSON-Tabelle und den generischen Attribut-Codec, keine eigene Ansicht. Sie kann
@@ -290,12 +326,17 @@ neue Eingabe übernehmbar. Nichts geht beim Neuladen verloren.
 
 ## 7. Technisches Konzept
 
-### 7.1 Build-Schritt: Entscheidungsvorlage
+### 7.1 Build-Schritt
+
+> **Entschieden:** Variante C (Vite + TypeScript + Svelte), der Build läuft ausschließlich
+> in GitHub Actions. Ausgeliefert wird ein fertiger Ordner. Die Begründung und die
+> verworfenen Alternativen stehen hier, weil die Entscheidung den Rest des Abschnitts
+> erklärt.
 
 **Vorweg, weil es leicht zu verwechseln ist:** Ein Build-Schritt verstößt *nicht* gegen die
 Vorgabe „statische App ohne aktive Serverseite". Die Vorgabe betrifft die *Laufzeit* – was
 passiert, wenn jemand die Seite aufruft. Ein Build läuft vorher, einmalig, auf dem eigenen
-Rechner oder in der CI. Heraus kommen HTML-, JS- und CSS-Dateien, die auf GitHub Pages
+Rechner oder in der CI. Heraus kommen HTML-, JS- und CSS-Dateien, die auf dem Webspace
 liegen. Für den Browser ist das Ergebnis nicht unterscheidbar von handgeschriebenen
 Dateien. Kein Server, keine Datenbank, keine Laufzeitabhängigkeit.
 
@@ -334,21 +375,43 @@ Abhängigkeiten verrottet sind. Das ist ein reales Argument, kein theoretisches.
 - **C – Vite + TypeScript + Svelte** (ursprünglicher Vorschlag). Voller Komfort,
   `vite-plugin-pwa` erledigt das Offline-Thema zuverlässig.
 
-**Empfehlung: C.** Nicht wegen des Komforts, sondern weil „funktioniert garantiert
-vollständig offline" ein Abnahmekriterium ist und das der Punkt ist, an dem Handarbeit
-zuverlässig schiefgeht. Wenn Langlebigkeit und Nachvollziehbarkeit schwerer wiegen als
-Tempo beim Bauen, ist **B** die richtige Wahl – der Umfang bleibt derselbe, nur die
-Umsetzung wird mühsamer. **A** würde ich nicht empfehlen, solange Offline-Betrieb
-Pflicht ist.
+**Entscheidung: C**, mit zwei Einschränkungen aus Abschnitt 7.2. Ausschlaggebend ist, dass
+„funktioniert garantiert vollständig offline" ein Abnahmekriterium ist und die
+Service-Worker-Dateiliste genau der Punkt ist, an dem Handarbeit zuverlässig schiefgeht.
 
-### 7.2 Stack (bei Variante C)
+Der Haupteinwand gegen C – der Werkzeugkasten – wiegt hier leichter als sonst, weil der
+Build nur in GitHub Actions läuft. Und wenn der Baum in einigen Jahren verrottet, bricht
+der **Build**, nicht die **Seite**: Was auf dem Webspace liegt, läuft unverändert weiter,
+und von jedem Build wird zusätzlich ein ZIP archiviert. Der Schaden im schlimmsten Fall
+ist also „vorerst keine neuen Versionen", nicht „App weg".
+
+### 7.2 Stack und Abhängigkeiten
 
 - **Vite + TypeScript + Svelte**, Ausgabe als rein statische Dateien: kleine Bundles,
   wenig Laufzeit-Overhead, Komponenten ohne Zeremonie.
 - **Kein UI-Framework-Ballast**, eigenes CSS mit Custom Properties für die Themes.
 - **TypeScript strikt** – die Codec-Tabellen sind fehleranfällig, Typen fangen das früh.
-- **Keine Laufzeit-Abhängigkeit von CDNs** – alles wird mit ausgeliefert, sonst ist die
-  App im Funkloch kaputt.
+
+**Abhängigkeiten werden bewusst kleingehalten:**
+
+- **Zur Laufzeit: null.** Kein CDN, keine Schriftart von fremden Servern, keine API, kein
+  Analytics. Alles liegt im ausgelieferten Ordner. Das ist ohnehin Voraussetzung dafür,
+  dass die App im Funkloch funktioniert – jede Laufzeit-Abhängigkeit wäre gleichzeitig ein
+  Offline-Fehler.
+- **Zur Bauzeit: vier direkte Pakete** – Vite, Svelte, TypeScript, Vitest. Keine
+  Utility-Bibliotheken, keine Komponentensammlungen.
+- **Kein Workbox / `vite-plugin-pwa`.** Ursprünglich vorgesehen, aber gestrichen: Der
+  Service Worker dieser App ist simpel – beim Installieren alles in den Cache, danach
+  cache-first. Das sind rund vierzig Zeilen selbst geschrieben, und die Dateiliste erzeugt
+  ein kleines eigenes Vite-Plugin. Damit fällt der größte einzelne Abhängigkeitsbaum weg,
+  und ausgerechnet der offline-kritische Teil bleibt Code, den wir vollständig verstehen.
+- `package-lock.json` liegt im Repo, der Build läuft mit `npm ci`, Actions sind auf
+  Versionen gepinnt → reproduzierbar, keine stillen Updates.
+
+Ehrlich dazugesagt: Vite bringt transitiv einige Dutzend Pakete mit (esbuild, Rollup,
+PostCSS). Vollständig ohne fremden Code ginge nur Variante B aus 7.1. Die obigen Regeln
+begrenzen den Kreis auf etablierte Werkzeuge und halten alles fern, was zur Laufzeit im
+Browser landet.
 
 ### 7.3 Projektstruktur
 
@@ -412,8 +475,11 @@ davon.
 
 ### 7.6 Offline / PWA
 
-- Service Worker mit Precaching der gesamten App-Shell inklusive aller Codec-Tabellen und
-  SVGs → **funktioniert im Flugmodus vollständig**, das ist Abnahmekriterium.
+- Selbst geschriebener Service Worker (~40 Zeilen, siehe 7.2): beim Installieren wird die
+  gesamte App-Shell inklusive aller Codec-Tabellen und SVGs in den Cache gelegt, danach
+  wird cache-first ausgeliefert → **funktioniert im Flugmodus vollständig**, das ist
+  Abnahmekriterium. Die Dateiliste erzeugt der Build, damit nichts vergessen wird.
+- Scope und Pfade relativ, damit der Service Worker auch in einem Unterordner greift.
 - Große Daten (Elementdetails, Wörterbuch, n-Gramme) als getrennte Chunks, im Hintergrund
   nachgeladen und in IndexedDB gehalten – die App startet auch ohne sie.
 - Bewusst **vor** der Veranstaltung einmal „vollständig laden"-Knopf anbieten.
@@ -430,10 +496,50 @@ Deshalb:
 - Goldene Testfälle aus bekannten Rätseln.
 - Vitest, CI über GitHub Actions.
 
-### 7.8 Deployment
+### 7.8 Ortsunabhängigkeit
 
-GitHub Pages, gebaut per GitHub Action bei jedem Push auf `main`. Statisch, kostenlos,
-kein Server – passt exakt zur Vorgabe.
+Die App soll unter `https://huntkit.kanonenwiese.de` laufen, aber genauso in einem
+Unterordner einer beliebigen anderen Domain – **ohne neuen Build**. Drei Regeln stellen
+das sicher:
+
+- **Nur relative Pfade** (`base: './'`). Nirgendwo ein Hostname, nirgendwo ein führender
+  Schrägstrich. Das gebaute Verzeichnis ist damit ein Ordner, den man irgendwohin kopiert.
+- **Hash-Routing** (`…/#/werkbank`) statt History-API. Auf einfachem Webspace gibt es keine
+  Rewrite-Regel, die Deep-Links auf `index.html` umbiegt; mit Hash-Routing braucht es
+  keine – kein `.htaccess`, keine Serverkonfiguration, funktioniert auch in einem
+  Unterordner.
+- **Service Worker mit relativem Scope**, liegt neben `index.html`.
+
+Optional für später: ein zusätzlicher Build, der alles in *eine* HTML-Datei einbettet – als
+Notfallkopie auf dem Stick, die auch ohne Webserver aufgeht. Die installierte PWA deckt den
+Fall eigentlich ab, aber Redundanz kostet hier wenig.
+
+### 7.9 Deployment
+
+Push auf `main` → GitHub Actions baut → das Ergebnis landet auf dem Webspace. Kein
+Handgriff deinerseits.
+
+```
+Push auf main
+  └─ GitHub Actions
+       ├─ npm ci && npm test && npm run build     → dist/
+       ├─ Upload dist/ auf den Webspace           (rsync über SSH, alternativ FTPS)
+       └─ dist/ zusätzlich als ZIP ans Build anhängen
+```
+
+- **Zugangsdaten** liegen als GitHub Secrets (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KEY`
+  bzw. `DEPLOY_PASS`, `DEPLOY_PATH`) – nie im Repo.
+- **Keine fremden Marketplace-Actions für den Upload.** Verwendet werden nur die offiziellen
+  `actions/checkout` und `actions/setup-node`, beide auf Version gepinnt, dazu ein normaler
+  `rsync`- oder `lftp`-Aufruf. Begründung: Eine Deploy-Action aus dem Marketplace ist genau
+  die Art externer Abhängigkeit, die vermieden werden soll – und sie bekommt die
+  Zugangsdaten zum Webspace zu sehen.
+- **Upload nur nach grünen Tests**, sonst bleibt die alte Version stehen.
+- **Jeder Build hängt `dist/` zusätzlich als ZIP an.** Herunterladen, irgendwo entpacken,
+  läuft. Damit ist die Veröffentlichung nie an GitHub gebunden, und alte Stände bleiben
+  greifbar – wichtig, wenn kurz vor der Veranstaltung etwas schiefgeht.
+- Auf Wunsch zusätzlich GitHub Pages als Zweitadresse. Kostet eine Zeile und ist ein
+  brauchbarer Ausweichweg, wenn der Webspace klemmt.
 
 ---
 
@@ -441,7 +547,7 @@ kein Server – passt exakt zur Vorgabe.
 
 | Phase | Inhalt | Ergebnis |
 |---|---|---|
-| **0 – Gerüst** | Vite/Svelte/TS, PWA-Shell, Dark Theme, GH-Pages-Deployment, CI | Installierbare leere App, offline lauffähig |
+| **0 – Gerüst** | Vite/Svelte/TS, eigener Service Worker, Dark Theme, Actions-Build + Upload auf den Webspace | Installierbare leere App unter huntkit.kanonenwiese.de, offline lauffähig |
 | **1 – Textcodes** | Codec-Registry, Werkbank, ABC123, ASCII (dez/bin/hex), NATO, Morse, Caesar + Brute-Force-Wand, Zahlensysteme, Element-Attribut-Codec (§5.1) | Bereits die Hälfte von `development.md`, sofort einsetzbar |
 | **2 – Visuelle Codes** | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
 | **3 – Periodensystem & Widerstände** | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
@@ -461,10 +567,13 @@ ohne die visuellen Codes zu verzögern.
 
 ## 9. Risiken und offene Punkte
 
-- **Lizenzen bei Daten und Bildern.** Elementdaten aus einer freien Quelle (Wikidata,
-  PubChem) übernehmen und die Herkunft dokumentieren. Glyphen selbst zeichnen statt
-  Grafiken zu übernehmen. Beim Wörterbuch auf die Lizenz achten (freie Wortlisten,
-  Wiktionary-Ableitungen).
+- **Lizenzen bei Daten und Bildern.** Elementdaten siehe 5.5 – Herkunft dokumentieren.
+  Glyphen selbst zeichnen statt Grafiken zu übernehmen. Beim Wörterbuch auf die Lizenz
+  achten (freie Wortlisten, Wiktionary-Ableitungen).
+- **Zugangsdaten zum Webspace.** Liegen als GitHub Secrets und sind damit nur so gut
+  geschützt wie das GitHub-Konto. Wenn möglich einen eigenen SSH-Schlüssel nur für das
+  Deployment anlegen, dessen Zugriff auf das Zielverzeichnis beschränkt ist – dann ist im
+  schlimmsten Fall die Webseite betroffen und nicht der ganze Webspace.
 - **Fingeralphabet ist nicht eindeutig.** DGS (deutsch) und ASL (amerikanisch)
   unterscheiden sich deutlich. Für die Nachtschicht DGS, für den Mystery Hunt ASL – beide
   vorsehen und klar beschriften.
@@ -484,10 +593,10 @@ ohne die visuellen Codes zu verzögern.
 
 ### Zu klären
 
-1. **Build-Schritt:** Variante A, B oder C aus Abschnitt 7.1? Empfehlung ist C, B ist der
-   vertretbare Mittelweg.
-2. Wie ausführlich sollen die Elementdaten sein – die gängigen zwei Dutzend Attribute oder
-   wirklich alles, was die Quelle hergibt? (Kostet nur Datenmenge, keine Logik.)
+1. **Wie kommt der Zollstock auf den Webspace – SSH/rsync oder FTP?** Davon hängt der
+   Upload-Schritt ab. SSH wäre die bessere Wahl, FTPS geht auch.
+2. In welches Verzeichnis zeigt `huntkit.kanonenwiese.de`, und liegt dort schon etwas? Der
+   Upload soll nicht versehentlich Nachbarverzeichnisse anfassen.
 3. Gibt es Rätselbeispiele aus früheren Jahren, an denen wir die Extraktions- und
    Markierungsfunktionen ausrichten können? Das wäre die beste Prüfung, ob wir richtig
    liegen.
