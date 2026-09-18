@@ -12,7 +12,7 @@ skizzierten App.
   (Abschnitt 5).
 - **Build-Schritt: ja**, aber ausschließlich automatisch über GitHub Actions – lokal muss
   nie jemand etwas bauen (Abschnitt 7.1).
-- **Deployment per SFTP auf den eigenen Webspace** nach
+- **Deployment per SFTP (Passwort-Anmeldung)** nach
   `/home/webzwenka/kanonenwiese.de/huntkit` (`https://huntkit.kanonenwiese.de`),
   gleichzeitig an beliebigem anderem Ort lauffähig (Abschnitt 7.9).
 - **Externe Abhängigkeiten werden strikt kleingehalten** – zur Laufzeit gar keine
@@ -534,14 +534,35 @@ Push auf main
 - **Ziel:** `/home/webzwenka/kanonenwiese.de/huntkit` per **SFTP**, erreichbar unter
   `https://huntkit.kanonenwiese.de`. Das Verzeichnis ist leer, es wird also nichts
   überschrieben; der Upload bleibt strikt auf dieses Verzeichnis beschränkt.
-- **Zugangsdaten** liegen als GitHub Secrets (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KEY`
-  bzw. `DEPLOY_PASS`, `DEPLOY_PATH`) – nie im Repo.
+- **Anmeldung per Passwort.** Zugangsdaten liegen ausschließlich als GitHub Secrets, nie
+  im Repo:
+
+  | Secret | Inhalt |
+  |---|---|
+  | `DEPLOY_HOST` | SFTP-Servername des Webspace |
+  | `DEPLOY_USER` | Benutzername (vermutlich `webzwenka`) |
+  | `DEPLOY_PASSWORD` | das Passwort |
+  | `DEPLOY_PATH` | `/home/webzwenka/kanonenwiese.de/huntkit` |
+  | `DEPLOY_PORT` | nur nötig, falls der Webspace nicht Port 22 verwendet |
+  | `DEPLOY_KNOWN_HOSTS` | optional, empfohlen: die `known_hosts`-Zeile des Servers |
+
+  Hochgeladen wird mit `lftp` über `sftp://`. Das Passwort wird als Umgebungsvariable
+  `LFTP_PASSWORD` übergeben (`lftp --env-password`), damit es nicht in der Kommandozeile
+  und damit in der Prozessliste steht. GitHub maskiert Secrets zusätzlich in den Logs.
+- **Host-Schlüssel prüfen.** Ohne `DEPLOY_KNOWN_HOSTS` müsste der Upload jeden beliebigen
+  Serverschlüssel akzeptieren. Mit hinterlegter `known_hosts`-Zeile fällt diese Lücke weg –
+  bei Passwort-Anmeldung wiegt das schwerer als bei Schlüsseln, weil sonst das Passwort
+  selbst an einen falschen Server gehen könnte.
 - **Keine fremden Marketplace-Actions für den Upload.** Verwendet werden nur die offiziellen
   `actions/checkout` und `actions/setup-node`, beide auf Version gepinnt, dazu ein normaler
   `rsync`- oder `lftp`-Aufruf. Begründung: Eine Deploy-Action aus dem Marketplace ist genau
   die Art externer Abhängigkeit, die vermieden werden soll – und sie bekommt die
   Zugangsdaten zum Webspace zu sehen.
-- **Upload nur nach grünen Tests**, sonst bleibt die alte Version stehen.
+- **Upload nur nach grünen Tests** und nur bei Push auf `main`, sonst bleibt die alte
+  Version stehen.
+- Der Upload spiegelt `dist/` in das Zielverzeichnis und räumt dort auf, was nicht mehr
+  dazugehört (`mirror -R --delete`). Das betrifft ausschließlich
+  `/home/webzwenka/kanonenwiese.de/huntkit`.
 - **Jeder Build hängt `dist/` zusätzlich als ZIP an.** Herunterladen, irgendwo entpacken,
   läuft. Damit ist die Veröffentlichung nie an GitHub gebunden, und alte Stände bleiben
   greifbar – wichtig, wenn kurz vor der Veranstaltung etwas schiefgeht.
