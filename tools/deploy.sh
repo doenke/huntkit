@@ -81,11 +81,24 @@ ZIEL="${PROTOKOLL}://${DEPLOY_HOST}"
 
 echo "Lade '$QUELLE' nach ${DEPLOY_PATH} (${DEPLOY_PROTOCOL:-sftp}) ..."
 
+# Nach der Uebertragung werden Arbeitsverzeichnis und Zielinhalt ausgegeben.
+# Grund: Bei manchem Webspace landet man nach der Anmeldung bereits im eigenen
+# Heimatverzeichnis. Ein absoluter Pfad wird dann darunter angelegt statt an der
+# erwarteten Stelle – die Uebertragung meldet Erfolg, und trotzdem ist am Ziel
+# nichts zu sehen. Die beiden Zeilen im Protokoll zeigen sofort, was wirklich
+# passiert ist.
+
 # --env-password: Das Passwort steht in der Umgebung, nicht in der
 # Kommandozeile – sonst waere es in der Prozessliste sichtbar.
 LFTP_PASSWORD="$DEPLOY_PASSWORD" lftp -u "$DEPLOY_USER" --env-password "$ZIEL" <<LFTP
 ${EINSTELLUNGEN}
 mirror --reverse --delete --no-perms --parallel=4 --verbose '${QUELLE}' '${DEPLOY_PATH}'
+echo ---- Arbeitsverzeichnis nach der Anmeldung ----
+pwd
+echo ---- Was dort liegt ----
+cls -l .
+echo ---- Inhalt des Zielverzeichnisses ----
+cls -l '${DEPLOY_PATH}'
 bye
 LFTP
 
