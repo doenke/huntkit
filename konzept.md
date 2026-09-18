@@ -12,10 +12,13 @@ skizzierten App.
   (Abschnitt 5).
 - **Build-Schritt: ja**, aber ausschließlich automatisch über GitHub Actions – lokal muss
   nie jemand etwas bauen (Abschnitt 7.1).
-- **Deployment auf eigenen Webspace** (`https://huntkit.kanonenwiese.de`), gleichzeitig an
-  beliebigem anderem Ort lauffähig (Abschnitt 7.9).
+- **Deployment per SFTP auf den eigenen Webspace** nach
+  `/home/webzwenka/kanonenwiese.de/huntkit` (`https://huntkit.kanonenwiese.de`),
+  gleichzeitig an beliebigem anderem Ort lauffähig (Abschnitt 7.9).
 - **Externe Abhängigkeiten werden strikt kleingehalten** – zur Laufzeit gar keine
   (Abschnitt 7.2).
+- **Elementdaten sind erledigt:** 118 Elemente mit neun Feldern in `data/elements.json`
+  (Abschnitt 5.5).
 
 ---
 
@@ -258,39 +261,39 @@ Markierungssätze lassen sich benennen, speichern und über den Link teilen.
 - Detailkarte je Element mit allen Attributen, jeder Wert einzeln kopierbar.
 - Vollständig offline; die Elementdaten werden mit ausgeliefert.
 
-### 5.5 Datenbasis
+### 5.5 Datenbasis – erledigt
 
-Maßgeblich ist die Tabelle
+Die Elementdaten sind **ausgelesen und liegen im Repo**: `data/elements.json`, 32 KB, 118
+Elemente. Quelle ist die Tabelle
 [`Periodic_table_(German)_EN.svg`](https://de.wikipedia.org/wiki/Datei:Periodic_table_(German)_EN.svg)
-aus der deutschen Wikipedia: Der Attributsatz der App ist genau das, was diese Grafik zeigt.
+aus der deutschen Wikipedia.
 
-Umgesetzt wird das über ein **Importskript im Repo**, das die SVG einliest und daraus
-`elements.json` erzeugt. Die Grafik ist eine gezeichnete Tabelle – jede Zelle besteht aus
-Textelementen, die sich maschinell auslesen lassen. Das hat drei Vorteile gegenüber
-Abtippen: Der Attributsatz ergibt sich aus der Quelle statt aus unserer Annahme, das
-Ergebnis ist reproduzierbar und nachprüfbar, und bei einer neuen Version der Grafik lässt
-sich der Import wiederholen.
+Neun Felder je Element:
 
-`elements.json` wird **im Repo eingecheckt**, nicht beim Bauen heruntergeladen – zur
-Laufzeit und zur Bauzeit besteht damit keine Abhängigkeit von Wikipedia. Das Importskript
-läuft nur, wenn wir es bewusst starten.
+`ordnungszahl` · `symbol` · `name` · `atomgewicht` · `elektronenkonfiguration` ·
+`elektronegativitaet` · `serie` · `aggregatzustand` · `radioaktiv`
 
-Zwei Dinge, die dabei zu beachten sind:
+Drei davon stehen in der Grafik nicht als Text, sondern stecken in der Darstellung und
+wurden über die Legende aufgelöst: die **Serie** in der Füllfarbe der Zelle, der
+**Aggregatzustand** in der Farbe des Symbols, die **Radioaktivität** in der Farbe der
+Ordnungszahl.
 
-- **Ergänzende Attribute.** Was die Grafik nicht in den Zellen zeigt, sondern nur über die
-  Farblegende (Kategorie, Aggregatzustand), wird aus der Legende mitgenommen. Sollten für
-  die Schlüsselfunktion Attribute fehlen, die im Rätsel üblich sind, melde ich das, statt
-  stillschweigend eine zweite Quelle dazuzumischen – sonst weiß hinterher niemand mehr,
-  woher ein Wert stammt.
-- **Lizenz.** Übernommen werden die *Daten*, nicht die Datei. Messwerte und Ordnungszahlen
-  sind Fakten und nicht schutzfähig; die Grafik selbst wird nicht weiterverwendet. Quelle,
-  Abrufdatum, Autor und Lizenz der Vorlage werden trotzdem in `elements.json` und im
-  Impressum vermerkt.
+Ausgelesen hat das [`tools/import-elements.py`](tools/import-elements.py). Das Skript
+bleibt im Repo, damit der Schritt nachvollziehbar und bei einer neuen Fassung der Grafik
+wiederholbar ist. Die SVG selbst wurde nach dem Import wieder entfernt.
 
-> **Offen:** Der Inhalt der Datei konnte in dieser Arbeitsumgebung nicht geprüft werden –
-> der Zugriff auf Wikimedia ist hier gesperrt. Der genaue Attributsatz steht deshalb erst
-> fest, wenn das Importskript einmal gelaufen ist. Am Aufbau der App ändert das nichts, nur
-> an der Liste der Attribute, die der Schlüssel-Codec anbietet.
+Geprüft wird beim Import auf lückenlose Ordnungszahlen 1–118, eindeutige Symbole und Namen
+und vollständige Pflichtfelder; bei Verstoß bricht das Skript ab. Unabhängig davon von Hand
+gegengeprüft: Die Summe der Schalenbesetzung ergibt bei allen 118 Elementen exakt die
+Ordnungszahl – damit sind Zuordnung und das Zusammensetzen der umbrochenen Konfigurationen
+bestätigt.
+
+Herkunft, Feldbedeutungen und die Eigenheiten dieser Quelle stehen in
+[`data/QUELLE.md`](data/QUELLE.md). Übernommen wurden die *Daten*, nicht die Grafik.
+
+Für die Gitteransicht (5.2) fehlen Gruppe und Periode. Die sind bewusst nicht Teil des
+Datensatzes: Die Stellung im Periodensystem ist Allgemeinwissen und hängt nicht an dieser
+Quelle – sie ergibt sich aus dem Layout, das die App ohnehin selbst zeichnet.
 
 ### 5.6 Konsequenz für die Reihenfolge
 
@@ -523,10 +526,14 @@ Handgriff deinerseits.
 Push auf main
   └─ GitHub Actions
        ├─ npm ci && npm test && npm run build     → dist/
-       ├─ Upload dist/ auf den Webspace           (rsync über SSH, alternativ FTPS)
+       ├─ Upload dist/ per SFTP nach                                        
+       │     /home/webzwenka/kanonenwiese.de/huntkit
        └─ dist/ zusätzlich als ZIP ans Build anhängen
 ```
 
+- **Ziel:** `/home/webzwenka/kanonenwiese.de/huntkit` per **SFTP**, erreichbar unter
+  `https://huntkit.kanonenwiese.de`. Das Verzeichnis ist leer, es wird also nichts
+  überschrieben; der Upload bleibt strikt auf dieses Verzeichnis beschränkt.
 - **Zugangsdaten** liegen als GitHub Secrets (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KEY`
   bzw. `DEPLOY_PASS`, `DEPLOY_PATH`) – nie im Repo.
 - **Keine fremden Marketplace-Actions für den Upload.** Verwendet werden nur die offiziellen
@@ -593,10 +600,9 @@ ohne die visuellen Codes zu verzögern.
 
 ### Zu klären
 
-1. **Wie kommt der Zollstock auf den Webspace – SSH/rsync oder FTP?** Davon hängt der
-   Upload-Schritt ab. SSH wäre die bessere Wahl, FTPS geht auch.
-2. In welches Verzeichnis zeigt `huntkit.kanonenwiese.de`, und liegt dort schon etwas? Der
-   Upload soll nicht versehentlich Nachbarverzeichnisse anfassen.
-3. Gibt es Rätselbeispiele aus früheren Jahren, an denen wir die Extraktions- und
+1. **Zugang für das Deployment:** SSH-Schlüssel oder Passwort? Ein eigener Schlüssel nur
+   für das Deployment wäre sauberer – den öffentlichen Teil legst du auf dem Webspace ab,
+   den privaten als GitHub Secret.
+2. Gibt es Rätselbeispiele aus früheren Jahren, an denen wir die Extraktions- und
    Markierungsfunktionen ausrichten können? Das wäre die beste Prüfung, ob wir richtig
    liegen.
