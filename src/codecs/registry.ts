@@ -4,8 +4,12 @@ import { basen } from './basen';
 import { braille } from './braille';
 import { caesar } from './caesar';
 import { elemente } from './elemente';
+import { hexahue } from './hexahue';
 import { morse } from './morse';
 import { nato } from './nato';
+import { templer } from './templer';
+import { umlaute } from './umlaute';
+import { winker } from './winker';
 import type { Codec } from './types';
 
 /**
@@ -19,8 +23,12 @@ export const CODECS: ReadonlyArray<Codec> = [
   ascii,
   nato,
   braille,
+  winker,
+  hexahue,
+  templer,
   caesar,
   basen,
+  umlaute,
   elemente
 ];
 

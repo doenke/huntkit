@@ -586,15 +586,22 @@ Phasen 0–3 liefern das, was in `development.md` steht. 4 und 5 sind der Vorsch
 hinaus – Phase 1 ist bereits allein benutzbar, jede weitere Phase ist ein eigenständiger
 Zugewinn.
 
-**Stand:** Phase 0 und 1 stehen, Phase 2 zur Hälfte. Gerüst, Offline-Betrieb, Themes und das automatische
+**Stand:** Phase 0 und 1 stehen, Phase 2 bis auf das Fingeralphabet. Gerüst, Offline-Betrieb, Themes und das automatische
 Deployment laufen; Codec-Registry, Werkbank mit Schrittkette, Brute-Force-Wand und die
 Textcodes Morse, ABC123, ASCII, NATO, Caesar, Zahlensysteme und der Element-Schlüssel
 sind gebaut. Die Elementdaten aus Phase 3 liegen vor (Abschnitt 5.5).
 
-Aus Phase 2 stehen die Infrastruktur und Braille: Codecs können ihre Zeichen als SVG
-zeichnen, und daraus entsteht automatisch der Visual Picker.
+Aus Phase 2 stehen die Infrastruktur und fünf der sechs Codes: Braille, Winkeralphabet,
+Hexahue und Templercode, dazu der Visual Picker. Grundlage ist das Regelheft der
+Dortmunder Nachtschicht 2026 – damit gelten genau die Varianten der Veranstaltung, was
+beim Templercode den Ausschlag gibt. Herkunft und Proben stehen in
+[`src/codecs/QUELLE.md`](src/codecs/QUELLE.md).
 
-Die fünf übrigen visuellen Codes hängen an einer Vorlage – siehe unten unter „Zu klären".
+Dazu aus demselben Regelheft die Umlautregel als eigenes Werkzeug: Lösungswörter werden
+dort „wie in gängigen Kreuzworträtseln" geschrieben, Ä als AE und ß als SS.
+
+Offen bleibt allein das **Fingeralphabet** – dort ist eine Lizenzentscheidung zu treffen,
+siehe „Zu klären".
 
 Das Periodensystem ist bewusst auf zwei Phasen verteilt: Die Schlüsselfunktion (§5.1) ist
 reine Datenarbeit ohne eigene Ansicht und läuft schon in Phase 1 mit; das Gitter mit
@@ -613,8 +620,8 @@ ohne die visuellen Codes zu verzögern.
   Deployment anlegen, dessen Zugriff auf das Zielverzeichnis beschränkt ist – dann ist im
   schlimmsten Fall die Webseite betroffen und nicht der ganze Webspace.
 - **Fingeralphabet ist nicht eindeutig.** DGS (deutsch) und ASL (amerikanisch)
-  unterscheiden sich deutlich. Für die Nachtschicht DGS, für den Mystery Hunt ASL – beide
-  vorsehen und klar beschriften.
+  unterscheiden sich deutlich. Das Regelheft der Nachtschicht zeigt DGS, mit Ä, Ö, Ü und
+  Sch.
 - **Hexahue-Farben.** Muss exakt stimmen und braucht Kontrastprüfung; bei Nacht und auf
   schlechten Displays sind Farbcodes heikel. Zusätzlich Farbnamen einblenden.
 - **iOS-Eigenheiten.** Taschenlampen-Steuerung ist per Web-API eingeschränkt, Safari räumt
@@ -622,8 +629,11 @@ ohne die visuellen Codes zu verzögern.
   Gerät testen, nicht nur im Simulator.
 - **Akku.** Kamera, Taschenlampe und Wake Lock sind die größten Verbraucher. Sparsam
   einsetzen und den Wake Lock automatisch freigeben.
-- **Regeln der Veranstaltung.** Vor dem Einsatz prüfen, ob und welche Hilfsmittel bei der
-  Nachtschicht zugelassen sind. Beim MIT Mystery Hunt sind Werkzeuge üblich und erwünscht.
+- ~~**Regeln der Veranstaltung.**~~ Geklärt: Das Regelheft nennt als Hilfsmittel
+  ausdrücklich „Grips, Infoheft und Ausrüstungsgegenstände" und hält fest, dass „die
+  Nutzung des Internets bei manchen Rätseln hilfreich sein" kann. Die App ist also
+  zulässig. Zu beachten: Der Lösungsweg muss auf Nachfrage vorzeigbar sein – ein weiteres
+  Argument für die Schrittkette der Werkbank, die genau das protokolliert.
 
 - **Periodensystem-Layouts.** Rätsel setzen stillschweigend eine bestimmte Darstellung
   voraus. Die Layoutwahl muss in der Oberfläche sichtbar sein, sonst liest man Koordinaten
@@ -631,16 +641,17 @@ ohne die visuellen Codes zu verzögern.
 
 ### Zu klären
 
-1. **Vorlagen für die fünf übrigen visuellen Codes.** Winkeralphabet, Hexahue,
-   Flaggenalphabet, Templercode und Fingeralphabet brauchen je eine Zeichentabelle, die
-   *stimmt*. Aus dem Gedächtnis bekomme ich die nicht sicher zusammen, und eine Tabelle,
-   die zu 90 % stimmt, ist im Hunt schlimmer als gar keine: Man merkt den Fehler nicht,
-   sondern sucht ihn stundenlang im Rätsel. Am schnellsten geht es wie beim Periodensystem
-   – eine Vorlage ins Repo legen, ich lese sie aus. Beim Templercode kommt eine
-   Entscheidung dazu: Es sind mehrere, sich widersprechende Varianten im Umlauf.
-2. **Zugang für das Deployment:** SSH-Schlüssel oder Passwort? Ein eigener Schlüssel nur
+1. **Fingeralphabet: Lizenz oder Eigenzeichnung?** Die Tafel im Regelheft stammt vom
+   Landesverband Bayern der Gehörlosen e. V. und steht unter CC BY-SA 4.0. Sie zu
+   übernehmen ist erlaubt, verlangt aber Namensnennung und dieselbe Lizenz für die
+   Ableitung – und bricht mit dem Grundsatz, alle Zeichen selbst zu zeichnen. Die
+   Alternative ist, 30 Handformen so nachzuzeichnen, dass sie erkennbar bleiben. Das ist
+   eine Entscheidung, keine technische Frage.
+2. **Flaggenalphabet.** Steht in `development.md`, kommt im Regelheft der Nachtschicht
+   aber nicht vor. Weiterhin gewünscht? Dann brauche ich dafür eine Vorlage.
+3. **Zugang für das Deployment:** SSH-Schlüssel oder Passwort? Ein eigener Schlüssel nur
    für das Deployment wäre sauberer – den öffentlichen Teil legst du auf dem Webspace ab,
    den privaten als GitHub Secret.
-3. Gibt es Rätselbeispiele aus früheren Jahren, an denen wir die Extraktions- und
+4. Gibt es Rätselbeispiele aus früheren Jahren, an denen wir die Extraktions- und
    Markierungsfunktionen ausrichten können? Das wäre die beste Prüfung, ob wir richtig
    liegen.
