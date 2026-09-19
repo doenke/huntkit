@@ -10,12 +10,27 @@ ohne Server und ohne Konto.
 
 ## Stand
 
-Phase 0 (Gerüst) steht: installierbare App, Offline-Betrieb, Themes,
-automatisches Deployment. Die Werkzeuge selbst folgen ab Phase 1 – siehe
-Roadmap im Konzept.
+Phase 0 (Gerüst) und Phase 1 (Textcodes) stehen:
 
-Bereits vorhanden: die Elementdaten für das Periodensystem
-([`data/elements.json`](data/elements.json), 118 Elemente).
+- **Werkbank** – ein gemeinsamer Textpuffer mit einer Kette von Schritten. Jeder
+  Schritt einzeln abschaltbar, verschiebbar und mit eigenen Optionen; jeder
+  Zwischenstand sichtbar.
+- **Codes** – Morse, ABC123, ASCII (dezimal/binär/hexadezimal), NATO,
+  Caesar, Zahlensysteme (Basis 2–36) und das Periodensystem als Schlüssel,
+  jeweils mit Referenztabelle.
+- **Brute-Force-Wand** – alle 26 Caesar-Verschiebungen auf einen Blick, jede
+  per Tipp als neue Eingabe übernehmbar.
+
+Aus Phase 2 (visuelle Codes):
+
+- **Braille** – vollständig, mit Umlauten, Eszett und Zahlzeichen.
+- **Visual Picker** – Glyphe antippen statt tippen, Text sammeln und an die
+  Werkbank übergeben. Jeder Codec, der seine Zeichen zeichnen kann, bekommt ihn
+  automatisch.
+
+Noch offen: Winkeralphabet, Hexahue, Flaggenalphabet, Templercode und
+Fingeralphabet. Dafür fehlt jeweils eine belastbare Vorlage – siehe „Zu klären"
+im Konzept.
 
 ## Entwickeln
 
@@ -35,7 +50,9 @@ Archiv jedes Builds hängt an der jeweiligen Action.
 | Pfad | Inhalt |
 |---|---|
 | `src/` | Anwendung (Svelte, TypeScript) |
-| `src/lib/` | Router, Themes – später die Codec-Registry |
+| `src/codecs/` | ein Modul je Code, dazu Registry und Schnittstelle |
+| `src/lib/` | Werkbank, Router, Themes |
+| `src/ui/` | wiederverwendete Bausteine der Oberfläche |
 | `data/` | Datensätze; Herkunft in [`data/QUELLE.md`](data/QUELLE.md) |
 | `tools/` | Hilfsskripte: Datenimport, Icons, Deployment, Offline-Plugin |
 | `.github/workflows/` | Bauen, Testen, Veröffentlichen |
