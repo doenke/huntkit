@@ -75,6 +75,12 @@ export const templer: Codec = {
   decode: (eingabe) => zeichen.decode(eingabe),
   tabelle: () => zeichen.tabelle(),
 
+  passt(eingabe) {
+    const stuecke = eingabe.trim().split(/[\s/]+/).filter((s) => s.length > 0);
+    if (stuecke.length === 0) return 0;
+    return stuecke.filter((s) => /^(Sp|Dr|Ra)-(oben|rechts|unten|links)\+?$|^Mi$/i.test(s)).length / stuecke.length;
+  },
+
   zeichne(gesucht): Glyph | null {
     const eintrag = NACH_ZEICHEN.get(gesucht) ?? NACH_ZEICHEN.get(gesucht.toUpperCase());
     if (!eintrag) return null;

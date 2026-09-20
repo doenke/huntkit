@@ -69,6 +69,29 @@ export const elemente: Codec = {
     { id: 'von', titel: 'von', art: 'auswahl', standard: 'symbol', werte: FELDER },
     { id: 'nach', titel: 'nach', art: 'auswahl', standard: 'ordnungszahl', werte: FELDER }
   ],
+  // Nur die Paare, die im Rätsel tatsächlich vorkommen – alle 81 Kombinationen
+  // durchzuprobieren brächte vor allem Rauschen.
+  erkennungsoptionen: [
+    { von: 'symbol', nach: 'ordnungszahl' },
+    { von: 'ordnungszahl', nach: 'symbol' },
+    { von: 'symbol', nach: 'name' },
+    { von: 'name', nach: 'symbol' }
+  ],
+
+  passt(eingabe) {
+    const stuecke = eingabe.trim().split(/[\s,;]+/).filter((s) => s.length > 0);
+    if (stuecke.length === 0) return 0;
+    const bekannt = stuecke.filter((stueck) =>
+      elementeDaten.some(
+        (e) =>
+          e.symbol.toLowerCase() === stueck.toLowerCase() ||
+          e.name.toLowerCase() === stueck.toLowerCase() ||
+          String(e.ordnungszahl) === stueck
+      )
+    );
+    return bekannt.length / stuecke.length;
+  },
+
   encode: (eingabe, optionen) =>
     uebersetze(eingabe, feldAus(optionen, 'von', 'symbol'), feldAus(optionen, 'nach', 'ordnungszahl')),
   decode: (eingabe, optionen) =>

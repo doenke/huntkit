@@ -1,6 +1,8 @@
 <script lang="ts">
   import { alleVerschiebungen } from '../codecs/caesar';
   import { CODECS, codec } from '../codecs/registry';
+  import { erkenne, optionenText, type Fund } from '../lib/erkennen';
+  import { sprachwert } from '../lib/sprachwert';
   import {
     anwenden,
     laden,
@@ -14,9 +16,22 @@
 
   let zustand = $state<Werkbankzustand>(laden());
   let wandOffen = $state(false);
+  let erkennungOffen = $state(false);
 
   const staende = $derived(anwenden(zustand));
   const ergebnis = $derived(staende[staende.length - 1]);
+  const funde = $derived(erkennungOffen ? erkenne(ergebnis?.text ?? '') : []);
+
+  /** Die 26 Verschiebungen samt Sprachwert – der beste wird hervorgehoben. */
+  const wand = $derived.by(() => {
+    if (!wandOffen) return [];
+    const reihen = alleVerschiebungen(ergebnis?.text ?? '').map((r) => ({
+      ...r,
+      wert: sprachwert(r.text)
+    }));
+    const bester = Math.max(...reihen.map((r) => r.wert));
+    return reihen.map((r) => ({ ...r, beste: bester > 0.15 && r.wert === bester }));
+  });
 
   $effect(() => {
     sichern(zustand);
@@ -43,6 +58,14 @@
 
   function leeren() {
     zustand = leererZustand();
+  }
+
+  /** Einen Vorschlag der Erkennung als Schritt übernehmen. */
+  function uebernimmFund(fund: Fund) {
+    const schritt = neuerSchritt(fund.codec.id);
+    schritt.optionen = { ...fund.optionen };
+    zustand.schritte.push(schritt);
+    erkennungOffen = false;
   }
 </script>
 
@@ -127,6 +150,38 @@
 
 <Textfeld text={ergebnis?.text ?? ''} uebernehmen={() => uebernehmen(ergebnis?.text ?? '')} />
 
+<section class="erkennung">
+  <button type="button" class="aufklapp" onclick={() => (erkennungOffen = !erkennungOffen)}>
+    {erkennungOffen ? '▾' : '▸'} Was ist das? · Code erkennen
+  </button>
+  {#if erkennungOffen}
+    {#if funde.length === 0}
+      <p class="hinweis">Dazu fällt mir nichts ein – zu kurz oder kein bekannter Code.</p>
+    {:else}
+      <ol class="funde">
+        {#each funde as fund (fund.codec.id)}
+          <li>
+            <button type="button" onclick={() => uebernimmFund(fund)}>
+              <span class="kopfzeile">
+                <strong>{fund.codec.name}</strong>
+                {#if optionenText(fund)}<span class="leise">{optionenText(fund)}</span>{/if}
+                <span class="balken" aria-hidden="true">
+                  <span style="width: {Math.round(fund.bewertung * 100)}%"></span>
+                </span>
+              </span>
+              <span class="mono vorschau">{fund.text.slice(0, 90)}</span>
+            </button>
+          </li>
+        {/each}
+      </ol>
+      <p class="hinweis">
+        Tippen fügt den Schritt hinzu. Der Balken zeigt, wie sehr das Ergebnis nach Sprache
+        aussieht – eine Hilfe, kein Urteil.
+      </p>
+    {/if}
+  {/if}
+</section>
+
 <section class="wand">
   <button type="button" class="aufklapp" onclick={() => (wandOffen = !wandOffen)}>
     {wandOffen ? '▾' : '▸'} Brute-Force-Wand · alle 26 Verschiebungen
@@ -136,9 +191,14 @@
       <p class="hinweis">Noch kein Text da.</p>
     {:else}
       <ol class="verschiebungen">
-        {#each alleVerschiebungen(ergebnis?.text ?? '') as reihe (reihe.schritte)}
+        {#each wand as reihe (reihe.schritte)}
           <li>
-            <button type="button" onclick={() => uebernehmen(reihe.text)} title="als Eingabe übernehmen">
+            <button
+              type="button"
+              class:beste={reihe.beste}
+              onclick={() => uebernehmen(reihe.text)}
+              title={`Sprachwert ${reihe.wert.toFixed(2)} – als Eingabe übernehmen`}
+            >
               <span class="nummer">{reihe.schritte}</span>
               <span class="mono">{reihe.text}</span>
             </button>
@@ -293,5 +353,63 @@
     flex: 0 0 2rem;
     color: var(--text-leise);
     font-size: 0.8rem;
+  }
+
+  .verschiebungen button.beste {
+    background: var(--flaeche-hoch);
+    border-left: 3px solid var(--akzent);
+  }
+
+  .erkennung {
+    margin-top: 20px;
+  }
+
+  .funde {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+
+  .funde button {
+    display: grid;
+    gap: 4px;
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    min-height: 0;
+  }
+
+  .kopfzeile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .leise {
+    color: var(--text-leise);
+    font-size: 0.8rem;
+  }
+
+  .balken {
+    flex: 1 0 60px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--grund);
+    overflow: hidden;
+  }
+
+  .balken span {
+    display: block;
+    height: 100%;
+    background: var(--akzent);
+  }
+
+  .vorschau {
+    color: var(--text-leise);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
   }
 </style>

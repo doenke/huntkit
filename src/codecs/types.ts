@@ -88,11 +88,15 @@ export interface Codec {
    */
   zeichne?(zeichen: string): Glyph | null;
 
-  /**
-   * Wie gut passt die Eingabe strukturell zu diesem Code? 0 bis 1.
-   * Grundlage für die Auto-Erkennung in Phase 4.
-   */
+  /** Wie gut passt die Eingabe strukturell zu diesem Code? 0 bis 1. */
   passt?(eingabe: string): number;
+
+  /**
+   * Einstellungen, die die Auto-Erkennung durchprobieren soll. Ohne Angabe
+   * werden nur die Standardwerte versucht. Caesar nennt hier alle 26
+   * Verschiebungen, ASCII seine drei Zahlensysteme.
+   */
+  erkennungsoptionen?: ReadonlyArray<OptionWerte>;
 }
 
 export function standardOptionen(codec: Codec): OptionWerte {

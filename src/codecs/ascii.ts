@@ -39,6 +39,8 @@ export const ascii: Codec = {
     }
   ],
 
+  erkennungsoptionen: [{ basis: '10' }, { basis: '2' }, { basis: '16' }],
+
   encode(eingabe, optionen) {
     const { basis, breite } = basisAus(optionen);
     // Leerzeichen sind hier echte Zeichen (Code 32) und kein Worttrenner –

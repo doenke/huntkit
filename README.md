@@ -37,6 +37,14 @@ Aus Phase 3 (Nachschlagen):
   Auslesen in wählbarer Reihenfolge und Sichern als Bild.
 - **Widerstandsfarbcode** – 4, 5 oder 6 Ringe, in beide Richtungen.
 
+Aus Phase 4 (Auto-Erkennung):
+
+- **„Was ist das?"** – die Eingabe gegen alle Codes werfen und eine Rangliste
+  bekommen. Ein Tipp übernimmt den Vorschlag als Schritt in die Kette.
+- **Sprachwert** – bewertet, ob ein Ergebnis sich wie Deutsch oder Englisch
+  liest. Er hebt in der Brute-Force-Wand die wahrscheinlichste der 26
+  Verschiebungen hervor.
+
 Grundlage der Zeichentabellen ist das Regelheft der Dortmunder Nachtschicht;
 Herkunft und Proben stehen in [`src/codecs/QUELLE.md`](src/codecs/QUELLE.md).
 

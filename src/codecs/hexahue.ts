@@ -46,6 +46,12 @@ export const hexahue: Codec = {
   decode: (eingabe) => zeichen.decode(eingabe),
   tabelle: () => zeichen.tabelle(),
 
+  passt(eingabe) {
+    const stuecke = eingabe.trim().split(/[\s/]+/).filter((s) => s.length > 0);
+    if (stuecke.length === 0) return 0;
+    return stuecke.filter((s) => /^[MRGYBC]{6}$/i.test(s)).length / stuecke.length;
+  },
+
   zeichne(gesucht): Glyph | null {
     const muster = NACH_ZEICHEN.get(gesucht) ?? NACH_ZEICHEN.get(gesucht.toUpperCase());
     if (!muster) return null;

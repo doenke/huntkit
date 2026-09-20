@@ -579,14 +579,14 @@ Push auf main
 | **1 – Textcodes** ✅ | Codec-Registry, Werkbank, ABC123, ASCII (dez/bin/hex), NATO, Morse, Caesar + Brute-Force-Wand, Zahlensysteme, Element-Attribut-Codec (§5.1) | Bereits die Hälfte von `development.md`, sofort einsetzbar |
 | **2 – Visuelle Codes** ✅ | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
 | **3 – Periodensystem & Widerstände** ✅ | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
-| **4 – Identify** | Sniffer, n-Gramm-Sprachmodell, Rangliste | „Was ist das überhaupt?" in einem Schritt |
+| **4 – Identify** ✅ | Sniffer, n-Gramm-Sprachmodell, Rangliste | „Was ist das überhaupt?" in einem Schritt |
 | **5 – Hunt-Extras** | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, QR-Scan, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
 
 Phasen 0–3 liefern das, was in `development.md` steht. 4 und 5 sind der Vorschlag darüber
 hinaus – Phase 1 ist bereits allein benutzbar, jede weitere Phase ist ein eigenständiger
 Zugewinn.
 
-**Stand:** Phase 0 bis 3 stehen. Gerüst, Offline-Betrieb, Themes und das automatische
+**Stand:** Phase 0 bis 4 stehen. Gerüst, Offline-Betrieb, Themes und das automatische
 Deployment laufen; Codec-Registry, Werkbank mit Schrittkette, Brute-Force-Wand und die
 Textcodes Morse, ABC123, ASCII, NATO, Caesar, Zahlensysteme und der Element-Schlüssel
 sind gebaut. Die Elementdaten aus Phase 3 liegen vor (Abschnitt 5.5).
@@ -615,7 +615,18 @@ Gruppe und Periode werden gerechnet, nicht gespeichert – die Stellung im Perio
 hängt nicht an der Quelle. Welches Layout gilt, steht über der Tafel, denn die Koordinaten
 hängen daran.
 
-Als Nächstes Phase 4: die Auto-Erkennung.
+Phase 4 bringt die Auto-Erkennung: „Was ist das?" wirft die Eingabe gegen alle Codes und
+liefert eine Rangliste. Zuerst der billige Struktur-Check, dann wird tatsächlich
+entschlüsselt und das Ergebnis danach bewertet, ob es sich wie Sprache liest – der zweite
+Schritt gibt den Ausschlag. Derselbe Sprachwert hebt in der Brute-Force-Wand die
+wahrscheinlichste der 26 Verschiebungen hervor.
+
+Der Sprachwert kommt bewusst ohne Wörterbuch und ohne trainiertes Modell aus:
+Buchstabenhäufigkeit, häufige Paare und häufige Dreiergruppen für Deutsch und Englisch.
+Gebraucht wird nur die Unterscheidung zwischen Sprache und Buchstabensalat, und die
+leisten die drei zusammen zuverlässig.
+
+Als Nächstes Phase 5: die Hunt-Extras.
 
 Das Periodensystem ist bewusst auf zwei Phasen verteilt: Die Schlüsselfunktion (§5.1) ist
 reine Datenarbeit ohne eigene Ansicht und läuft schon in Phase 1 mit; das Gitter mit
