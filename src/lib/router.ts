@@ -15,7 +15,9 @@ export const SEITEN: ReadonlyArray<{ id: Seite; titel: string }> = [
 const STANDARD: Seite = 'werkbank';
 
 export function ausHash(hash: string): Seite {
-  const name = hash.replace(/^#\/?/, '').split('/')[0];
+  // Alles ab ? gehört zu den Parametern – geteilte Links hängen dort den
+  // Werkbank-Stand an.
+  const name = hash.replace(/^#\/?/, '').split('?')[0]?.split('/')[0];
   return SEITEN.some((s) => s.id === name) ? (name as Seite) : STANDARD;
 }
 

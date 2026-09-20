@@ -34,6 +34,8 @@ export const caesar: Codec = {
   optionen: [
     { id: 'verschiebung', titel: 'Verschiebung', art: 'zahl', min: 0, max: 25, standard: 3 }
   ],
+  // Alle 26 Verschiebungen durchprobieren – genau dafür ist die Wand da.
+  erkennungsoptionen: Array.from({ length: 26 }, (_, verschiebung) => ({ verschiebung })),
   encode: (eingabe, optionen) => ergebnis(verschiebe(eingabe, schritteAus(optionen))),
   decode: (eingabe, optionen) => ergebnis(verschiebe(eingabe, -schritteAus(optionen))),
   tabelle(optionen): ReadonlyArray<TabellenEintrag> {

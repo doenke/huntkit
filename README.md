@@ -23,14 +23,60 @@ Phase 0 (Gerüst) und Phase 1 (Textcodes) stehen:
 
 Aus Phase 2 (visuelle Codes):
 
-- **Braille** – vollständig, mit Umlauten, Eszett und Zahlzeichen.
-- **Visual Picker** – Glyphe antippen statt tippen, Text sammeln und an die
-  Werkbank übergeben. Jeder Codec, der seine Zeichen zeichnen kann, bekommt ihn
-  automatisch.
+- **Braille, Winkeralphabet, Hexahue, Templercode, Fingeralphabet** – jeweils
+  mit Visual Picker: Zeichen antippen statt tippen, Text sammeln und an die
+  Werkbank übergeben.
+- **Umlaute** – Ä zu AE, ß zu SS und zurück, wie die Nachtschicht
+  Lösungswörter schreibt.
 
-Noch offen: Winkeralphabet, Hexahue, Flaggenalphabet, Templercode und
-Fingeralphabet. Dafür fehlt jeweils eine belastbare Vorlage – siehe „Zu klären"
-im Konzept.
+Aus Phase 3 (Nachschlagen):
+
+- **Periodensystem** als Gitter – 18 Spalten, 32 Spalten oder kompakt, mit Zoom,
+  Suche (`gold`, `serie:edelgase`, `z>50`, `primzahl`, `radioaktiv`) und
+  Detailkarte. Dazu Markierungsebenen mit Mengenoperationen, Musteransicht,
+  Auslesen in wählbarer Reihenfolge und Sichern als Bild.
+- **Widerstandsfarbcode** – 4, 5 oder 6 Ringe, in beide Richtungen.
+
+Aus Phase 4 (Auto-Erkennung):
+
+- **„Was ist das?"** – die Eingabe gegen alle Codes werfen und eine Rangliste
+  bekommen. Ein Tipp übernimmt den Vorschlag als Schritt in die Kette.
+- **Sprachwert** – bewertet, ob ein Ergebnis sich wie Deutsch oder Englisch
+  liest. Er hebt in der Brute-Force-Wand die wahrscheinlichste der 26
+  Verschiebungen hervor.
+
+Aus Phase 5 vorgezogen:
+
+- **Extraktionshelfer** – jeden n-ten Buchstaben, Buchstaben an einer
+  Stellenliste, den n-ten Buchstaben jedes Wortes, und Text durch ein Gitter
+  lesen (spaltenweise, Zeilen abwechselnd, Diagonalen, Spirale).
+- **Nacht-Ausrüstung** – Bildschirm wachhalten, Kamera als Lupe mit Licht,
+  und ein Notizzettel, der das Neuladen übersteht.
+
+Rest von Phase 5:
+
+- **Klassische Chiffren** – Atbash, Vigenère, Bacon, Polybios, Zaunmuster,
+  Handytastatur. Dazu römische Zahlen, Base64 und Base32.
+- **Häufigkeiten** – zeigt über den Koinzidenzindex, *welche Art* Chiffre
+  vorliegt.
+- **Wörter** – Wortmustersuche (`?A??LE`, `GOLD*`) und Anagramme über ein
+  Wörterbuch, das beim ersten Gebrauch geladen wird und danach offline bleibt.
+- **Koordinaten** – zwischen Dezimalgrad, Grad mit Dezimalminuten (so gibt die
+  Nachtschicht Standorte an) und Grad/Minuten/Sekunden.
+- **Element-Speller** – Wörter in Elementsymbolen, mit *allen* Lesarten.
+- **QR- und Barcodes** – über den Codeleser des Browsers, ohne Zusatzpaket.
+- **Link teilen** – der ganze Werkbank-Stand steckt im Fragment der Adresse und
+  erreicht nie einen Server.
+
+Grundlage der Zeichentabellen ist das Regelheft der Dortmunder Nachtschicht;
+Herkunft und Proben stehen in [`src/codecs/QUELLE.md`](src/codecs/QUELLE.md).
+
+Alle Zeichen sind eigene SVG-Zeichnungen. Einzige Ausnahme ist das
+Fingeralphabet: Dessen Tafel stammt vom Landesverband Bayern der Gehörlosen
+e. V. und steht unter CC BY-SA 4.0 – siehe
+[`public/finger/LIZENZ.md`](public/finger/LIZENZ.md). Das Wörterbuch stammt aus
+[an-array-of-german-words](https://github.com/hexapode/an-array-of-german-words)
+(MIT) – siehe [`data/WOERTERBUCH.md`](data/WOERTERBUCH.md).
 
 ## Entwickeln
 

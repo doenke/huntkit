@@ -577,24 +577,73 @@ Push auf main
 |---|---|---|
 | **0 – Gerüst** ✅ | Vite/Svelte/TS, eigener Service Worker, Dark Theme, Actions-Build + Upload auf den Webspace | Installierbare leere App unter huntkit.kanonenwiese.de, offline lauffähig |
 | **1 – Textcodes** ✅ | Codec-Registry, Werkbank, ABC123, ASCII (dez/bin/hex), NATO, Morse, Caesar + Brute-Force-Wand, Zahlensysteme, Element-Attribut-Codec (§5.1) | Bereits die Hälfte von `development.md`, sofort einsetzbar |
-| **2 – Visuelle Codes** ◐ | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
-| **3 – Periodensystem & Widerstände** | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
-| **4 – Identify** | Sniffer, n-Gramm-Sprachmodell, Rangliste | „Was ist das überhaupt?" in einem Schritt |
-| **5 – Hunt-Extras** | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, QR-Scan, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
+| **2 – Visuelle Codes** ✅ | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
+| **3 – Periodensystem & Widerstände** ✅ | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
+| **4 – Identify** ✅ | Sniffer, n-Gramm-Sprachmodell, Rangliste | „Was ist das überhaupt?" in einem Schritt |
+| **5 – Hunt-Extras** ✅ | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, QR-Scan, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
 
 Phasen 0–3 liefern das, was in `development.md` steht. 4 und 5 sind der Vorschlag darüber
 hinaus – Phase 1 ist bereits allein benutzbar, jede weitere Phase ist ein eigenständiger
 Zugewinn.
 
-**Stand:** Phase 0 und 1 stehen, Phase 2 zur Hälfte. Gerüst, Offline-Betrieb, Themes und das automatische
+**Stand:** Alle fünf Phasen stehen. Gerüst, Offline-Betrieb, Themes und das automatische
 Deployment laufen; Codec-Registry, Werkbank mit Schrittkette, Brute-Force-Wand und die
 Textcodes Morse, ABC123, ASCII, NATO, Caesar, Zahlensysteme und der Element-Schlüssel
 sind gebaut. Die Elementdaten aus Phase 3 liegen vor (Abschnitt 5.5).
 
-Aus Phase 2 stehen die Infrastruktur und Braille: Codecs können ihre Zeichen als SVG
-zeichnen, und daraus entsteht automatisch der Visual Picker.
+Aus Phase 2 stehen die Infrastruktur und fünf der sechs Codes: Braille, Winkeralphabet,
+Hexahue und Templercode, dazu der Visual Picker. Grundlage ist das Regelheft der
+Dortmunder Nachtschicht 2026 – damit gelten genau die Varianten der Veranstaltung, was
+beim Templercode den Ausschlag gibt. Herkunft und Proben stehen in
+[`src/codecs/QUELLE.md`](src/codecs/QUELLE.md).
 
-Die fünf übrigen visuellen Codes hängen an einer Vorlage – siehe unten unter „Zu klären".
+Dazu aus demselben Regelheft die Umlautregel als eigenes Werkzeug: Lösungswörter werden
+dort „wie in gängigen Kreuzworträtseln" geschrieben, Ä als AE und ß als SS.
+
+Das **Fingeralphabet** ist der einzige Code, dessen Zeichen keine eigene Zeichnung sind:
+Die Tafel des Landesverbands Bayern der Gehörlosen e. V. steht unter CC BY-SA 4.0 und ist
+mit Namensnennung übernommen. 30 Handformen nachzuzeichnen, ohne sie unkenntlich zu
+machen, wäre eine eigene Kunst – die Vorlage ist besser als alles, was hier entstünde.
+
+Phase 3 erfüllt die beiden verbliebenen Rollen des Periodensystems: das Gitter mit
+umschaltbaren Layouts (18 Spalten, 32 Spalten, kompakt), Zoom, Suche und Detailkarte sowie
+die Zeichenfläche mit Markierungsebenen, regelbasierter Auswahl, Mengenoperationen,
+Musteransicht und Auslesen in wählbarer Reihenfolge. Dazu der Widerstandsfarbcode in beide
+Richtungen.
+
+Gruppe und Periode werden gerechnet, nicht gespeichert – die Stellung im Periodensystem
+hängt nicht an der Quelle. Welches Layout gilt, steht über der Tafel, denn die Koordinaten
+hängen daran.
+
+Phase 4 bringt die Auto-Erkennung: „Was ist das?" wirft die Eingabe gegen alle Codes und
+liefert eine Rangliste. Zuerst der billige Struktur-Check, dann wird tatsächlich
+entschlüsselt und das Ergebnis danach bewertet, ob es sich wie Sprache liest – der zweite
+Schritt gibt den Ausschlag. Derselbe Sprachwert hebt in der Brute-Force-Wand die
+wahrscheinlichste der 26 Verschiebungen hervor.
+
+Der Sprachwert kommt bewusst ohne Wörterbuch und ohne trainiertes Modell aus:
+Buchstabenhäufigkeit, häufige Paare und häufige Dreiergruppen für Deutsch und Englisch.
+Gebraucht wird nur die Unterscheidung zwischen Sprache und Buchstabensalat, und die
+leisten die drei zusammen zuverlässig.
+
+Aus Phase 5 sind die **Extraktionshelfer** und die **Nacht-Ausrüstung** vorgezogen – die
+beiden Stücke, die im Feld am schnellsten fehlen.
+
+Die Extraktionshelfer sind einseitige Schritte: Aus „jeden dritten Buchstaben“ lässt sich
+der Ausgangstext nicht zurückgewinnen. Die Oberfläche blendet den Richtungsschalter dort
+aus, statt eine Umkehr vorzutäuschen.
+
+Dazu kamen die übrigen Hunt-Extras: die klassischen Chiffren (Atbash, Vigenère, Bacon,
+Polybios, Zaunmuster, Handytastatur), römische Zahlen und Base64/32, die Häufigkeitsanalyse
+mit Koinzidenzindex, der Element-Speller mit allen Zerlegungen, Wortmuster- und
+Anagrammsuche über ein Wörterbuch im Gerät, der Koordinaten-Umrechner in der Schreibweise
+der Nachtschicht, das Lesen von QR- und Barcodes und das Teilen des Werkbank-Stands als
+Link.
+
+Zwei Entscheidungen dabei: Der Codeleser ist der des Browsers, nicht eine eingebundene
+Bibliothek – die wäre die größte Abhängigkeit der App geworden, für etwas, das viele Geräte
+mitbringen. Und der geteilte Link trägt alles im Fragment hinter dem Doppelkreuz, das der
+Browser nie an einen Server schickt: Teilen im Team, ohne dass die App ein Backend bekäme.
 
 Das Periodensystem ist bewusst auf zwei Phasen verteilt: Die Schlüsselfunktion (§5.1) ist
 reine Datenarbeit ohne eigene Ansicht und läuft schon in Phase 1 mit; das Gitter mit
@@ -606,15 +655,16 @@ ohne die visuellen Codes zu verzögern.
 ## 9. Risiken und offene Punkte
 
 - **Lizenzen bei Daten und Bildern.** Elementdaten siehe 5.5 – Herkunft dokumentieren.
-  Glyphen selbst zeichnen statt Grafiken zu übernehmen. Beim Wörterbuch auf die Lizenz
+  Glyphen selbst zeichnen statt Grafiken zu übernehmen; einzige bewusste Ausnahme ist das
+  Fingeralphabet unter CC BY-SA 4.0 mit Namensnennung. Beim Wörterbuch auf die Lizenz
   achten (freie Wortlisten, Wiktionary-Ableitungen).
 - **Zugangsdaten zum Webspace.** Liegen als GitHub Secrets und sind damit nur so gut
   geschützt wie das GitHub-Konto. Wenn möglich einen eigenen SSH-Schlüssel nur für das
   Deployment anlegen, dessen Zugriff auf das Zielverzeichnis beschränkt ist – dann ist im
   schlimmsten Fall die Webseite betroffen und nicht der ganze Webspace.
 - **Fingeralphabet ist nicht eindeutig.** DGS (deutsch) und ASL (amerikanisch)
-  unterscheiden sich deutlich. Für die Nachtschicht DGS, für den Mystery Hunt ASL – beide
-  vorsehen und klar beschriften.
+  unterscheiden sich deutlich. Das Regelheft der Nachtschicht zeigt DGS, mit Ä, Ö, Ü und
+  Sch.
 - **Hexahue-Farben.** Muss exakt stimmen und braucht Kontrastprüfung; bei Nacht und auf
   schlechten Displays sind Farbcodes heikel. Zusätzlich Farbnamen einblenden.
 - **iOS-Eigenheiten.** Taschenlampen-Steuerung ist per Web-API eingeschränkt, Safari räumt
@@ -622,8 +672,11 @@ ohne die visuellen Codes zu verzögern.
   Gerät testen, nicht nur im Simulator.
 - **Akku.** Kamera, Taschenlampe und Wake Lock sind die größten Verbraucher. Sparsam
   einsetzen und den Wake Lock automatisch freigeben.
-- **Regeln der Veranstaltung.** Vor dem Einsatz prüfen, ob und welche Hilfsmittel bei der
-  Nachtschicht zugelassen sind. Beim MIT Mystery Hunt sind Werkzeuge üblich und erwünscht.
+- ~~**Regeln der Veranstaltung.**~~ Geklärt: Das Regelheft nennt als Hilfsmittel
+  ausdrücklich „Grips, Infoheft und Ausrüstungsgegenstände" und hält fest, dass „die
+  Nutzung des Internets bei manchen Rätseln hilfreich sein" kann. Die App ist also
+  zulässig. Zu beachten: Der Lösungsweg muss auf Nachfrage vorzeigbar sein – ein weiteres
+  Argument für die Schrittkette der Werkbank, die genau das protokolliert.
 
 - **Periodensystem-Layouts.** Rätsel setzen stillschweigend eine bestimmte Darstellung
   voraus. Die Layoutwahl muss in der Oberfläche sichtbar sein, sonst liest man Koordinaten
@@ -631,13 +684,8 @@ ohne die visuellen Codes zu verzögern.
 
 ### Zu klären
 
-1. **Vorlagen für die fünf übrigen visuellen Codes.** Winkeralphabet, Hexahue,
-   Flaggenalphabet, Templercode und Fingeralphabet brauchen je eine Zeichentabelle, die
-   *stimmt*. Aus dem Gedächtnis bekomme ich die nicht sicher zusammen, und eine Tabelle,
-   die zu 90 % stimmt, ist im Hunt schlimmer als gar keine: Man merkt den Fehler nicht,
-   sondern sucht ihn stundenlang im Rätsel. Am schnellsten geht es wie beim Periodensystem
-   – eine Vorlage ins Repo legen, ich lese sie aus. Beim Templercode kommt eine
-   Entscheidung dazu: Es sind mehrere, sich widersprechende Varianten im Umlauf.
+1. **Flaggenalphabet.** Steht in `development.md`, kommt im Regelheft der Nachtschicht
+   aber nicht vor. Weiterhin gewünscht? Dann brauche ich dafür eine Vorlage.
 2. **Zugang für das Deployment:** SSH-Schlüssel oder Passwort? Ein eigener Schlüssel nur
    für das Deployment wäre sauberer – den öffentlichen Teil legst du auf dem Webspace ab,
    den privaten als GitHub Secret.

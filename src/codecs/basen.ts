@@ -50,6 +50,9 @@ export const basen: Codec = {
     { id: 'von', titel: 'von Basis', standard: 16, ...BASIS_OPTION },
     { id: 'nach', titel: 'nach Basis', standard: 10, ...BASIS_OPTION }
   ],
+  erkennungsoptionen: [
+    { von: 16, nach: 10 }, { von: 2, nach: 10 }, { von: 8, nach: 10 }, { von: 10, nach: 16 }
+  ],
   encode: (eingabe, optionen) =>
     rechne(eingabe, zahl(optionen, 'von', 16), zahl(optionen, 'nach', 10)),
   // Rückwärts heißt hier schlicht: andersherum rechnen.

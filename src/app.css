@@ -10,6 +10,23 @@
   --akzent-text: #06121d;
   --warn: #e6b45a;
 
+  /* Strichzeichnungen liegen schwarz auf weiß vor und werden für die dunklen
+     Themen umgekehrt, damit sie nicht als grelle Kacheln blenden. */
+  --bildfilter: invert(1);
+
+  /* Farben der Elementserien: dieselben Farbtöne wie auf der Tafel der
+     Nachtschicht, nur abgedunkelt – helle Pastelltöne blenden im Dunkeln. */
+  --serie-alkalimetalle: #5c3436;
+  --serie-erdalkalimetalle: #5c4a2e;
+  --serie-uebergangsmetalle: #4a3336;
+  --serie-lanthanoide: #4a3350;
+  --serie-actinoide: #55304a;
+  --serie-metalle: #3d434b;
+  --serie-halbmetalle: #4a4a33;
+  --serie-nichtmetalle: #2f4a35;
+  --serie-halogene: #4f4a2c;
+  --serie-edelgase: #2c4a4f;
+
   --radius: 10px;
   --tap: 48px; /* Mindestgroesse fuer Tippziele – nachts, im Stehen, mit Handschuh */
 
@@ -30,6 +47,19 @@
 }
 
 :root[data-theme='light'] {
+  /* Im hellen Thema die Originaltöne der Tafel. */
+  --serie-alkalimetalle: #ffd5d5;
+  --serie-erdalkalimetalle: #fff5e8;
+  --serie-uebergangsmetalle: #ffeded;
+  --serie-lanthanoide: #ffedff;
+  --serie-actinoide: #ffe3f1;
+  --serie-metalle: #f1f1f1;
+  --serie-halbmetalle: #f1f1e3;
+  --serie-nichtmetalle: #e4ffe4;
+  --serie-halogene: #ffffe3;
+  --serie-edelgase: #edffff;
+
+  --bildfilter: none;
   --grund: #f7f8fa;
   --flaeche: #ffffff;
   --flaeche-hoch: #eef1f5;
@@ -82,4 +112,10 @@ a:focus-visible {
 
 code, pre, .mono {
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* Gilt für die Glyphen der Nachschlagecodes; sie werden als Markup eingesetzt
+   und deshalb hier global angesprochen. */
+svg image {
+  filter: var(--bildfilter);
 }

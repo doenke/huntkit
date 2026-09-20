@@ -1,12 +1,61 @@
 <script lang="ts">
-  // Platzhalter. Periodensystem und Widerstandscode folgen in Phase 3;
-  // die Elementdaten liegen bereits als data/elements.json im Repo.
+  import Koordinaten from '../ui/Koordinaten.svelte';
+  import Periodensystem from '../ui/Periodensystem.svelte';
+  import Widerstand from '../ui/Widerstand.svelte';
+  import Woerter from '../ui/Woerter.svelte';
+
+  type Bereich = 'pse' | 'widerstand' | 'woerter' | 'koordinaten';
+
+  const BEREICHE: ReadonlyArray<{ id: Bereich; titel: string }> = [
+    { id: 'pse', titel: 'Periodensystem' },
+    { id: 'woerter', titel: 'Wörter' },
+    { id: 'widerstand', titel: 'Widerstände' },
+    { id: 'koordinaten', titel: 'Koordinaten' }
+  ];
+
+  let bereich = $state<Bereich>('pse');
 </script>
 
 <h2>Nachschlagen</h2>
-<p>Periodensystem und Widerstandscode.</p>
-<p class="leise">Kommt in Phase 3. Die Elementdaten liegen schon bereit.</p>
+
+<div class="reiter">
+  {#each BEREICHE as eintrag (eintrag.id)}
+    <button
+      type="button"
+      aria-pressed={bereich === eintrag.id}
+      onclick={() => (bereich = eintrag.id)}
+    >
+      {eintrag.titel}
+    </button>
+  {/each}
+</div>
+
+{#if bereich === 'pse'}
+  <Periodensystem />
+{:else if bereich === 'woerter'}
+  <Woerter />
+{:else if bereich === 'widerstand'}
+  <Widerstand />
+{:else}
+  <Koordinaten />
+{/if}
 
 <style>
-  .leise { color: var(--text-leise); }
+  .reiter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .reiter button {
+    flex: 1 1 8rem;
+    min-height: 44px;
+    font-size: 0.9rem;
+  }
+
+  .reiter button[aria-pressed='true'] {
+    border-color: var(--akzent);
+    color: var(--akzent);
+  }
 </style>

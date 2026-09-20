@@ -114,11 +114,15 @@ describe('Vollständigkeit der Tabellen', () => {
   });
 
   it('vergibt innerhalb eines Codes keine Darstellung doppelt', () => {
+    // Einzige Ausnahme: Im Templercode liegen I und J auf derselben Form. Das
+    // ist keine Nachlässigkeit, sondern steht so in der Quelle – beim
+    // Entschlüsseln bleibt die Stelle deshalb mehrdeutig.
+    const erlaubt: Record<string, number> = { templer: 1 };
     for (const c of CODECS) {
       if (!c.tabelle) continue;
-      const eintraege = c.tabelle(standardOptionen(c));
-      const darstellungen = eintraege.map((e) => e.darstellung);
-      expect(new Set(darstellungen).size, `${c.id}`).toBe(darstellungen.length);
+      const darstellungen = c.tabelle(standardOptionen(c)).map((e) => e.darstellung);
+      const doppelt = darstellungen.length - new Set(darstellungen).size;
+      expect(doppelt, `${c.id}`).toBe(erlaubt[c.id] ?? 0);
     }
   });
 });

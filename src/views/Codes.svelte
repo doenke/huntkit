@@ -39,7 +39,13 @@
         {#if codec.zeichne}
           <VisualPicker {codec} />
         {/if}
-        {#if codec.tabelle}
+        {#if codec.quelle}
+          <p class="quelle">
+            Bild: {codec.quelle.text}.
+            <a href={codec.quelle.url} target="_blank" rel="noreferrer">Quelle</a>
+          </p>
+        {/if}
+        {#if codec.tabelle && !codec.nurNachschlagen}
           <div class="tabelle">
             {#each codec.tabelle(werte[codec.id]) as eintrag (eintrag.zeichen)}
               <div class="zelle">
@@ -48,7 +54,7 @@
               </div>
             {/each}
           </div>
-        {:else}
+        {:else if !codec.nurNachschlagen}
           <p class="leise ohne">Für diesen Code gibt es keine feste Tabelle – er rechnet.</p>
         {/if}
       {/if}
@@ -131,5 +137,12 @@
 
   .ohne {
     padding: 0 12px 12px;
+  }
+
+  .quelle {
+    margin: 0;
+    padding: 0 12px 12px;
+    color: var(--text-leise);
+    font-size: 0.75rem;
   }
 </style>

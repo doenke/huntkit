@@ -3,9 +3,17 @@ import { ascii } from './ascii';
 import { basen } from './basen';
 import { braille } from './braille';
 import { caesar } from './caesar';
+import { atbash, bacon, handytasten, polybios, vigenereCodec, zaun } from './chiffren';
+import { ausWoertern, gitter, jedesN, stellen } from './extrahieren';
 import { elemente } from './elemente';
+import { fingeralphabet } from './fingeralphabet';
+import { hexahue } from './hexahue';
 import { morse } from './morse';
+import { base32, base64, roemisch } from './zahlen';
 import { nato } from './nato';
+import { templer } from './templer';
+import { umlaute } from './umlaute';
+import { winker } from './winker';
 import type { Codec } from './types';
 
 /**
@@ -19,8 +27,26 @@ export const CODECS: ReadonlyArray<Codec> = [
   ascii,
   nato,
   braille,
+  winker,
+  hexahue,
+  templer,
+  fingeralphabet,
   caesar,
+  atbash,
+  vigenereCodec,
+  bacon,
+  polybios,
+  zaun,
+  handytasten,
   basen,
+  roemisch,
+  base64,
+  base32,
+  umlaute,
+  jedesN,
+  stellen,
+  ausWoertern,
+  gitter,
   elemente
 ];
 

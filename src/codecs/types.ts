@@ -41,6 +41,13 @@ export type OptionSpec =
       art: 'auswahl';
       werte: ReadonlyArray<{ wert: string; titel: string }>;
       standard: string;
+    }
+  | {
+      id: string;
+      titel: string;
+      art: 'text';
+      standard: string;
+      platzhalter?: string;
     };
 
 export interface TabellenEintrag {
@@ -65,6 +72,23 @@ export interface Codec {
   beschreibung: string;
   optionen?: ReadonlyArray<OptionSpec>;
 
+  /**
+   * Reiner Nachschlagecode: Man liest ihn ab, rechnet aber nichts um. Solche
+   * Codes tauchen in der Werkbank nicht als Schritt auf – ein Schritt, der
+   * nichts tut, stiftet dort nur Verwirrung.
+   */
+  nurNachschlagen?: boolean;
+
+  /**
+   * Der Schritt kennt keine Gegenrichtung. Aus „jeden dritten Buchstaben“ lässt
+   * sich der ursprüngliche Text nicht zurückgewinnen – die Oberfläche blendet
+   * den Richtungsschalter dann aus, statt eine Umkehr vorzutäuschen.
+   */
+  einseitig?: boolean;
+
+  /** Herkunftsangabe, wenn die Zeichen aus einer fremden Vorlage stammen. */
+  quelle?: { text: string; url: string };
+
   encode(eingabe: string, optionen?: OptionWerte): CodecErgebnis;
   decode(eingabe: string, optionen?: OptionWerte): CodecErgebnis;
 
@@ -78,11 +102,15 @@ export interface Codec {
    */
   zeichne?(zeichen: string): Glyph | null;
 
-  /**
-   * Wie gut passt die Eingabe strukturell zu diesem Code? 0 bis 1.
-   * Grundlage für die Auto-Erkennung in Phase 4.
-   */
+  /** Wie gut passt die Eingabe strukturell zu diesem Code? 0 bis 1. */
   passt?(eingabe: string): number;
+
+  /**
+   * Einstellungen, die die Auto-Erkennung durchprobieren soll. Ohne Angabe
+   * werden nur die Standardwerte versucht. Caesar nennt hier alle 26
+   * Verschiebungen, ASCII seine drei Zahlensysteme.
+   */
+  erkennungsoptionen?: ReadonlyArray<OptionWerte>;
 }
 
 export function standardOptionen(codec: Codec): OptionWerte {

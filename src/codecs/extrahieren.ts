@@ -1,0 +1,208 @@
+import { ergebnis, text, zahl } from './hilfen';
+import type { Codec, OptionWerte } from './types';
+
+/**
+ * Extraktionshelfer.
+ *
+ * Der letzte Schritt fast jedes Rätsels: „nimm jeden dritten Buchstaben“,
+ * „lies die Spalten“, „die Anfangsbuchstaben ergeben das Lösungswort“. Von Hand
+ * verzählt man sich dabei – nachts zuverlässig.
+ *
+ * Alle Helfer sind einseitig: Aus dem Ergebnis lässt sich der Ausgangstext
+ * nicht zurückgewinnen.
+ */
+
+function buchstaben(eingabe: string): string[] {
+  return [...eingabe].filter((z) => /\p{L}|\p{N}/u.test(z));
+}
+
+const GRUNDLAGE = {
+  id: 'grundlage',
+  titel: 'zählt',
+  art: 'auswahl',
+  standard: 'buchstaben',
+  werte: [
+    { wert: 'buchstaben', titel: 'nur Buchstaben und Ziffern' },
+    { wert: 'zeichen', titel: 'alle Zeichen' }
+  ]
+} as const;
+
+function zeichenliste(eingabe: string, optionen: OptionWerte | undefined): string[] {
+  return text(optionen, 'grundlage', 'buchstaben') === 'zeichen'
+    ? [...eingabe]
+    : buchstaben(eingabe);
+}
+
+export const jedesN: Codec = {
+  id: 'jedes-n',
+  name: 'Jeden n-ten',
+  beschreibung: 'Aus dem Text jeden n-ten Buchstaben herausziehen.',
+  einseitig: true,
+  optionen: [
+    { id: 'n', titel: 'jeden', art: 'zahl', min: 1, max: 40, standard: 3 },
+    { id: 'versatz', titel: 'ab Stelle', art: 'zahl', min: 1, max: 40, standard: 1 },
+    GRUNDLAGE
+  ],
+  encode: (eingabe, optionen) => {
+    const liste = zeichenliste(eingabe, optionen);
+    const n = Math.max(1, zahl(optionen, 'n', 3));
+    const start = Math.max(1, zahl(optionen, 'versatz', 1)) - 1;
+    const heraus: string[] = [];
+    for (let i = start; i < liste.length; i += n) heraus.push(liste[i] as string);
+    return ergebnis(heraus.join(''));
+  },
+  decode: (eingabe, optionen) => jedesN.encode(eingabe, optionen)
+};
+
+export const stellen: Codec = {
+  id: 'stellen',
+  name: 'Buchstaben an Stellen',
+  beschreibung: 'Eine Liste von Stellen angeben, z.B. 3,1,4,1,5 – gezählt ab 1.',
+  einseitig: true,
+  optionen: [
+    { id: 'liste', titel: 'Stellen', art: 'text', standard: '1', platzhalter: '3,1,4,1,5' },
+    GRUNDLAGE
+  ],
+  encode: (eingabe, optionen) => {
+    const liste = zeichenliste(eingabe, optionen);
+    const stellenliste = text(optionen, 'liste', '1')
+      .split(/[^\d-]+/)
+      .filter((s) => s.length > 0)
+      .map(Number)
+      .filter((n) => Number.isFinite(n));
+    const luecken: { position: number; zeichen: string }[] = [];
+    const heraus = stellenliste.map((stelle, i) => {
+      // Negative Angaben zählen von hinten: −1 ist der letzte Buchstabe.
+      const index = stelle < 0 ? liste.length + stelle : stelle - 1;
+      const zeichen = liste[index];
+      if (zeichen === undefined) {
+        luecken.push({ position: i, zeichen: String(stelle) });
+        return '';
+      }
+      return zeichen;
+    });
+    return ergebnis(heraus.join(''), luecken);
+  },
+  decode: (eingabe, optionen) => stellen.encode(eingabe, optionen)
+};
+
+export const ausWoertern: Codec = {
+  id: 'aus-woertern',
+  name: 'Aus jedem Wort',
+  beschreibung: 'Den n-ten Buchstaben jedes Wortes nehmen – Anfangsbuchstaben sind n = 1.',
+  einseitig: true,
+  optionen: [
+    { id: 'stelle', titel: 'Buchstabe Nr.', art: 'zahl', min: -10, max: 10, standard: 1 }
+  ],
+  encode: (eingabe, optionen) => {
+    const stelle = zahl(optionen, 'stelle', 1);
+    const luecken: { position: number; zeichen: string }[] = [];
+    const heraus = eingabe
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0)
+      .map((wort, i) => {
+        const zeichen = [...wort].filter((z) => /\p{L}|\p{N}/u.test(z));
+        const index = stelle < 0 ? zeichen.length + stelle : Math.max(1, stelle) - 1;
+        const treffer = zeichen[index];
+        if (treffer === undefined) {
+          luecken.push({ position: i, zeichen: wort });
+          return '';
+        }
+        return treffer;
+      });
+    return ergebnis(heraus.join(''), luecken);
+  },
+  decode: (eingabe, optionen) => ausWoertern.encode(eingabe, optionen)
+};
+
+/** Liest ein zeilenweise gefülltes Gitter in verschiedenen Richtungen aus. */
+export function gitterLesen(zeichen: string[], breite: number, richtung: string): string {
+  const b = Math.max(1, breite);
+  const hoehe = Math.ceil(zeichen.length / b);
+  const feld = (zeile: number, spalte: number) => zeichen[zeile * b + spalte] ?? '';
+
+  if (richtung === 'spalten') {
+    const heraus: string[] = [];
+    for (let s = 0; s < b; s++) for (let z = 0; z < hoehe; z++) heraus.push(feld(z, s));
+    return heraus.join('');
+  }
+
+  if (richtung === 'bustrophedon') {
+    // Wie der Ochse pflügt: Zeile für Zeile, jede zweite rückwärts.
+    const heraus: string[] = [];
+    for (let z = 0; z < hoehe; z++) {
+      for (let s = 0; s < b; s++) heraus.push(feld(z, z % 2 === 0 ? s : b - 1 - s));
+    }
+    return heraus.join('');
+  }
+
+  if (richtung === 'diagonalen') {
+    const heraus: string[] = [];
+    for (let d = 0; d <= hoehe + b - 2; d++) {
+      for (let z = 0; z < hoehe; z++) {
+        const s = d - z;
+        if (s >= 0 && s < b) heraus.push(feld(z, s));
+      }
+    }
+    return heraus.join('');
+  }
+
+  if (richtung === 'spirale') {
+    const heraus: string[] = [];
+    let oben = 0;
+    let unten = hoehe - 1;
+    let links = 0;
+    let rechts = b - 1;
+    while (oben <= unten && links <= rechts) {
+      for (let s = links; s <= rechts; s++) heraus.push(feld(oben, s));
+      oben++;
+      for (let z = oben; z <= unten; z++) heraus.push(feld(z, rechts));
+      rechts--;
+      if (oben <= unten) {
+        for (let s = rechts; s >= links; s--) heraus.push(feld(unten, s));
+        unten--;
+      }
+      if (links <= rechts) {
+        for (let z = unten; z >= oben; z--) heraus.push(feld(z, links));
+        links++;
+      }
+    }
+    return heraus.join('');
+  }
+
+  return zeichen.join('');
+}
+
+export const gitter: Codec = {
+  id: 'gitter',
+  name: 'Gitter lesen',
+  beschreibung: 'Text zeilenweise in ein Gitter füllen und in anderer Richtung auslesen.',
+  einseitig: true,
+  optionen: [
+    { id: 'breite', titel: 'Spalten', art: 'zahl', min: 2, max: 40, standard: 5 },
+    {
+      id: 'richtung',
+      titel: 'lesen',
+      art: 'auswahl',
+      standard: 'spalten',
+      werte: [
+        { wert: 'spalten', titel: 'spaltenweise' },
+        { wert: 'bustrophedon', titel: 'Zeilen abwechselnd' },
+        { wert: 'diagonalen', titel: 'Diagonalen' },
+        { wert: 'spirale', titel: 'Spirale' },
+        { wert: 'zeilen', titel: 'zeilenweise' }
+      ]
+    },
+    GRUNDLAGE
+  ],
+  encode: (eingabe, optionen) =>
+    ergebnis(
+      gitterLesen(
+        zeichenliste(eingabe, optionen),
+        zahl(optionen, 'breite', 5),
+        text(optionen, 'richtung', 'spalten')
+      )
+    ),
+  decode: (eingabe, optionen) => gitter.encode(eingabe, optionen)
+};

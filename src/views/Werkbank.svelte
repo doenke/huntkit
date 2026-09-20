@@ -1,6 +1,10 @@
 <script lang="ts">
   import { alleVerschiebungen } from '../codecs/caesar';
   import { CODECS, codec } from '../codecs/registry';
+  import { erkenne, optionenText, type Fund } from '../lib/erkennen';
+  import { sprachwert } from '../lib/sprachwert';
+  import { analysiere } from '../lib/frequenz';
+  import { alsLink, ausAdresse } from '../lib/teilen';
   import {
     anwenden,
     laden,
@@ -14,9 +18,32 @@
 
   let zustand = $state<Werkbankzustand>(laden());
   let wandOffen = $state(false);
+  let erkennungOffen = $state(false);
+  let haeufigkeitenOffen = $state(false);
+  let linkStand = $state('');
+
+  // Ein geteilter Link bringt einen fertigen Stand mit; er hat Vorrang vor dem,
+  // was zuletzt auf diesem Gerät offen war.
+  $effect(() => {
+    void ausAdresse().then((geteilt) => {
+      if (geteilt) zustand = geteilt;
+    });
+  });
 
   const staende = $derived(anwenden(zustand));
   const ergebnis = $derived(staende[staende.length - 1]);
+  const funde = $derived(erkennungOffen ? erkenne(ergebnis?.text ?? '') : []);
+
+  /** Die 26 Verschiebungen samt Sprachwert – der beste wird hervorgehoben. */
+  const wand = $derived.by(() => {
+    if (!wandOffen) return [];
+    const reihen = alleVerschiebungen(ergebnis?.text ?? '').map((r) => ({
+      ...r,
+      wert: sprachwert(r.text)
+    }));
+    const bester = Math.max(...reihen.map((r) => r.wert));
+    return reihen.map((r) => ({ ...r, beste: bester > 0.15 && r.wert === bester }));
+  });
 
   $effect(() => {
     sichern(zustand);
@@ -44,6 +71,25 @@
   function leeren() {
     zustand = leererZustand();
   }
+
+  async function linkTeilen() {
+    const link = await alsLink(zustand);
+    try {
+      await navigator.clipboard.writeText(link);
+      linkStand = 'Link kopiert';
+    } catch {
+      linkStand = link;
+    }
+    setTimeout(() => (linkStand = ''), 4000);
+  }
+
+  /** Einen Vorschlag der Erkennung als Schritt übernehmen. */
+  function uebernimmFund(fund: Fund) {
+    const schritt = neuerSchritt(fund.codec.id);
+    schritt.optionen = { ...fund.optionen };
+    zustand.schritte.push(schritt);
+    erkennungOffen = false;
+  }
 </script>
 
 <h2>Werkbank</h2>
@@ -68,13 +114,15 @@
       <div class="zeile">
         <strong>{gewaehlt?.name ?? schritt.codecId}</strong>
         <div class="steuerung">
-          <button
-            type="button"
-            onclick={() => (schritt.richtung = schritt.richtung === 'decode' ? 'encode' : 'decode')}
-            title="Richtung umschalten"
-          >
-            {schritt.richtung === 'decode' ? 'entschlüsseln' : 'verschlüsseln'}
-          </button>
+          {#if !gewaehlt?.einseitig}
+            <button
+              type="button"
+              onclick={() => (schritt.richtung = schritt.richtung === 'decode' ? 'encode' : 'decode')}
+              title="Richtung umschalten"
+            >
+              {schritt.richtung === 'decode' ? 'entschlüsseln' : 'verschlüsseln'}
+            </button>
+          {/if}
           <button
             type="button"
             aria-pressed={!schritt.aktiv}
@@ -116,16 +164,75 @@
 <div class="anbau">
   <select onchange={hinzufuegen} aria-label="Schritt hinzufügen">
     <option value="">Schritt hinzufügen …</option>
-    {#each CODECS as eintrag (eintrag.id)}
+    {#each CODECS.filter((c) => !c.nurNachschlagen) as eintrag (eintrag.id)}
       <option value={eintrag.id}>{eintrag.name}</option>
     {/each}
   </select>
   {#if zustand.schritte.length > 0 || zustand.eingabe.length > 0}
     <button type="button" onclick={leeren}>alles leeren</button>
+    <button type="button" onclick={linkTeilen}>Link teilen</button>
   {/if}
 </div>
 
 <Textfeld text={ergebnis?.text ?? ''} uebernehmen={() => uebernehmen(ergebnis?.text ?? '')} />
+
+{#if linkStand}
+  <p class="linkstand mono">{linkStand}</p>
+{/if}
+
+<section class="erkennung">
+  <button type="button" class="aufklapp" onclick={() => (erkennungOffen = !erkennungOffen)}>
+    {erkennungOffen ? '▾' : '▸'} Was ist das? · Code erkennen
+  </button>
+  {#if erkennungOffen}
+    {#if funde.length === 0}
+      <p class="hinweis">Dazu fällt mir nichts ein – zu kurz oder kein bekannter Code.</p>
+    {:else}
+      <ol class="funde">
+        {#each funde as fund (fund.codec.id)}
+          <li>
+            <button type="button" onclick={() => uebernimmFund(fund)}>
+              <span class="kopfzeile">
+                <strong>{fund.codec.name}</strong>
+                {#if optionenText(fund)}<span class="leise">{optionenText(fund)}</span>{/if}
+                <span class="balken" aria-hidden="true">
+                  <span style="width: {Math.round(fund.bewertung * 100)}%"></span>
+                </span>
+              </span>
+              <span class="mono vorschau">{fund.text.slice(0, 90)}</span>
+            </button>
+          </li>
+        {/each}
+      </ol>
+      <p class="hinweis">
+        Tippen fügt den Schritt hinzu. Der Balken zeigt, wie sehr das Ergebnis nach Sprache
+        aussieht – eine Hilfe, kein Urteil.
+      </p>
+    {/if}
+  {/if}
+</section>
+
+<section class="erkennung">
+  <button type="button" class="aufklapp" onclick={() => (haeufigkeitenOffen = !haeufigkeitenOffen)}>
+    {haeufigkeitenOffen ? '▾' : '▸'} Häufigkeiten · welche Art Chiffre?
+  </button>
+  {#if haeufigkeitenOffen}
+    {@const analyse = analysiere(ergebnis?.text ?? '')}
+    <p class="hinweis">
+      {analyse.laenge} Buchstaben · Koinzidenzindex {analyse.koinzidenz.toFixed(3)}
+    </p>
+    <p class="deutung">{analyse.deutung}</p>
+    <ol class="saeulen">
+      {#each analyse.haeufigkeiten.slice(0, 26) as eintrag (eintrag.zeichen)}
+        <li>
+          <span class="saeule" style="height: {Math.round(eintrag.anteil * 400)}px"></span>
+          <span class="buchstabe">{eintrag.zeichen}</span>
+          <span class="anzahl">{eintrag.anzahl}</span>
+        </li>
+      {/each}
+    </ol>
+  {/if}
+</section>
 
 <section class="wand">
   <button type="button" class="aufklapp" onclick={() => (wandOffen = !wandOffen)}>
@@ -136,9 +243,14 @@
       <p class="hinweis">Noch kein Text da.</p>
     {:else}
       <ol class="verschiebungen">
-        {#each alleVerschiebungen(ergebnis?.text ?? '') as reihe (reihe.schritte)}
+        {#each wand as reihe (reihe.schritte)}
           <li>
-            <button type="button" onclick={() => uebernehmen(reihe.text)} title="als Eingabe übernehmen">
+            <button
+              type="button"
+              class:beste={reihe.beste}
+              onclick={() => uebernehmen(reihe.text)}
+              title={`Sprachwert ${reihe.wert.toFixed(2)} – als Eingabe übernehmen`}
+            >
               <span class="nummer">{reihe.schritte}</span>
               <span class="mono">{reihe.text}</span>
             </button>
@@ -293,5 +405,111 @@
     flex: 0 0 2rem;
     color: var(--text-leise);
     font-size: 0.8rem;
+  }
+
+  .verschiebungen button.beste {
+    background: var(--flaeche-hoch);
+    border-left: 3px solid var(--akzent);
+  }
+
+  .erkennung {
+    margin-top: 20px;
+  }
+
+  .funde {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+
+  .funde button {
+    display: grid;
+    gap: 4px;
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    min-height: 0;
+  }
+
+  .kopfzeile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .leise {
+    color: var(--text-leise);
+    font-size: 0.8rem;
+  }
+
+  .balken {
+    flex: 1 0 60px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--grund);
+    overflow: hidden;
+  }
+
+  .balken span {
+    display: block;
+    height: 100%;
+    background: var(--akzent);
+  }
+
+  .linkstand {
+    color: var(--text-leise);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+    margin: 0 0 12px;
+  }
+
+  .deutung {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+  }
+
+  .saeulen {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    overflow-x: auto;
+  }
+
+  .saeulen li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 1.3rem;
+  }
+
+  .saeule {
+    display: block;
+    width: 100%;
+    min-height: 2px;
+    max-height: 90px;
+    background: var(--akzent);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .buchstabe {
+    font-size: 0.75rem;
+  }
+
+  .anzahl {
+    font-size: 0.65rem;
+    color: var(--text-leise);
+  }
+
+  .vorschau {
+    color: var(--text-leise);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
   }
 </style>
