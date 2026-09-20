@@ -66,7 +66,12 @@ export function erkenne(eingabe: string, hoechstens = 6): Fund[] {
         };
       }
     }
-    if (bester && bester.bewertung > 0.05) funde.push(bester);
+    // Aufnahme nur, wenn das Ergebnis nach Sprache aussieht oder die Struktur
+    // deutlich passt. Ein Code, der die Zeichen bloß umsortiert, erklärt nichts
+    // und macht die Liste länger, nicht besser.
+    if (bester && (bester.sprache > 0.08 || bester.struktur >= 0.6) && bester.bewertung > 0.05) {
+      funde.push(bester);
+    }
   }
 
   return funde.sort((a, b) => b.bewertung - a.bewertung).slice(0, hoechstens);

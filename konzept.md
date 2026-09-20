@@ -580,13 +580,13 @@ Push auf main
 | **2 – Visuelle Codes** ✅ | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
 | **3 – Periodensystem & Widerstände** ✅ | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
 | **4 – Identify** ✅ | Sniffer, n-Gramm-Sprachmodell, Rangliste | „Was ist das überhaupt?" in einem Schritt |
-| **5 – Hunt-Extras** ◐ | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, QR-Scan, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
+| **5 – Hunt-Extras** ✅ | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, QR-Scan, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
 
 Phasen 0–3 liefern das, was in `development.md` steht. 4 und 5 sind der Vorschlag darüber
 hinaus – Phase 1 ist bereits allein benutzbar, jede weitere Phase ist ein eigenständiger
 Zugewinn.
 
-**Stand:** Phase 0 bis 4 stehen, aus Phase 5 die zwei dringendsten Stücke. Gerüst, Offline-Betrieb, Themes und das automatische
+**Stand:** Alle fünf Phasen stehen. Gerüst, Offline-Betrieb, Themes und das automatische
 Deployment laufen; Codec-Registry, Werkbank mit Schrittkette, Brute-Force-Wand und die
 Textcodes Morse, ABC123, ASCII, NATO, Caesar, Zahlensysteme und der Element-Schlüssel
 sind gebaut. Die Elementdaten aus Phase 3 liegen vor (Abschnitt 5.5).
@@ -633,8 +633,17 @@ Die Extraktionshelfer sind einseitige Schritte: Aus „jeden dritten Buchstaben�
 der Ausgangstext nicht zurückgewinnen. Die Oberfläche blendet den Richtungsschalter dort
 aus, statt eine Umkehr vorzutäuschen.
 
-Offen bleiben aus Phase 5: weitere Chiffren, Wortmuster- und Anagrammsuche mit
-Offline-Wörterbuch, QR-Scanner, Koordinaten-Umrechner und das Link-Sharing.
+Dazu kamen die übrigen Hunt-Extras: die klassischen Chiffren (Atbash, Vigenère, Bacon,
+Polybios, Zaunmuster, Handytastatur), römische Zahlen und Base64/32, die Häufigkeitsanalyse
+mit Koinzidenzindex, der Element-Speller mit allen Zerlegungen, Wortmuster- und
+Anagrammsuche über ein Wörterbuch im Gerät, der Koordinaten-Umrechner in der Schreibweise
+der Nachtschicht, das Lesen von QR- und Barcodes und das Teilen des Werkbank-Stands als
+Link.
+
+Zwei Entscheidungen dabei: Der Codeleser ist der des Browsers, nicht eine eingebundene
+Bibliothek – die wäre die größte Abhängigkeit der App geworden, für etwas, das viele Geräte
+mitbringen. Und der geteilte Link trägt alles im Fragment hinter dem Doppelkreuz, das der
+Browser nie an einen Server schickt: Teilen im Team, ohne dass die App ein Backend bekäme.
 
 Das Periodensystem ist bewusst auf zwei Phasen verteilt: Die Schlüsselfunktion (§5.1) ist
 reine Datenarbeit ohne eigene Ansicht und läuft schon in Phase 1 mit; das Gitter mit

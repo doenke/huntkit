@@ -53,13 +53,30 @@ Aus Phase 5 vorgezogen:
 - **Nacht-Ausrüstung** – Bildschirm wachhalten, Kamera als Lupe mit Licht,
   und ein Notizzettel, der das Neuladen übersteht.
 
+Rest von Phase 5:
+
+- **Klassische Chiffren** – Atbash, Vigenère, Bacon, Polybios, Zaunmuster,
+  Handytastatur. Dazu römische Zahlen, Base64 und Base32.
+- **Häufigkeiten** – zeigt über den Koinzidenzindex, *welche Art* Chiffre
+  vorliegt.
+- **Wörter** – Wortmustersuche (`?A??LE`, `GOLD*`) und Anagramme über ein
+  Wörterbuch, das beim ersten Gebrauch geladen wird und danach offline bleibt.
+- **Koordinaten** – zwischen Dezimalgrad, Grad mit Dezimalminuten (so gibt die
+  Nachtschicht Standorte an) und Grad/Minuten/Sekunden.
+- **Element-Speller** – Wörter in Elementsymbolen, mit *allen* Lesarten.
+- **QR- und Barcodes** – über den Codeleser des Browsers, ohne Zusatzpaket.
+- **Link teilen** – der ganze Werkbank-Stand steckt im Fragment der Adresse und
+  erreicht nie einen Server.
+
 Grundlage der Zeichentabellen ist das Regelheft der Dortmunder Nachtschicht;
 Herkunft und Proben stehen in [`src/codecs/QUELLE.md`](src/codecs/QUELLE.md).
 
 Alle Zeichen sind eigene SVG-Zeichnungen. Einzige Ausnahme ist das
 Fingeralphabet: Dessen Tafel stammt vom Landesverband Bayern der Gehörlosen
 e. V. und steht unter CC BY-SA 4.0 – siehe
-[`public/finger/LIZENZ.md`](public/finger/LIZENZ.md).
+[`public/finger/LIZENZ.md`](public/finger/LIZENZ.md). Das Wörterbuch stammt aus
+[an-array-of-german-words](https://github.com/hexapode/an-array-of-german-words)
+(MIT) – siehe [`data/WOERTERBUCH.md`](data/WOERTERBUCH.md).
 
 ## Entwickeln
 

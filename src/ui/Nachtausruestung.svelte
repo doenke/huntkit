@@ -1,7 +1,9 @@
 <script lang="ts">
   import {
-    Bildschirmwaechter, kameraStarten, kameraStoppen, kannWachhalten, leuchten, zoomen
+    Bildschirmwaechter, codeleser, kameraStarten, kameraStoppen, kannCodesLesen,
+    kannWachhalten, leuchten, zoomen
   } from '../lib/nacht';
+  import { anWerkbank } from '../lib/werkbank';
 
   const waechter = new Bildschirmwaechter();
   let wachhalten = $state(false);
@@ -14,6 +16,10 @@
   let licht = $state(false);
   let fehler = $state('');
   let bild = $state<HTMLVideoElement | null>(null);
+  let sucheCode = $state(false);
+  let gefundenerCode = $state('');
+  let codesGehen = kannCodesLesen();
+  let sucher: number | null = null;
 
   $effect(() => {
     const beiWechsel = () => void waechter.beiSichtbarkeit();
@@ -52,7 +58,33 @@
     }
   }
 
+  function codesuche() {
+    if (sucheCode) {
+      sucheCode = false;
+      if (sucher !== null) clearInterval(sucher);
+      sucher = null;
+      return;
+    }
+    const leser = codeleser();
+    if (!leser || !bild) return;
+    sucheCode = true;
+    gefundenerCode = '';
+    sucher = setInterval(async () => {
+      if (!bild) return;
+      try {
+        const treffer = await leser.detect(bild);
+        if (treffer.length > 0 && treffer[0]) {
+          gefundenerCode = treffer[0].rawValue;
+          codesuche();
+        }
+      } catch {
+        // Einzelne Bilder scheitern immer wieder – einfach das nächste nehmen.
+      }
+    }, 400) as unknown as number;
+  }
+
   async function lupeAus() {
+    if (sucheCode) codesuche();
     if (licht) await leuchten(strom, false);
     kameraStoppen(strom);
     strom = null;
@@ -99,6 +131,22 @@
       </button>
     {/if}
   </div>
+  {#if codesGehen}
+    <div class="gruppe">
+      <button type="button" aria-pressed={sucheCode} onclick={codesuche}>
+        {sucheCode ? 'Suche läuft …' : 'QR-Code suchen'}
+      </button>
+    </div>
+    {#if gefundenerCode}
+      <output class="fund mono">{gefundenerCode}</output>
+      <div class="gruppe">
+        <button type="button" onclick={() => anWerkbank(gefundenerCode)}>an die Werkbank</button>
+        <button type="button" onclick={() => (gefundenerCode = '')}>verwerfen</button>
+      </div>
+    {/if}
+  {:else}
+    <p class="leise">Dieser Browser bringt keinen Codeleser mit.</p>
+  {/if}
   {#if zoombereich}
     <label class="zoom">
       <span class="leise">Vergrößerung</span>
@@ -168,6 +216,16 @@
   .zoom input {
     width: 100%;
     min-height: var(--tap);
+  }
+
+  .fund {
+    display: block;
+    padding: 10px;
+    background: var(--flaeche);
+    border: 1px solid var(--akzent);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    overflow-wrap: anywhere;
   }
 
   .leise {

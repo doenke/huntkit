@@ -122,3 +122,42 @@ export async function zoomen(strom: MediaStream | null, wert: number): Promise<v
     // Geräte ohne optischen Zoom ignorieren das; die Lupe vergrößert dann per Bild.
   }
 }
+
+// ---------------------------------------------------------------------------
+// Codes lesen
+// ---------------------------------------------------------------------------
+
+interface Codeleser {
+  detect(bild: CanvasImageSource): Promise<Array<{ rawValue: string; format: string }>>;
+}
+
+interface CodeleserBauplan {
+  new (einstellungen?: { formats?: string[] }): Codeleser;
+  getSupportedFormats?(): Promise<string[]>;
+}
+
+function bauplan(): CodeleserBauplan | undefined {
+  return (globalThis as unknown as { BarcodeDetector?: CodeleserBauplan }).BarcodeDetector;
+}
+
+/**
+ * QR- und Barcodes liest der Browser selbst, wo er es kann. Eine eigene
+ * Bibliothek dafür einzubinden wäre die größte Abhängigkeit der App – für eine
+ * Funktion, die viele Geräte ohnehin mitbringen.
+ */
+export function kannCodesLesen(): boolean {
+  return bauplan() !== undefined;
+}
+
+export function codeleser(): Codeleser | null {
+  const Bauplan = bauplan();
+  if (!Bauplan) return null;
+  try {
+    return new Bauplan({
+      formats: ['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8', 'data_matrix', 'aztec']
+    });
+  } catch {
+    // Wenn das Gerät diese Formate nicht kennt, tut es die Voreinstellung auch.
+    return new Bauplan();
+  }
+}

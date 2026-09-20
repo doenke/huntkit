@@ -16,4 +16,10 @@ describe('Hash-Routing', () => {
   it('ignoriert weitere Pfadteile', () => {
     expect(ausHash('#/codes/morse')).toBe('codes');
   });
+
+  it('ignoriert angehängte Parameter', () => {
+    // Ein geteilter Link trägt den Werkbank-Stand hinter einem Fragezeichen.
+    expect(ausHash('#/werkbank?w=zABC123')).toBe('werkbank');
+    expect(ausHash('#/nachschlagen?x=1')).toBe('nachschlagen');
+  });
 });

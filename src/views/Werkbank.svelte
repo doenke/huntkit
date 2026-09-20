@@ -3,6 +3,8 @@
   import { CODECS, codec } from '../codecs/registry';
   import { erkenne, optionenText, type Fund } from '../lib/erkennen';
   import { sprachwert } from '../lib/sprachwert';
+  import { analysiere } from '../lib/frequenz';
+  import { alsLink, ausAdresse } from '../lib/teilen';
   import {
     anwenden,
     laden,
@@ -17,6 +19,16 @@
   let zustand = $state<Werkbankzustand>(laden());
   let wandOffen = $state(false);
   let erkennungOffen = $state(false);
+  let haeufigkeitenOffen = $state(false);
+  let linkStand = $state('');
+
+  // Ein geteilter Link bringt einen fertigen Stand mit; er hat Vorrang vor dem,
+  // was zuletzt auf diesem Gerät offen war.
+  $effect(() => {
+    void ausAdresse().then((geteilt) => {
+      if (geteilt) zustand = geteilt;
+    });
+  });
 
   const staende = $derived(anwenden(zustand));
   const ergebnis = $derived(staende[staende.length - 1]);
@@ -58,6 +70,17 @@
 
   function leeren() {
     zustand = leererZustand();
+  }
+
+  async function linkTeilen() {
+    const link = await alsLink(zustand);
+    try {
+      await navigator.clipboard.writeText(link);
+      linkStand = 'Link kopiert';
+    } catch {
+      linkStand = link;
+    }
+    setTimeout(() => (linkStand = ''), 4000);
   }
 
   /** Einen Vorschlag der Erkennung als Schritt übernehmen. */
@@ -147,10 +170,15 @@
   </select>
   {#if zustand.schritte.length > 0 || zustand.eingabe.length > 0}
     <button type="button" onclick={leeren}>alles leeren</button>
+    <button type="button" onclick={linkTeilen}>Link teilen</button>
   {/if}
 </div>
 
 <Textfeld text={ergebnis?.text ?? ''} uebernehmen={() => uebernehmen(ergebnis?.text ?? '')} />
+
+{#if linkStand}
+  <p class="linkstand mono">{linkStand}</p>
+{/if}
 
 <section class="erkennung">
   <button type="button" class="aufklapp" onclick={() => (erkennungOffen = !erkennungOffen)}>
@@ -181,6 +209,28 @@
         aussieht – eine Hilfe, kein Urteil.
       </p>
     {/if}
+  {/if}
+</section>
+
+<section class="erkennung">
+  <button type="button" class="aufklapp" onclick={() => (haeufigkeitenOffen = !haeufigkeitenOffen)}>
+    {haeufigkeitenOffen ? '▾' : '▸'} Häufigkeiten · welche Art Chiffre?
+  </button>
+  {#if haeufigkeitenOffen}
+    {@const analyse = analysiere(ergebnis?.text ?? '')}
+    <p class="hinweis">
+      {analyse.laenge} Buchstaben · Koinzidenzindex {analyse.koinzidenz.toFixed(3)}
+    </p>
+    <p class="deutung">{analyse.deutung}</p>
+    <ol class="saeulen">
+      {#each analyse.haeufigkeiten.slice(0, 26) as eintrag (eintrag.zeichen)}
+        <li>
+          <span class="saeule" style="height: {Math.round(eintrag.anteil * 400)}px"></span>
+          <span class="buchstabe">{eintrag.zeichen}</span>
+          <span class="anzahl">{eintrag.anzahl}</span>
+        </li>
+      {/each}
+    </ol>
   {/if}
 </section>
 
@@ -407,6 +457,54 @@
     display: block;
     height: 100%;
     background: var(--akzent);
+  }
+
+  .linkstand {
+    color: var(--text-leise);
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+    margin: 0 0 12px;
+  }
+
+  .deutung {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+  }
+
+  .saeulen {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    overflow-x: auto;
+  }
+
+  .saeulen li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 1.3rem;
+  }
+
+  .saeule {
+    display: block;
+    width: 100%;
+    min-height: 2px;
+    max-height: 90px;
+    background: var(--akzent);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .buchstabe {
+    font-size: 0.75rem;
+  }
+
+  .anzahl {
+    font-size: 0.65rem;
+    color: var(--text-leise);
   }
 
   .vorschau {

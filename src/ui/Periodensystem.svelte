@@ -6,6 +6,7 @@
   } from '../lib/periodensystem';
   import { EBENENFARBEN, serienfarbe } from '../lib/serienfarben';
   import { anWerkbank } from '../lib/werkbank';
+  import { satzZerlegen } from '../lib/elementspeller';
 
   interface Ebene {
     name: string;
@@ -39,6 +40,9 @@
   const ausgelesen = $derived(
     auslesen(aktiveEbene?.elemente ?? [], layout, reihenfolge, ausgabe)
   );
+
+  let spellerText = $state('');
+  const zerlegt = $derived(spellerText.trim() ? satzZerlegen(spellerText, 12) : []);
 
   function markierungen(ordnungszahl: number): Ebene[] {
     return ebenen.filter((e) => e.sichtbar && e.elemente.includes(ordnungszahl));
@@ -232,6 +236,43 @@
   </button>
 </div>
 
+<h3>In Elementsymbolen schreiben</h3>
+<input
+  class="speller"
+  type="text"
+  bind:value={spellerText}
+  placeholder="z.B. BACON"
+  spellcheck="false"
+  aria-label="Wort in Elementsymbolen schreiben"
+/>
+{#if spellerText.trim()}
+  <ul class="zerlegungen">
+    {#each zerlegt as eintrag (eintrag.wort)}
+      <li>
+        <strong>{eintrag.wort}</strong>
+        {#if eintrag.zerlegungen.length === 0}
+          <span class="leise">lässt sich nicht aus Elementsymbolen legen</span>
+        {:else}
+          <ol>
+            {#each eintrag.zerlegungen as zerlegung, i (i)}
+              <li>
+                <button type="button" onclick={() => anWerkbank(zerlegung.ordnungszahlen.join(' '))}>
+                  <span class="mono">{zerlegung.symbole.join('-')}</span>
+                  <span class="leise">{zerlegung.ordnungszahlen.join(' ')}</span>
+                </button>
+              </li>
+            {/each}
+          </ol>
+        {/if}
+      </li>
+    {/each}
+  </ul>
+  <p class="hinweis">
+    Alle Lesarten, nicht nur eine – „CON“ ist C-O-N oder Co-N. Tippen schickt die
+    Ordnungszahlen an die Werkbank.
+  </p>
+{/if}
+
 {#if gewaehlt}
   <h3>{gewaehlt.name}</h3>
   <dl class="karte">
@@ -404,6 +445,44 @@
     border-radius: var(--radius);
     margin-bottom: 8px;
     overflow-wrap: anywhere;
+  }
+
+  .speller {
+    width: 100%;
+    font: inherit;
+    color: var(--text);
+    background: var(--flaeche);
+    border: 1px solid var(--rand);
+    border-radius: var(--radius);
+    min-height: var(--tap);
+    padding: 0 12px;
+    margin-bottom: 8px;
+  }
+
+  .zerlegungen {
+    list-style: none;
+    margin: 0 0 8px;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+
+  .zerlegungen ol {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 4px;
+  }
+
+  .zerlegungen button {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    min-height: 40px;
+    font-size: 0.9rem;
   }
 
   .karte {

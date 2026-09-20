@@ -1,41 +1,57 @@
 <script lang="ts">
+  import Koordinaten from '../ui/Koordinaten.svelte';
   import Periodensystem from '../ui/Periodensystem.svelte';
   import Widerstand from '../ui/Widerstand.svelte';
+  import Woerter from '../ui/Woerter.svelte';
 
-  let bereich = $state<'pse' | 'widerstand'>('pse');
+  type Bereich = 'pse' | 'widerstand' | 'woerter' | 'koordinaten';
+
+  const BEREICHE: ReadonlyArray<{ id: Bereich; titel: string }> = [
+    { id: 'pse', titel: 'Periodensystem' },
+    { id: 'woerter', titel: 'Wörter' },
+    { id: 'widerstand', titel: 'Widerstände' },
+    { id: 'koordinaten', titel: 'Koordinaten' }
+  ];
+
+  let bereich = $state<Bereich>('pse');
 </script>
 
 <h2>Nachschlagen</h2>
 
 <div class="reiter">
-  <button type="button" aria-pressed={bereich === 'pse'} onclick={() => (bereich = 'pse')}>
-    Periodensystem
-  </button>
-  <button
-    type="button"
-    aria-pressed={bereich === 'widerstand'}
-    onclick={() => (bereich = 'widerstand')}
-  >
-    Widerstände
-  </button>
+  {#each BEREICHE as eintrag (eintrag.id)}
+    <button
+      type="button"
+      aria-pressed={bereich === eintrag.id}
+      onclick={() => (bereich = eintrag.id)}
+    >
+      {eintrag.titel}
+    </button>
+  {/each}
 </div>
 
 {#if bereich === 'pse'}
   <Periodensystem />
-{:else}
+{:else if bereich === 'woerter'}
+  <Woerter />
+{:else if bereich === 'widerstand'}
   <Widerstand />
+{:else}
+  <Koordinaten />
 {/if}
 
 <style>
   .reiter {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
     margin-bottom: 14px;
   }
 
   .reiter button {
-    flex: 1;
+    flex: 1 1 8rem;
     min-height: 44px;
+    font-size: 0.9rem;
   }
 
   .reiter button[aria-pressed='true'] {
