@@ -578,7 +578,7 @@ Push auf main
 | **0 – Gerüst** ✅ | Vite/Svelte/TS, eigener Service Worker, Dark Theme, Actions-Build + Upload auf den Webspace | Installierbare leere App unter huntkit.kanonenwiese.de, offline lauffähig |
 | **1 – Textcodes** ✅ | Codec-Registry, Werkbank, ABC123, ASCII (dez/bin/hex), NATO, Morse, Caesar + Brute-Force-Wand, Zahlensysteme, Element-Attribut-Codec (§5.1) | Bereits die Hälfte von `development.md`, sofort einsetzbar |
 | **2 – Visuelle Codes** ✅ | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
-| **3 – Periodensystem & Widerstände** | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
+| **3 – Periodensystem & Widerstände** ✅ | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
 | **4 – Identify** | Sniffer, n-Gramm-Sprachmodell, Rangliste | „Was ist das überhaupt?" in einem Schritt |
 | **5 – Hunt-Extras** | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, QR-Scan, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
 
@@ -586,7 +586,7 @@ Phasen 0–3 liefern das, was in `development.md` steht. 4 und 5 sind der Vorsch
 hinaus – Phase 1 ist bereits allein benutzbar, jede weitere Phase ist ein eigenständiger
 Zugewinn.
 
-**Stand:** Phase 0, 1 und 2 stehen. Gerüst, Offline-Betrieb, Themes und das automatische
+**Stand:** Phase 0 bis 3 stehen. Gerüst, Offline-Betrieb, Themes und das automatische
 Deployment laufen; Codec-Registry, Werkbank mit Schrittkette, Brute-Force-Wand und die
 Textcodes Morse, ABC123, ASCII, NATO, Caesar, Zahlensysteme und der Element-Schlüssel
 sind gebaut. Die Elementdaten aus Phase 3 liegen vor (Abschnitt 5.5).
@@ -605,7 +605,17 @@ Die Tafel des Landesverbands Bayern der Gehörlosen e. V. steht unter CC BY-SA 4
 mit Namensnennung übernommen. 30 Handformen nachzuzeichnen, ohne sie unkenntlich zu
 machen, wäre eine eigene Kunst – die Vorlage ist besser als alles, was hier entstünde.
 
-Als Nächstes Phase 3: das Periodensystem als Gitter.
+Phase 3 erfüllt die beiden verbliebenen Rollen des Periodensystems: das Gitter mit
+umschaltbaren Layouts (18 Spalten, 32 Spalten, kompakt), Zoom, Suche und Detailkarte sowie
+die Zeichenfläche mit Markierungsebenen, regelbasierter Auswahl, Mengenoperationen,
+Musteransicht und Auslesen in wählbarer Reihenfolge. Dazu der Widerstandsfarbcode in beide
+Richtungen.
+
+Gruppe und Periode werden gerechnet, nicht gespeichert – die Stellung im Periodensystem
+hängt nicht an der Quelle. Welches Layout gilt, steht über der Tafel, denn die Koordinaten
+hängen daran.
+
+Als Nächstes Phase 4: die Auto-Erkennung.
 
 Das Periodensystem ist bewusst auf zwei Phasen verteilt: Die Schlüsselfunktion (§5.1) ist
 reine Datenarbeit ohne eigene Ansicht und läuft schon in Phase 1 mit; das Gitter mit

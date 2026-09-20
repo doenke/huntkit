@@ -13,6 +13,7 @@ Templercode ist das der entscheidende Punkt.
 | Templercode | F | Formen und Buchstabenpaare abgelesen, Beschriftungen bei 700 dpi geprüft |
 | Winkeralphabet | G | Armstellungen abgelesen, teilweise zusätzlich aus den Pixeln bestimmt |
 | Hexahue | M | Farbfelder maschinell ausgelesen |
+| Widerstandsfarbcode | O | bestätigt, samt beider Beispiele der Tafel |
 | Umlautregel | Regelteil | „Ä → AE, ß → SS, sofern nicht anders auf dem Rätsel vermerkt“ |
 
 Übernommen wurden die **Zuordnungen**, nicht die Grafiken. Alle Zeichen der App
@@ -28,6 +29,9 @@ Jede Tabelle hat mindestens eine Probe, die unabhängig von der Abschrift ist:
   Plätze. Beim Auslesen verrutschte Felder würden beides verletzen.
 - **Winkeralphabet** — 26 Buchstaben ergeben 26 verschiedene Paare aus acht
   Richtungen; keine Stellung kommt doppelt vor.
+- **Widerstandsfarbcode** — die beiden Widerstände, die die Tafel abbildet,
+  werden nachgerechnet: gelb-violett-schwarz-orange ergibt 470 kΩ,
+  blau-grau-rot ergibt 6,8 kΩ.
 - **Templercode** — die zweite Hälfte des Alphabets trägt einen Punkt, die erste
   nicht.
 

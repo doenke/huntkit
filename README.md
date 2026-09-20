@@ -29,6 +29,14 @@ Aus Phase 2 (visuelle Codes):
 - **Umlaute** – Ä zu AE, ß zu SS und zurück, wie die Nachtschicht
   Lösungswörter schreibt.
 
+Aus Phase 3 (Nachschlagen):
+
+- **Periodensystem** als Gitter – 18 Spalten, 32 Spalten oder kompakt, mit Zoom,
+  Suche (`gold`, `serie:edelgase`, `z>50`, `primzahl`, `radioaktiv`) und
+  Detailkarte. Dazu Markierungsebenen mit Mengenoperationen, Musteransicht,
+  Auslesen in wählbarer Reihenfolge und Sichern als Bild.
+- **Widerstandsfarbcode** – 4, 5 oder 6 Ringe, in beide Richtungen.
+
 Grundlage der Zeichentabellen ist das Regelheft der Dortmunder Nachtschicht;
 Herkunft und Proben stehen in [`src/codecs/QUELLE.md`](src/codecs/QUELLE.md).
 
