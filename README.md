@@ -45,6 +45,14 @@ Aus Phase 4 (Auto-Erkennung):
   liest. Er hebt in der Brute-Force-Wand die wahrscheinlichste der 26
   Verschiebungen hervor.
 
+Aus Phase 5 vorgezogen:
+
+- **Extraktionshelfer** – jeden n-ten Buchstaben, Buchstaben an einer
+  Stellenliste, den n-ten Buchstaben jedes Wortes, und Text durch ein Gitter
+  lesen (spaltenweise, Zeilen abwechselnd, Diagonalen, Spirale).
+- **Nacht-Ausrüstung** – Bildschirm wachhalten, Kamera als Lupe mit Licht,
+  und ein Notizzettel, der das Neuladen übersteht.
+
 Grundlage der Zeichentabellen ist das Regelheft der Dortmunder Nachtschicht;
 Herkunft und Proben stehen in [`src/codecs/QUELLE.md`](src/codecs/QUELLE.md).
 

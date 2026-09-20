@@ -91,13 +91,15 @@
       <div class="zeile">
         <strong>{gewaehlt?.name ?? schritt.codecId}</strong>
         <div class="steuerung">
-          <button
-            type="button"
-            onclick={() => (schritt.richtung = schritt.richtung === 'decode' ? 'encode' : 'decode')}
-            title="Richtung umschalten"
-          >
-            {schritt.richtung === 'decode' ? 'entschlüsseln' : 'verschlüsseln'}
-          </button>
+          {#if !gewaehlt?.einseitig}
+            <button
+              type="button"
+              onclick={() => (schritt.richtung = schritt.richtung === 'decode' ? 'encode' : 'decode')}
+              title="Richtung umschalten"
+            >
+              {schritt.richtung === 'decode' ? 'entschlüsseln' : 'verschlüsseln'}
+            </button>
+          {/if}
           <button
             type="button"
             aria-pressed={!schritt.aktiv}

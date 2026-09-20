@@ -15,6 +15,15 @@
         value={werte[option.id] ?? option.standard}
         oninput={(e) => (werte[option.id] = Number(e.currentTarget.value))}
       />
+    {:else if option.art === 'text'}
+      <input
+        type="text"
+        class="breit"
+        value={werte[option.id] ?? option.standard}
+        placeholder={option.platzhalter ?? ''}
+        spellcheck="false"
+        oninput={(e) => (werte[option.id] = e.currentTarget.value)}
+      />
     {:else}
       <select
         value={werte[option.id] ?? option.standard}
@@ -50,4 +59,6 @@
   }
 
   input { width: 5.5rem; }
+
+  input.breit { width: 9rem; }
 </style>

@@ -3,6 +3,7 @@ import { ascii } from './ascii';
 import { basen } from './basen';
 import { braille } from './braille';
 import { caesar } from './caesar';
+import { ausWoertern, gitter, jedesN, stellen } from './extrahieren';
 import { elemente } from './elemente';
 import { fingeralphabet } from './fingeralphabet';
 import { hexahue } from './hexahue';
@@ -31,6 +32,10 @@ export const CODECS: ReadonlyArray<Codec> = [
   caesar,
   basen,
   umlaute,
+  jedesN,
+  stellen,
+  ausWoertern,
+  gitter,
   elemente
 ];
 

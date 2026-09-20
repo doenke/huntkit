@@ -1,5 +1,7 @@
 <script lang="ts">
   import { gespeichertesThema, setzeThema, THEMEN, type Thema } from '../lib/theme';
+  import Nachtausruestung from '../ui/Nachtausruestung.svelte';
+  import Notizen from '../ui/Notizen.svelte';
 
   let thema = $state<Thema>(gespeichertesThema());
 
@@ -8,6 +10,10 @@
     setzeThema(neu);
   }
 </script>
+
+<h2>Für die Nacht</h2>
+<Nachtausruestung />
+<Notizen />
 
 <h2>Darstellung</h2>
 <div class="themen">
@@ -26,10 +32,24 @@
 <h2>Über</h2>
 <p class="leise">
   huntkit läuft vollständig offline und ohne Server. Einmal geladen, bleibt alles
-  auf dem Gerät.
+  auf dem Gerät – auch Notizen und der Stand der Werkbank.
+</p>
+<p class="leise">
+  Die Zeichen des Fingeralphabets stammen vom Landesverband Bayern der Gehörlosen
+  e. V. und stehen unter
+  <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noreferrer">
+    CC BY-SA 4.0</a>. Alle übrigen Zeichen sind eigene Zeichnungen.
 </p>
 
 <style>
+  h2 {
+    margin-top: 28px;
+  }
+
+  h2:first-of-type {
+    margin-top: 0;
+  }
+
   .themen {
     display: grid;
     gap: 8px;

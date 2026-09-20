@@ -41,6 +41,13 @@ export type OptionSpec =
       art: 'auswahl';
       werte: ReadonlyArray<{ wert: string; titel: string }>;
       standard: string;
+    }
+  | {
+      id: string;
+      titel: string;
+      art: 'text';
+      standard: string;
+      platzhalter?: string;
     };
 
 export interface TabellenEintrag {
@@ -71,6 +78,13 @@ export interface Codec {
    * nichts tut, stiftet dort nur Verwirrung.
    */
   nurNachschlagen?: boolean;
+
+  /**
+   * Der Schritt kennt keine Gegenrichtung. Aus „jeden dritten Buchstaben“ lässt
+   * sich der ursprüngliche Text nicht zurückgewinnen – die Oberfläche blendet
+   * den Richtungsschalter dann aus, statt eine Umkehr vorzutäuschen.
+   */
+  einseitig?: boolean;
 
   /** Herkunftsangabe, wenn die Zeichen aus einer fremden Vorlage stammen. */
   quelle?: { text: string; url: string };

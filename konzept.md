@@ -580,13 +580,13 @@ Push auf main
 | **2 – Visuelle Codes** ✅ | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
 | **3 – Periodensystem & Widerstände** ✅ | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
 | **4 – Identify** ✅ | Sniffer, n-Gramm-Sprachmodell, Rangliste | „Was ist das überhaupt?" in einem Schritt |
-| **5 – Hunt-Extras** | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, QR-Scan, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
+| **5 – Hunt-Extras** ◐ | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, QR-Scan, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
 
 Phasen 0–3 liefern das, was in `development.md` steht. 4 und 5 sind der Vorschlag darüber
 hinaus – Phase 1 ist bereits allein benutzbar, jede weitere Phase ist ein eigenständiger
 Zugewinn.
 
-**Stand:** Phase 0 bis 4 stehen. Gerüst, Offline-Betrieb, Themes und das automatische
+**Stand:** Phase 0 bis 4 stehen, aus Phase 5 die zwei dringendsten Stücke. Gerüst, Offline-Betrieb, Themes und das automatische
 Deployment laufen; Codec-Registry, Werkbank mit Schrittkette, Brute-Force-Wand und die
 Textcodes Morse, ABC123, ASCII, NATO, Caesar, Zahlensysteme und der Element-Schlüssel
 sind gebaut. Die Elementdaten aus Phase 3 liegen vor (Abschnitt 5.5).
@@ -626,7 +626,15 @@ Buchstabenhäufigkeit, häufige Paare und häufige Dreiergruppen für Deutsch un
 Gebraucht wird nur die Unterscheidung zwischen Sprache und Buchstabensalat, und die
 leisten die drei zusammen zuverlässig.
 
-Als Nächstes Phase 5: die Hunt-Extras.
+Aus Phase 5 sind die **Extraktionshelfer** und die **Nacht-Ausrüstung** vorgezogen – die
+beiden Stücke, die im Feld am schnellsten fehlen.
+
+Die Extraktionshelfer sind einseitige Schritte: Aus „jeden dritten Buchstaben“ lässt sich
+der Ausgangstext nicht zurückgewinnen. Die Oberfläche blendet den Richtungsschalter dort
+aus, statt eine Umkehr vorzutäuschen.
+
+Offen bleiben aus Phase 5: weitere Chiffren, Wortmuster- und Anagrammsuche mit
+Offline-Wörterbuch, QR-Scanner, Koordinaten-Umrechner und das Link-Sharing.
 
 Das Periodensystem ist bewusst auf zwei Phasen verteilt: Die Schlüsselfunktion (§5.1) ist
 reine Datenarbeit ohne eigene Ansicht und läuft schon in Phase 1 mit; das Gitter mit
