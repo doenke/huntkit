@@ -65,6 +65,16 @@ export interface Codec {
   beschreibung: string;
   optionen?: ReadonlyArray<OptionSpec>;
 
+  /**
+   * Reiner Nachschlagecode: Man liest ihn ab, rechnet aber nichts um. Solche
+   * Codes tauchen in der Werkbank nicht als Schritt auf – ein Schritt, der
+   * nichts tut, stiftet dort nur Verwirrung.
+   */
+  nurNachschlagen?: boolean;
+
+  /** Herkunftsangabe, wenn die Zeichen aus einer fremden Vorlage stammen. */
+  quelle?: { text: string; url: string };
+
   encode(eingabe: string, optionen?: OptionWerte): CodecErgebnis;
   decode(eingabe: string, optionen?: OptionWerte): CodecErgebnis;
 

@@ -577,7 +577,7 @@ Push auf main
 |---|---|---|
 | **0 – Gerüst** ✅ | Vite/Svelte/TS, eigener Service Worker, Dark Theme, Actions-Build + Upload auf den Webspace | Installierbare leere App unter huntkit.kanonenwiese.de, offline lauffähig |
 | **1 – Textcodes** ✅ | Codec-Registry, Werkbank, ABC123, ASCII (dez/bin/hex), NATO, Morse, Caesar + Brute-Force-Wand, Zahlensysteme, Element-Attribut-Codec (§5.1) | Bereits die Hälfte von `development.md`, sofort einsetzbar |
-| **2 – Visuelle Codes** ◐ | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
+| **2 – Visuelle Codes** ✅ | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
 | **3 – Periodensystem & Widerstände** | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
 | **4 – Identify** | Sniffer, n-Gramm-Sprachmodell, Rangliste | „Was ist das überhaupt?" in einem Schritt |
 | **5 – Hunt-Extras** | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, QR-Scan, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
@@ -586,7 +586,7 @@ Phasen 0–3 liefern das, was in `development.md` steht. 4 und 5 sind der Vorsch
 hinaus – Phase 1 ist bereits allein benutzbar, jede weitere Phase ist ein eigenständiger
 Zugewinn.
 
-**Stand:** Phase 0 und 1 stehen, Phase 2 bis auf das Fingeralphabet. Gerüst, Offline-Betrieb, Themes und das automatische
+**Stand:** Phase 0, 1 und 2 stehen. Gerüst, Offline-Betrieb, Themes und das automatische
 Deployment laufen; Codec-Registry, Werkbank mit Schrittkette, Brute-Force-Wand und die
 Textcodes Morse, ABC123, ASCII, NATO, Caesar, Zahlensysteme und der Element-Schlüssel
 sind gebaut. Die Elementdaten aus Phase 3 liegen vor (Abschnitt 5.5).
@@ -600,8 +600,12 @@ beim Templercode den Ausschlag gibt. Herkunft und Proben stehen in
 Dazu aus demselben Regelheft die Umlautregel als eigenes Werkzeug: Lösungswörter werden
 dort „wie in gängigen Kreuzworträtseln" geschrieben, Ä als AE und ß als SS.
 
-Offen bleibt allein das **Fingeralphabet** – dort ist eine Lizenzentscheidung zu treffen,
-siehe „Zu klären".
+Das **Fingeralphabet** ist der einzige Code, dessen Zeichen keine eigene Zeichnung sind:
+Die Tafel des Landesverbands Bayern der Gehörlosen e. V. steht unter CC BY-SA 4.0 und ist
+mit Namensnennung übernommen. 30 Handformen nachzuzeichnen, ohne sie unkenntlich zu
+machen, wäre eine eigene Kunst – die Vorlage ist besser als alles, was hier entstünde.
+
+Als Nächstes Phase 3: das Periodensystem als Gitter.
 
 Das Periodensystem ist bewusst auf zwei Phasen verteilt: Die Schlüsselfunktion (§5.1) ist
 reine Datenarbeit ohne eigene Ansicht und läuft schon in Phase 1 mit; das Gitter mit
@@ -613,7 +617,8 @@ ohne die visuellen Codes zu verzögern.
 ## 9. Risiken und offene Punkte
 
 - **Lizenzen bei Daten und Bildern.** Elementdaten siehe 5.5 – Herkunft dokumentieren.
-  Glyphen selbst zeichnen statt Grafiken zu übernehmen. Beim Wörterbuch auf die Lizenz
+  Glyphen selbst zeichnen statt Grafiken zu übernehmen; einzige bewusste Ausnahme ist das
+  Fingeralphabet unter CC BY-SA 4.0 mit Namensnennung. Beim Wörterbuch auf die Lizenz
   achten (freie Wortlisten, Wiktionary-Ableitungen).
 - **Zugangsdaten zum Webspace.** Liegen als GitHub Secrets und sind damit nur so gut
   geschützt wie das GitHub-Konto. Wenn möglich einen eigenen SSH-Schlüssel nur für das
@@ -641,17 +646,11 @@ ohne die visuellen Codes zu verzögern.
 
 ### Zu klären
 
-1. **Fingeralphabet: Lizenz oder Eigenzeichnung?** Die Tafel im Regelheft stammt vom
-   Landesverband Bayern der Gehörlosen e. V. und steht unter CC BY-SA 4.0. Sie zu
-   übernehmen ist erlaubt, verlangt aber Namensnennung und dieselbe Lizenz für die
-   Ableitung – und bricht mit dem Grundsatz, alle Zeichen selbst zu zeichnen. Die
-   Alternative ist, 30 Handformen so nachzuzeichnen, dass sie erkennbar bleiben. Das ist
-   eine Entscheidung, keine technische Frage.
-2. **Flaggenalphabet.** Steht in `development.md`, kommt im Regelheft der Nachtschicht
+1. **Flaggenalphabet.** Steht in `development.md`, kommt im Regelheft der Nachtschicht
    aber nicht vor. Weiterhin gewünscht? Dann brauche ich dafür eine Vorlage.
-3. **Zugang für das Deployment:** SSH-Schlüssel oder Passwort? Ein eigener Schlüssel nur
+2. **Zugang für das Deployment:** SSH-Schlüssel oder Passwort? Ein eigener Schlüssel nur
    für das Deployment wäre sauberer – den öffentlichen Teil legst du auf dem Webspace ab,
    den privaten als GitHub Secret.
-4. Gibt es Rätselbeispiele aus früheren Jahren, an denen wir die Extraktions- und
+3. Gibt es Rätselbeispiele aus früheren Jahren, an denen wir die Extraktions- und
    Markierungsfunktionen ausrichten können? Das wäre die beste Prüfung, ob wir richtig
    liegen.

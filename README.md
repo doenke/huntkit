@@ -23,15 +23,19 @@ Phase 0 (Gerüst) und Phase 1 (Textcodes) stehen:
 
 Aus Phase 2 (visuelle Codes):
 
-- **Braille, Winkeralphabet, Hexahue, Templercode** – jeweils mit Visual Picker:
-  Glyphe antippen statt tippen, Text sammeln und an die Werkbank übergeben.
+- **Braille, Winkeralphabet, Hexahue, Templercode, Fingeralphabet** – jeweils
+  mit Visual Picker: Zeichen antippen statt tippen, Text sammeln und an die
+  Werkbank übergeben.
 - **Umlaute** – Ä zu AE, ß zu SS und zurück, wie die Nachtschicht
   Lösungswörter schreibt.
 
 Grundlage der Zeichentabellen ist das Regelheft der Dortmunder Nachtschicht;
 Herkunft und Proben stehen in [`src/codecs/QUELLE.md`](src/codecs/QUELLE.md).
 
-Noch offen: das Fingeralphabet – dort ist eine Lizenzentscheidung zu treffen.
+Alle Zeichen sind eigene SVG-Zeichnungen. Einzige Ausnahme ist das
+Fingeralphabet: Dessen Tafel stammt vom Landesverband Bayern der Gehörlosen
+e. V. und steht unter CC BY-SA 4.0 – siehe
+[`public/finger/LIZENZ.md`](public/finger/LIZENZ.md).
 
 ## Entwickeln
 

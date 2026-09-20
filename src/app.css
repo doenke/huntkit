@@ -10,6 +10,10 @@
   --akzent-text: #06121d;
   --warn: #e6b45a;
 
+  /* Strichzeichnungen liegen schwarz auf weiß vor und werden für die dunklen
+     Themen umgekehrt, damit sie nicht als grelle Kacheln blenden. */
+  --bildfilter: invert(1);
+
   --radius: 10px;
   --tap: 48px; /* Mindestgroesse fuer Tippziele – nachts, im Stehen, mit Handschuh */
 
@@ -30,6 +34,7 @@
 }
 
 :root[data-theme='light'] {
+  --bildfilter: none;
   --grund: #f7f8fa;
   --flaeche: #ffffff;
   --flaeche-hoch: #eef1f5;
@@ -82,4 +87,10 @@ a:focus-visible {
 
 code, pre, .mono {
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* Gilt für die Glyphen der Nachschlagecodes; sie werden als Markup eingesetzt
+   und deshalb hier global angesprochen. */
+svg image {
+  filter: var(--bildfilter);
 }

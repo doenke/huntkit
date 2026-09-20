@@ -4,6 +4,7 @@ import { basen } from './basen';
 import { braille } from './braille';
 import { caesar } from './caesar';
 import { elemente } from './elemente';
+import { fingeralphabet } from './fingeralphabet';
 import { hexahue } from './hexahue';
 import { morse } from './morse';
 import { nato } from './nato';
@@ -26,6 +27,7 @@ export const CODECS: ReadonlyArray<Codec> = [
   winker,
   hexahue,
   templer,
+  fingeralphabet,
   caesar,
   basen,
   umlaute,

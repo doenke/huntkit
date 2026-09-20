@@ -116,7 +116,7 @@
 <div class="anbau">
   <select onchange={hinzufuegen} aria-label="Schritt hinzufügen">
     <option value="">Schritt hinzufügen …</option>
-    {#each CODECS as eintrag (eintrag.id)}
+    {#each CODECS.filter((c) => !c.nurNachschlagen) as eintrag (eintrag.id)}
       <option value={eintrag.id}>{eintrag.name}</option>
     {/each}
   </select>

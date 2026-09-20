@@ -7,7 +7,7 @@ Templercode ist das der entscheidende Punkt.
 
 | Code | Anhang | Wie übernommen |
 |---|---|---|
-| Fingeralphabet | B | **noch offen**, siehe unten |
+| Fingeralphabet | B | Tafel übernommen, in 30 Zeichen zerschnitten — Lizenz siehe unten |
 | Braille | D | bestätigt — Aufbau A–J nur Punkte 1/2/4/5, K–T plus Punkt 3, Ziffern als A–J |
 | Morse | E | bestätigt gegen die vorhandene Tabelle |
 | Templercode | F | Formen und Buchstabenpaare abgelesen, Beschriftungen bei 700 dpi geprüft |
@@ -40,10 +40,10 @@ Jede Tabelle hat mindestens eine Probe, die unabhängig von der Abschrift ist:
   liefert I.
 - **Winkeralphabet:** Die Richtungen sind aus Sicht der Betrachterin notiert, so
   wie die Tafel zeichnet.
-- **Fingeralphabet:** Noch nicht umgesetzt. Die Tafel im Regelheft stammt vom
-  Landesverband Bayern der Gehörlosen e. V. und steht unter CC BY-SA 4.0. Sie
-  weiterzuverwenden wäre erlaubt, verlangt aber Namensnennung und dieselbe
-  Lizenz für die Ableitung — und widerspräche dem Grundsatz, alle Zeichen selbst
-  zu zeichnen. 30 Handformen so nachzuzeichnen, dass sie erkennbar bleiben, ist
-  dagegen eine eigene Aufgabe. Das ist eine Entscheidung, keine offene Frage der
-  Technik.
+- **Fingeralphabet:** Einziger Code, dessen Zeichen keine eigene Zeichnung sind.
+  Die Tafel stammt vom Landesverband Bayern der Gehörlosen e. V. und steht unter
+  CC BY-SA 4.0; sie ist in die 30 Einzelzeichen zerschnitten und auf Schwarzweiß
+  reduziert. Die Bilder stehen deshalb weiterhin unter CC BY-SA 4.0 — Einzelheiten
+  in [`public/finger/LIZENZ.md`](../../public/finger/LIZENZ.md). Die
+  Namensnennung erscheint in der App unter dem Zeichenraster. Der übrige
+  Quellcode ist davon nicht berührt.

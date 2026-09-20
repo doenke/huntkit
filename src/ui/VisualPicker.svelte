@@ -68,13 +68,16 @@
     align-items: center;
     gap: 2px;
     padding: 8px 4px;
-    min-height: calc(var(--tap) + 20px);
+    min-height: calc(var(--tap) + 44px);
     color: var(--akzent);
   }
 
   .glyph svg {
-    width: 100%;
-    height: 42px;
+    /* Höhe vorgeben, Breite folgt dem Seitenverhältnis – sonst stehen hohe
+       Zeichen wie die Handformen verloren in einer breiten Kachel. */
+    height: 64px;
+    width: auto;
+    max-width: 100%;
   }
 
   .glyph span {
