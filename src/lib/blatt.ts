@@ -33,6 +33,12 @@ interface Grundspalte {
   id: SpaltenId;
   /** Eigener Name; ohne Angabe steht der Buchstabe der Spalte da. */
   titel?: string;
+  /**
+   * Wie die Zellen aussehen sollen: als Zeichen oder gezeichnet. Das ist reine
+   * Anzeige – gerechnet wird immer mit den Zeichen, sonst hinge das Ergebnis
+   * davon ab, wie man gerade hinschaut.
+   */
+  darstellung?: 'zeichen' | 'grafik';
 }
 
 export interface Eingabespalte extends Grundspalte {
@@ -334,6 +340,17 @@ function sortierwert(art: Sortierart, text: string): string | number | null {
     return Number.isFinite(zahl) ? zahl : null;
   }
   return text.toUpperCase();
+}
+
+/**
+ * Welche Codetafel den Inhalt einer Spalte zeichnen kann – oder keine.
+ * Eine Werkzeugspalte steht nur dann im Code, wenn sie dorthin übersetzt;
+ * beim Entschlüsseln kommt Klartext heraus, und der hat kein Bild.
+ */
+export function anzeigetafel(spalte: Spalte): string | null {
+  if (spalte.art === 'eingabe') return spalte.tafel ?? null;
+  if (spalte.art === 'werkzeug' && spalte.richtung === 'encode') return spalte.codecId;
+  return null;
 }
 
 /** Spalten, die eine Zeile zum Sortieren anbietet – alle, die etwas liefern. */

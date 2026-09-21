@@ -87,6 +87,12 @@ sondern eine Handvoll – eine Zeile je Station, je Foto, je Fund.
   einem n, das pro Zeile woanders steht, ist der halbe Rätselalltag.
 - **Positionsspalte**: der Platz der Zeile in einer bestimmten Reihenfolge.
 
+Im Spaltenkopf lässt sich die **Anzeige umschalten**, wo der Inhalt in einem Code steht,
+den wir zeichnen können: Zeichen oder Bild. Das gilt für Eingabespalten mit Tafel und für
+Werkzeugspalten, die in einen Code übersetzen – beim Entschlüsseln kommt Klartext heraus,
+und der hat kein Bild. Gerechnet und sortiert wird immer mit den Zeichen; sonst hinge das
+Ergebnis davon ab, wie man gerade hinschaut.
+
 **Sortieren.** Weil jede Zelle aus ihrer eigenen Zeile rechnet, ändert Sortieren keinen
 Wert, sondern nur die Reihenfolge. Inhaltlich wirksam wird sie erst über eine
 Positionsspalte – und genau deshalb sind Sortierschritte **Daten, keine einmalige Aktion**:
@@ -146,6 +152,14 @@ Für jeden Codec automatisch generiert:
 
 Alle Glyphen werden **selbst als SVG gezeichnet**, nicht aus dem Netz kopiert: skaliert
 scharf, funktioniert offline, keine Lizenzfragen.
+
+Neben `zeichne(zeichen)` für ein Tabellenzeichen gibt es `zeichneCode(gruppe)` für den Code
+selbst. Damit wird ein ganzer Code-Text lesbar: Er wird in Gruppen zerlegt, jede Gruppe
+bekommt ihr Bild und eine Hinterlegung, die Abstände dazwischen bleiben frei – erst dadurch
+sieht man, was zu einem Buchstaben gehört. Morse nutzt das für Punkt und Strich als gleich
+dicke Balken in einer Spur; als Satzzeichenfolge (`.-` mit Punkt auf der Grundlinie, Strich
+in der Mitte) ist Morse am Handy kaum zu lesen. Was in keiner Tabelle steht, bleibt als Text
+stehen, statt zu verschwinden.
 
 **Nachgeschärft nach dem ersten Praxisblick:** Tabelle und Picker sind keine zwei Dinge
 mehr, sondern eine **Codekarte** – und die Codekarte ist zugleich ein Stück Werkbank. Sie

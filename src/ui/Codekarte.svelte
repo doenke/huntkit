@@ -2,6 +2,8 @@
   import type { Codec } from '../codecs/types';
   import { standardOptionen } from '../codecs/types';
   import { anWerkbank } from '../lib/blatt';
+  import { zeichenbar } from '../lib/codeanzeige';
+  import Codeanzeige from './Codeanzeige.svelte';
   import Optionen from './Optionen.svelte';
 
   /**
@@ -31,6 +33,8 @@
    * Zeichen lang ist, braucht es eins – sonst liefe alles ineinander.
    */
   const trenner = $derived(eintraege.every((e) => [...e.darstellung].length === 1) ? '' : ' ');
+  /** Codes mit Bild bekommen unter dem Feld eine gezeichnete Fassung. */
+  const malbar = $derived(zeichenbar(codec));
 
   function ausKlartext(wert: string) {
     klartext = wert;
@@ -118,6 +122,11 @@
       autocapitalize="off"
       oninput={(e) => ausKodiert(e.currentTarget.value)}
     ></textarea>
+    {#if malbar && kodiert.length > 0}
+      <div class="gemalt">
+        <Codeanzeige codecId={codec.id} text={kodiert} />
+      </div>
+    {/if}
   </label>
 </div>
 
@@ -273,6 +282,18 @@
 
   textarea.mono {
     font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  /* Der Code noch einmal als Bild: Morse ist als Satzzeichenfolge kaum zu
+     lesen, als Balkenreihe sofort. */
+  .gemalt {
+    margin-top: 6px;
+    padding: 6px 8px;
+    max-height: 5.2rem;
+    overflow-y: auto;
+    border: 1px solid var(--rand);
+    border-radius: var(--radius);
+    background: var(--flaeche);
   }
 
   .tasten {
