@@ -120,6 +120,19 @@ Für jeden Codec automatisch generiert:
 Alle Glyphen werden **selbst als SVG gezeichnet**, nicht aus dem Netz kopiert: skaliert
 scharf, funktioniert offline, keine Lizenzfragen.
 
+**Nachgeschärft nach dem ersten Praxisblick:** Tabelle und Picker sind keine zwei Dinge
+mehr, sondern eine **Codekarte** – und die Codekarte ist zugleich ein Stück Werkbank. Sie
+hat zwei verbundene Textfelder (Klartext und Code, beide Richtungen sofort), je Feld
+*kopieren* und *an die Werkbank*, codeeigene Eingabetasten (bei Morse Punkt, Strich,
+nächstes Zeichen, nächstes Wort) und darunter das antippbare Raster. Wer das Zeichen vor
+sich hat, soll es nicht erst nachschlagen und dann abtippen müssen.
+
+Lange Tabellen bekommen **Abschnitte** (`gruppe` am Tabelleneintrag): Morse trennt
+Buchstaben / Zahlen / Umlaute / Sonderzeichen, ASCII A–Z / a–z / 0–9 / Sonderzeichen, das
+Periodensystem die sieben Perioden. Damit passt jede Karte ohne Seitenscrollen auf ein
+Handy (390×844 geprüft); gerollt wird höchstens im Raster, während Textfelder und Tasten
+stehen bleiben.
+
 ---
 
 ## 4. Funktionsumfang

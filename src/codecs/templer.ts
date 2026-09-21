@@ -70,7 +70,7 @@ export const templer: Codec = {
   id: 'templer',
   name: 'Templercode',
   beschreibung:
-    'Formen des Malteserkreuzes. Die zweite Hälfte des Alphabets trägt einen Punkt. I und J teilen sich eine Form.',
+    'Formen des Malteserkreuzes; die zweite Alphabethälfte mit Punkt.',
   encode: (eingabe) => zeichen.encode(eingabe),
   decode: (eingabe) => zeichen.decode(eingabe),
   tabelle: () => zeichen.tabelle(),

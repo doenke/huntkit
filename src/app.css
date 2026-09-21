@@ -77,6 +77,18 @@
 
 html, body { height: 100%; }
 
+/*
+ * Der Schirm ist der Rahmen: Kopf, Inhalt und Leiste teilen ihn sich auf, und
+ * der Inhalt bekommt, was übrig bleibt. Eine Codekarte kann sich damit genau
+ * auf die Schirmhöhe legen, statt nach einer festen Höhe zu raten. Längere
+ * Ansichten wachsen weiterhin darüber hinaus – dann rollt die Seite wie immer.
+ */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 body {
   margin: 0;
   background: var(--grund);

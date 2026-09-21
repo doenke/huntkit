@@ -42,7 +42,7 @@ export const braille: Codec = {
   id: 'braille',
   name: 'Braille',
   beschreibung:
-    'Sechs Punkte, links 1–2–3 und rechts 4–5–6. Ziffern stehen nach dem Zahlzeichen ⠼ als A–J.',
+    'Sechs Punkte, links 1–2–3, rechts 4–5–6.',
   encode: (eingabe) => zeichen.encode(eingabe),
   decode: (eingabe) => zeichen.decode(eingabe),
   tabelle: () => zeichen.tabelle(),

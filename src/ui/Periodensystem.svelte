@@ -1,6 +1,6 @@
 <script lang="ts">
   import {
-    anStelle, auslesen, AUSGABEN, ELEMENTE, finde, LAYOUTS, raster, reihenZahl,
+    auslesen, AUSGABEN, ELEMENTE, finde, LAYOUTS, raster, reihenZahl,
     REIHENFOLGEN, spaltenZahl,
     type Ausgabe, type Element, type Layout, type Reihenfolge
   } from '../lib/periodensystem';

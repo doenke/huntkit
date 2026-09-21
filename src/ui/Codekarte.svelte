@@ -1,0 +1,372 @@
+<script lang="ts">
+  import type { Codec } from '../codecs/types';
+  import { standardOptionen } from '../codecs/types';
+  import { anWerkbank } from '../lib/werkbank';
+  import Optionen from './Optionen.svelte';
+
+  /**
+   * Eine Codekarte: Nachschlagen und Umrechnen in einem.
+   *
+   * Beide Textfelder hängen zusammen – tippt man links Klartext, steht rechts
+   * der Code, und umgekehrt. Ein Zeichen aus dem Raster anzutippen ist dasselbe
+   * wie es zu tippen. Genau diese Vermischung war der Punkt: Wer das Zeichen
+   * vor sich hat, will es nicht erst nachschlagen und dann abtippen.
+   */
+  let { codec, zurueck }: { codec: Codec; zurueck: () => void } = $props();
+
+  let klartext = $state('');
+  let kodiert = $state('');
+  let werte = $state<Record<string, string | number>>({ ...standardOptionen(codec) });
+
+  const eintraege = $derived(codec.tabelle?.(werte) ?? []);
+  const gruppen = $derived([...new Set(eintraege.map((e) => e.gruppe ?? 'Zeichen'))]);
+  let gruppe = $state<string | null>(null);
+  // Nach einem Wechsel der Einstellungen kann der gewählte Abschnitt weg sein –
+  // dann zeigt die Karte wieder den ersten statt eines leeren Rasters.
+  const aktiv = $derived(gruppe && gruppen.includes(gruppe) ? gruppe : gruppen[0]);
+  const sichtbar = $derived(eintraege.filter((e) => (e.gruppe ?? 'Zeichen') === aktiv));
+
+  /**
+   * Trennzeichen zwischen zwei Zeichen: Wo eine Darstellung mehr als ein
+   * Zeichen lang ist, braucht es eins – sonst liefe alles ineinander.
+   */
+  const trenner = $derived(eintraege.every((e) => [...e.darstellung].length === 1) ? '' : ' ');
+
+  function ausKlartext(wert: string) {
+    klartext = wert;
+    kodiert = codec.encode(wert, werte).text;
+  }
+
+  function ausKodiert(wert: string) {
+    kodiert = wert;
+    klartext = codec.decode(wert, werte).text;
+  }
+
+  function anhaengen(stueck: string) {
+    const vorher = kodiert.length > 0 && trenner && !kodiert.endsWith(trenner) ? trenner : '';
+    ausKodiert(kodiert + vorher + stueck);
+  }
+
+  function loeschen() {
+    const gekuerzt = trenner
+      ? kodiert.replace(new RegExp(`\\s*\\S+\\s*$`), '')
+      : [...kodiert].slice(0, -1).join('');
+    ausKodiert(gekuerzt);
+  }
+
+  async function kopieren(wert: string) {
+    try {
+      await navigator.clipboard.writeText(wert);
+    } catch {
+      // Ohne Zwischenablage bleibt Markieren von Hand.
+    }
+  }
+</script>
+
+<div class="karte">
+<div class="kopf">
+  <button type="button" class="zurueck" onclick={zurueck} aria-label="Zurück zur Übersicht">←</button>
+  <div>
+    <strong>{codec.name}</strong>
+    <span class="leise">{codec.beschreibung}</span>
+  </div>
+</div>
+
+{#if codec.optionen}
+  <div class="optionen">
+    <Optionen {codec} {werte} />
+  </div>
+{/if}
+
+<div class="felder">
+  <label>
+    <span class="marke">
+      Klartext
+      <span class="knoepfe">
+        <button type="button" onclick={() => kopieren(klartext)} disabled={!klartext}>kopieren</button>
+        <button type="button" onclick={() => anWerkbank(klartext)} disabled={!klartext}>Werkbank</button>
+      </span>
+    </span>
+    <textarea
+      rows="2"
+      value={klartext}
+      placeholder="Text eintippen"
+      spellcheck="false"
+      autocapitalize="characters"
+      oninput={(e) => ausKlartext(e.currentTarget.value)}
+    ></textarea>
+  </label>
+
+  <label>
+    <span class="marke">
+      {codec.name}
+      <span class="knoepfe">
+        {#if !codec.eingabetasten}
+          <button type="button" onclick={loeschen} disabled={!kodiert} aria-label="letztes Zeichen löschen">⌫</button>
+        {/if}
+        <button type="button" onclick={() => ausKodiert('')} disabled={!kodiert}>leeren</button>
+        <button type="button" onclick={() => kopieren(kodiert)} disabled={!kodiert}>kopieren</button>
+        <button type="button" onclick={() => anWerkbank(kodiert)} disabled={!kodiert}>Werkbank</button>
+      </span>
+    </span>
+    <textarea
+      class="mono"
+      rows="2"
+      value={kodiert}
+      placeholder={eintraege[0] ? `z.B. ${eintraege[0].darstellung}` : ''}
+      spellcheck="false"
+      autocapitalize="off"
+      oninput={(e) => ausKodiert(e.currentTarget.value)}
+    ></textarea>
+  </label>
+</div>
+
+{#if codec.eingabetasten}
+  <div class="tasten">
+    {#each codec.eingabetasten as taste (taste.titel)}
+      <button type="button" title={taste.hinweis} onclick={() => ausKodiert(kodiert + taste.einfuegen)}>
+        {taste.titel}
+      </button>
+    {/each}
+    <button type="button" onclick={loeschen} disabled={!kodiert} aria-label="letztes Zeichen löschen">
+      ⌫
+    </button>
+  </div>
+{/if}
+
+{#if gruppen.length > 1}
+  <div class="abschnitte">
+    {#each gruppen as name (name)}
+      <button
+        type="button"
+        aria-pressed={aktiv === name}
+        onclick={() => (gruppe = name)}
+      >
+        {name}
+      </button>
+    {/each}
+  </div>
+{/if}
+
+<div class="raster" class:mitBild={Boolean(codec.zeichne)}>
+  {#each sichtbar as eintrag, stelle (stelle)}
+    {@const glyph = codec.zeichne?.(eintrag.zeichen) ?? null}
+    <button type="button" onclick={() => anhaengen(eintrag.darstellung)}>
+      {#if glyph}
+        <svg viewBox={glyph.viewBox} aria-hidden="true">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html glyph.inhalt}
+        </svg>
+        <span class="zeichen">{eintrag.zeichen}</span>
+      {:else}
+        <span class="zeichen">{eintrag.zeichen}</span>
+        <span class="mono code">{eintrag.darstellung}</span>
+      {/if}
+    </button>
+  {/each}
+</div>
+
+{#if codec.quelle}
+  <p class="quelle">
+    Bild: {codec.quelle.text}.
+    <a href={codec.quelle.url} target="_blank" rel="noreferrer">Quelle</a>
+  </p>
+{/if}
+</div>
+
+<style>
+  /*
+   * Die Karte legt sich auf die Schirmhöhe: Kopf, Textfelder und Tasten stehen
+   * fest, das Raster nimmt den Rest. Lange Tabellen rollen damit im Raster und
+   * nicht auf der Seite – die Textfelder bleiben beim Tippen sichtbar.
+   */
+  .karte {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .kopf {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .kopf div {
+    min-width: 0;
+  }
+
+  .kopf .leise {
+    display: block;
+    /* Der Kopf bleibt zweizeilig – sonst schiebt er das Raster vom Schirm. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .kopf strong {
+    display: block;
+  }
+
+  .zurueck {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 1.2rem;
+    flex: 0 0 auto;
+  }
+
+  .leise {
+    color: var(--text-leise);
+    font-size: 0.8rem;
+  }
+
+  .optionen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .felder {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .marke {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text-leise);
+    margin-bottom: 2px;
+  }
+
+  .knoepfe {
+    display: flex;
+    gap: 4px;
+  }
+
+  .knoepfe button {
+    min-height: 32px;
+    padding: 0 8px;
+    font-size: 0.75rem;
+  }
+
+  textarea {
+    width: 100%;
+    font: inherit;
+    line-height: 1.35;
+    color: var(--text);
+    background: var(--flaeche);
+    border: 1px solid var(--rand);
+    border-radius: var(--radius);
+    padding: 6px 10px;
+    resize: vertical;
+    /* Zwei Zeilen reichen; wer mehr braucht, zieht das Feld auf. */
+    height: 3.4rem;
+    min-height: 3.4rem;
+  }
+
+  textarea.mono {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  .tasten {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .tasten button {
+    flex: 1 1 0;
+    min-width: 2.6rem;
+    min-height: 46px;
+    padding: 0 6px;
+    font-size: 1.05rem;
+  }
+
+  .abschnitte {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .abschnitte button {
+    flex: 1 1 0;
+    min-height: 36px;
+    padding: 0 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  button[aria-pressed='true'] {
+    border-color: var(--akzent);
+    color: var(--akzent);
+  }
+
+  .raster {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(4.2rem, 1fr));
+    gap: 4px;
+    align-content: start;
+    flex: 1 1 auto;
+    /* Vier Zeilen sind das Wenigste, worauf sich das Raster stauchen lässt –
+       darunter rollt lieber die ganze Seite. */
+    min-height: 12rem;
+    overflow-y: auto;
+  }
+
+  .raster.mitBild {
+    grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
+  }
+
+  .raster button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    min-height: 46px;
+    padding: 2px;
+  }
+
+  .raster.mitBild button {
+    min-height: 74px;
+    color: var(--akzent);
+  }
+
+  .raster svg {
+    height: 46px;
+    width: auto;
+    max-width: 100%;
+  }
+
+  .zeichen {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .raster.mitBild .zeichen {
+    color: var(--text-leise);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .code {
+    color: var(--text-leise);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+  }
+
+  .quelle {
+    margin: 10px 0 0;
+    color: var(--text-leise);
+    font-size: 0.72rem;
+  }
+</style>

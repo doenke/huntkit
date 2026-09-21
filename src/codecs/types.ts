@@ -53,6 +53,12 @@ export type OptionSpec =
 export interface TabellenEintrag {
   zeichen: string;
   darstellung: string;
+  /**
+   * Abschnitt der Codekarte, z.B. „Buchstaben“ oder „Zahlen“. Ohne Angabe
+   * stehen alle Zeichen in einem Abschnitt. Auf dem Handy entscheidet das
+   * darüber, ob man scrollen muss.
+   */
+  gruppe?: string;
 }
 
 /**
@@ -101,6 +107,12 @@ export interface Codec {
    * Braille, Winker oder Flaggen am Handy überhaupt praktikabel ist.
    */
   zeichne?(zeichen: string): Glyph | null;
+
+  /**
+   * Zusätzliche Tasten zum Eintippen des Codes. Morse braucht Punkt, Strich und
+   * Trenner – die stehen auf keiner Handytastatur nebeneinander.
+   */
+  eingabetasten?: ReadonlyArray<{ titel: string; einfuegen: string; hinweis?: string }>;
 
   /** Wie gut passt die Eingabe strukturell zu diesem Code? 0 bis 1. */
   passt?(eingabe: string): number;

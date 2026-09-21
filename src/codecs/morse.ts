@@ -21,13 +21,26 @@ const TABELLE = [
 
 const zeichen = zeichenCodec({ tabelle: TABELLE, trenner: ' ', worttrenner: '/' });
 
+function gruppe(z: string): string {
+  if (/[A-Z]/.test(z)) return 'Buchstaben';
+  if (/[0-9]/.test(z)) return 'Zahlen';
+  if (/[ÄÖÜß]/.test(z)) return 'Umlaute';
+  return 'Sonderzeichen';
+}
+
 export const morse: Codec = {
   id: 'morse',
   name: 'Morse',
-  beschreibung: 'Punkt und Strich. Zeichen durch Leerzeichen getrennt, Wörter durch /.',
+  beschreibung: 'Punkt und Strich.',
   encode: (eingabe) => zeichen.encode(eingabe),
   decode: (eingabe) => zeichen.decode(eingabe),
-  tabelle: () => zeichen.tabelle(),
+  tabelle: () => zeichen.tabelle().map((e) => ({ ...e, gruppe: gruppe(e.zeichen) })),
+  eingabetasten: [
+    { titel: '·', einfuegen: '.', hinweis: 'Punkt' },
+    { titel: '–', einfuegen: '-', hinweis: 'Strich' },
+    { titel: '␣', einfuegen: ' ', hinweis: 'nächstes Zeichen' },
+    { titel: '/', einfuegen: ' / ', hinweis: 'nächstes Wort' }
+  ],
   // Sehr aussagekräftig: Eine Eingabe aus nur Punkten und Strichen ist praktisch
   // immer Morse.
   passt: (eingabe) => anteil(eingabe, /[.\-/]/) ** 2

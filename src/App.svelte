@@ -59,6 +59,9 @@
     padding: 16px 16px calc(var(--tap) + 32px + env(safe-area-inset-bottom));
     max-width: 62rem;
     margin: 0 auto;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   nav {
