@@ -109,6 +109,18 @@ export interface Codec {
   zeichne?(zeichen: string): Glyph | null;
 
   /**
+   * Zeichnet eine Codegruppe so, wie sie dasteht – etwa „.-“ als Punkt und
+   * Strich. Gedacht für die Anzeige ganzer Zellen und Zeilen: Morse als Text
+   * ist auf einem Handy kaum zu lesen, weil der Punkt auf der Grundlinie sitzt
+   * und der Strich in der Mitte.
+   *
+   * Der Unterschied zu `zeichne`: Diese Funktion bekommt den Code, nicht den
+   * Buchstaben, und braucht deshalb keinen Tabelleneintrag. Wer nur `zeichne`
+   * hat, wird über die Tabelle bedient.
+   */
+  zeichneCode?(gruppe: string): Glyph | null;
+
+  /**
    * Zusätzliche Tasten zum Eintippen des Codes. Morse braucht Punkt, Strich und
    * Trenner – die stehen auf keiner Handytastatur nebeneinander.
    */

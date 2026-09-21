@@ -2,6 +2,7 @@
   import { codec as findeCodec } from '../codecs/registry';
   import type { OptionWerte } from '../codecs/types';
   import {
+    anzeigetafel,
     hoechsteNummer,
     laden,
     leeresBlatt,
@@ -17,7 +18,9 @@
     type Spalte,
     type SpaltenId
   } from '../lib/blatt';
+  import { zeichenbar } from '../lib/codeanzeige';
   import { alsLink, ausAdresse } from '../lib/teilen';
+  import Codeanzeige from '../ui/Codeanzeige.svelte';
   import Spalteneinstellung from '../ui/Spalteneinstellung.svelte';
   import Tafeleingabe from '../ui/Tafeleingabe.svelte';
   import Zellenanalyse from '../ui/Zellenanalyse.svelte';
@@ -82,6 +85,20 @@
     }
     if (spalte.art === 'eingabe' && spalte.tafel) return 'Tafel';
     return '';
+  }
+
+  /**
+   * Zeichenbar ist eine Spalte, wenn ihr Inhalt in einem Code steht, den wir
+   * malen können. Werkzeuge rechnen weiterhin mit den Zeichen – die Anzeige
+   * ändert nichts am Wert.
+   */
+  function tafelVon(spalte: Spalte): string | null {
+    const id = anzeigetafel(spalte);
+    return id && zeichenbar(findeCodec(id)) ? id : null;
+  }
+
+  function anzeigeUmschalten(spalte: Spalte) {
+    spalte.darstellung = spalte.darstellung === 'grafik' ? 'zeichen' : 'grafik';
   }
 
   function zeileHinzufuegen() {
@@ -237,11 +254,25 @@
         <th class="ecke" title="Nummer der Eingabe">#</th>
         {#each blatt.spalten as spalte, i (spalte.id)}
           <th>
-            <button type="button" class="spaltenkopf" onclick={() => (einstellung = einstellung === spalte.id ? null : spalte.id)}>
-              <span class="buchstabe">{spaltenzeichen(i)}</span>
-              <span class="name">{kopfname(spalte)}</span>
-              {#if untertitel(spalte)}<span class="quelle">{untertitel(spalte)}</span>{/if}
-            </button>
+            <div class="kopfzelle">
+              <button type="button" class="spaltenkopf" onclick={() => (einstellung = einstellung === spalte.id ? null : spalte.id)}>
+                <span class="buchstabe">{spaltenzeichen(i)}</span>
+                <span class="name">{kopfname(spalte)}</span>
+                {#if untertitel(spalte)}<span class="quelle">{untertitel(spalte)}</span>{/if}
+              </button>
+              {#if tafelVon(spalte)}
+                <button
+                  type="button"
+                  class="umschalter"
+                  aria-pressed={spalte.darstellung === 'grafik'}
+                  title={spalte.darstellung === 'grafik' ? 'Anzeige: Bild – auf Zeichen umstellen' : 'Anzeige: Zeichen – auf Bild umstellen'}
+                  aria-label={spalte.darstellung === 'grafik' ? 'Anzeige auf Zeichen umstellen' : 'Anzeige auf Bild umstellen'}
+                  onclick={() => anzeigeUmschalten(spalte)}
+                >
+                  {spalte.darstellung === 'grafik' ? '▦' : 'Aa'}
+                </button>
+              {/if}
+            </div>
           </th>
         {/each}
         <th class="rand"></th>
@@ -264,7 +295,16 @@
               class:aktiv={gewaehlt?.spalte === spalte.id && gewaehlt?.zeile === reihe.zeile.id}
               class:fehler={Boolean(inhalt?.fehler)}
             >
-              {#if spalte.art === 'eingabe'}
+              {#if spalte.darstellung === 'grafik' && tafelVon(spalte)}
+                <!-- Gezeichnet wird nur angezeigt; getippt wird in der Zelle unten. -->
+                <button
+                  type="button"
+                  class="wert bild"
+                  onclick={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
+                >
+                  <Codeanzeige codecId={tafelVon(spalte) ?? ''} text={inhalt?.text ?? ''} einzeilig />
+                </button>
+              {:else if spalte.art === 'eingabe'}
                 <input
                   class="mono"
                   value={reihe.zeile.werte[spalte.id] ?? ''}
@@ -389,6 +429,15 @@
         autocapitalize="off"
         oninput={(e) => setzeWert(zelle.reihe.zeile.id, zelle.spalte.id, e.currentTarget.value)}
       ></textarea>
+      {#if tafelVon(zelle.spalte)}
+        <div class="vorschau">
+          <Codeanzeige
+            codecId={tafelVon(zelle.spalte) ?? ''}
+            text={zelle.reihe.zeile.werte[zelle.spalte.id] ?? ''}
+            mitZeichen
+          />
+        </div>
+      {/if}
       {#if zelle.spalte.tafel}
         <Tafeleingabe
           codecId={zelle.spalte.tafel}
@@ -397,6 +446,11 @@
         />
       {/if}
     {:else}
+      {#if tafelVon(zelle.spalte)}
+        <div class="vorschau">
+          <Codeanzeige codecId={tafelVon(zelle.spalte) ?? ''} text={zelle.inhalt.text} mitZeichen />
+        </div>
+      {/if}
       <output class="mono ergebnis">{zelle.inhalt.text}</output>
       {#if zelle.inhalt.fehler}
         <p class="hinweis warn">{zelle.inhalt.fehler}</p>
@@ -539,12 +593,29 @@
     color: var(--akzent);
   }
 
+  .kopfzelle {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  .umschalter {
+    flex: 0 0 auto;
+    align-self: center;
+    min-height: 30px;
+    min-width: 30px;
+    margin-right: 4px;
+    padding: 0 4px;
+    font-size: 0.7rem;
+    background: none;
+  }
+
   .spaltenkopf {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 0;
-    width: 100%;
+    flex: 1 1 auto;
     min-width: 6.5rem;
     min-height: 44px;
     padding: 4px 8px;
@@ -590,6 +661,22 @@
 
   td .wert {
     color: var(--text-leise);
+  }
+
+  /* Gezeichnete Zellen brauchen ihre Breite – die Tabelle rollt ohnehin. */
+  td .wert.bild {
+    color: var(--text);
+    white-space: normal;
+    width: max-content;
+    padding: 4px 8px;
+  }
+
+  .vorschau {
+    padding: 6px 8px;
+    border: 1px solid var(--rand);
+    border-radius: var(--radius);
+    background: var(--flaeche);
+    margin-bottom: 6px;
   }
 
   td.aktiv {
