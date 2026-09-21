@@ -116,6 +116,39 @@ export const ausWoertern: Codec = {
   decode: (eingabe, optionen) => ausWoertern.encode(eingabe, optionen)
 };
 
+export const zaehlen: Codec = {
+  id: 'zaehlen',
+  name: 'Zeichen zählen',
+  beschreibung: 'Wie oft ein Zeichen im Text vorkommt.',
+  einseitig: true,
+  optionen: [
+    { id: 'suche', titel: 'Zeichen', art: 'text', standard: 'E', platzhalter: 'E oder ·' },
+    {
+      id: 'schreibung',
+      titel: 'Schreibung',
+      art: 'auswahl',
+      standard: 'egal',
+      werte: [
+        { wert: 'egal', titel: 'Groß/klein egal' },
+        { wert: 'genau', titel: 'genau so' }
+      ]
+    }
+  ],
+  encode: (eingabe, optionen) => {
+    const suche = text(optionen, 'suche', '');
+    // Ohne Eingabe oder ohne Suchzeichen gibt es nichts zu zählen – eine 0 wäre
+    // hier eine Behauptung über einen Text, den es noch gar nicht gibt.
+    if (eingabe.length === 0 || suche.length === 0) return ergebnis('');
+    const genau = text(optionen, 'schreibung', 'egal') === 'genau';
+    const heuhaufen = genau ? eingabe : eingabe.toLowerCase();
+    const nadel = genau ? suche : suche.toLowerCase();
+    // Über split gezählt: Das zählt auch mehrstellige Suchen („.-“, „SCH“)
+    // ohne Überlappung, so wie man von Hand zählen würde.
+    return ergebnis(String(heuhaufen.split(nadel).length - 1));
+  },
+  decode: (eingabe, optionen) => zaehlen.encode(eingabe, optionen)
+};
+
 /** Liest ein zeilenweise gefülltes Gitter in verschiedenen Richtungen aus. */
 export function gitterLesen(zeichen: string[], breite: number, richtung: string): string {
   const b = Math.max(1, breite);

@@ -4,7 +4,7 @@ import { basen } from './basen';
 import { braille } from './braille';
 import { caesar } from './caesar';
 import { atbash, bacon, handytasten, polybios, vigenereCodec, zaun } from './chiffren';
-import { ausWoertern, gitter, jedesN, stellen } from './extrahieren';
+import { ausWoertern, gitter, jedesN, stellen, zaehlen } from './extrahieren';
 import { elemente } from './elemente';
 import { fingeralphabet } from './fingeralphabet';
 import { hexahue } from './hexahue';
@@ -47,6 +47,7 @@ export const CODECS: ReadonlyArray<Codec> = [
   stellen,
   ausWoertern,
   gitter,
+  zaehlen,
   elemente
 ];
 
