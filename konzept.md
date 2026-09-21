@@ -238,7 +238,7 @@ Nach Nutzen-pro-Aufwand sortiert – die oberen zahlen sich im Hunt am schnellst
 | **Koordinaten-Umrechner** | DD ↔ DMS ↔ UTM, Peilung/Kompass – für einen Stadt-Hunt naheliegend | S |
 | **Römische Zahlen, Base64/32** | Kleinkram, oft gebraucht | S |
 | **Team-Sharing per Link** | kompletter Werkbank-Zustand im URL-Fragment → per Messenger teilen, ganz ohne Server | M |
-| **Nacht-Ausrüstung** | Taschenlampe, Lupe, Wake Lock, Rotlicht-Theme, Notiz-/Checkpoint-Log | S |
+| **Nacht-Ausrüstung** | Wake Lock, Rotlicht-Theme, QR-Codeleser | S |
 
 ### 4.3 Bewusst außen vor
 
@@ -750,11 +750,13 @@ ohne die visuellen Codes zu verzögern.
   Sch.
 - **Hexahue-Farben.** Muss exakt stimmen und braucht Kontrastprüfung; bei Nacht und auf
   schlechten Displays sind Farbcodes heikel. Zusätzlich Farbnamen einblenden.
-- **iOS-Eigenheiten.** Taschenlampen-Steuerung ist per Web-API eingeschränkt, Safari räumt
-  Speicher installierter PWAs unter Umständen auf. Vor der Veranstaltung auf dem echten
-  Gerät testen, nicht nur im Simulator.
-- **Akku.** Kamera, Taschenlampe und Wake Lock sind die größten Verbraucher. Sparsam
-  einsetzen und den Wake Lock automatisch freigeben.
+- **iOS-Eigenheiten.** Safari räumt den Speicher installierter PWAs unter Umständen auf.
+  Vor der Veranstaltung auf dem echten Gerät testen, nicht nur im Simulator.
+- **Akku.** Kamera und Wake Lock sind die größten Verbraucher. Sparsam einsetzen und den
+  Wake Lock automatisch freigeben.
+- **Taschenlampe und Lupe sind wieder draußen.** Die Web-API dafür ist geräteabhängig und
+  auf iOS kaum brauchbar – und beides kann das Handy von Haus aus besser. Von der Kamera
+  bleibt der Codeleser.
 - ~~**Regeln der Veranstaltung.**~~ Geklärt: Das Regelheft nennt als Hilfsmittel
   ausdrücklich „Grips, Infoheft und Ausrüstungsgegenstände" und hält fest, dass „die
   Nutzung des Internets bei manchen Rätseln hilfreich sein" kann. Die App ist also

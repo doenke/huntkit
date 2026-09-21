@@ -1,5 +1,5 @@
 /**
- * Ausrüstung für die Nacht: Bildschirm wachhalten, Kamera als Lupe, Licht an.
+ * Ausrüstung für die Nacht: Bildschirm wachhalten und Codes mit der Kamera lesen.
  *
  * Alles hier ist optional und geräteabhängig. Der Grundsatz: erst prüfen, ob das
  * Gerät es kann, und sonst ehrlich sagen, dass es nicht geht – statt einen
@@ -17,16 +17,6 @@ interface Wachposten {
 interface Bildschirmsperre {
   request(art: 'screen'): Promise<Wachposten>;
 }
-
-/** Fähigkeiten und Einstellungen, die die Typdefinitionen noch nicht kennen. */
-interface ErweiterteFaehigkeiten extends MediaTrackCapabilities {
-  torch?: boolean;
-  zoom?: { min: number; max: number; step: number };
-}
-
-type ErweiterteVorgabe = MediaTrackConstraints & {
-  advanced?: Array<{ torch?: boolean; zoom?: number }>;
-};
 
 function sperre(): Bildschirmsperre | undefined {
   return (navigator as unknown as { wakeLock?: Bildschirmsperre }).wakeLock;
@@ -78,49 +68,15 @@ export class Bildschirmwaechter {
   }
 }
 
-export interface Kamerastand {
-  strom: MediaStream;
-  kannLeuchten: boolean;
-  zoom: { min: number; max: number; step: number } | null;
-}
-
-export async function kameraStarten(): Promise<Kamerastand> {
-  const strom = await navigator.mediaDevices.getUserMedia({
+export async function kameraStarten(): Promise<MediaStream> {
+  return navigator.mediaDevices.getUserMedia({
     video: { facingMode: { ideal: 'environment' } },
     audio: false
   });
-  const spur = strom.getVideoTracks()[0];
-  const faehig = (spur?.getCapabilities?.() ?? {}) as ErweiterteFaehigkeiten;
-  return {
-    strom,
-    kannLeuchten: faehig.torch === true,
-    zoom: faehig.zoom ?? null
-  };
 }
 
 export function kameraStoppen(strom: MediaStream | null): void {
   strom?.getTracks().forEach((spur) => spur.stop());
-}
-
-export async function leuchten(strom: MediaStream | null, an: boolean): Promise<boolean> {
-  const spur = strom?.getVideoTracks()[0];
-  if (!spur) return false;
-  try {
-    await spur.applyConstraints({ advanced: [{ torch: an }] } as ErweiterteVorgabe);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function zoomen(strom: MediaStream | null, wert: number): Promise<void> {
-  const spur = strom?.getVideoTracks()[0];
-  if (!spur) return;
-  try {
-    await spur.applyConstraints({ advanced: [{ zoom: wert }] } as ErweiterteVorgabe);
-  } catch {
-    // Geräte ohne optischen Zoom ignorieren das; die Lupe vergrößert dann per Bild.
-  }
 }
 
 // ---------------------------------------------------------------------------

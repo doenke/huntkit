@@ -1,7 +1,7 @@
 <script lang="ts">
   import {
     Bildschirmwaechter, codeleser, kameraStarten, kameraStoppen, kannCodesLesen,
-    kannWachhalten, leuchten, zoomen
+    kannWachhalten
   } from '../lib/nacht';
   import { anWerkbank } from '../lib/blatt';
 
@@ -10,10 +10,6 @@
   let wachhaltenGeht = kannWachhalten();
 
   let strom = $state<MediaStream | null>(null);
-  let kannLeuchten = $state(false);
-  let zoombereich = $state<{ min: number; max: number; step: number } | null>(null);
-  let zoomwert = $state(1);
-  let licht = $state(false);
   let fehler = $state('');
   let bild = $state<HTMLVideoElement | null>(null);
   let sucheCode = $state(false);
@@ -41,16 +37,12 @@
     }
   }
 
-  async function lupeAn() {
+  async function kameraAn() {
     fehler = '';
     try {
-      const stand = await kameraStarten();
-      strom = stand.strom;
-      kannLeuchten = stand.kannLeuchten;
-      zoombereich = stand.zoom;
-      zoomwert = stand.zoom?.min ?? 1;
+      strom = await kameraStarten();
       if (bild) {
-        bild.srcObject = stand.strom;
+        bild.srcObject = strom;
         await bild.play().catch(() => undefined);
       }
     } catch {
@@ -83,20 +75,10 @@
     }, 400) as unknown as number;
   }
 
-  async function lupeAus() {
+  function kameraAus() {
     if (sucheCode) codesuche();
-    if (licht) await leuchten(strom, false);
     kameraStoppen(strom);
     strom = null;
-    licht = false;
-    kannLeuchten = false;
-    zoombereich = null;
-  }
-
-  async function lichtschalter() {
-    const geschafft = await leuchten(strom, !licht);
-    if (geschafft) licht = !licht;
-    else fehler = 'Dieses Gerät gibt das Licht über den Browser nicht frei.';
   }
 </script>
 
@@ -113,23 +95,18 @@
   <p class="leise">Dieses Gerät bietet dem Browser keine Bildschirmsperre an.</p>
 {/if}
 
-<h3>Lupe und Licht</h3>
+<h3>Code lesen</h3>
 {#if !strom}
-  <button type="button" onclick={lupeAn}>Kamera einschalten</button>
+  <button type="button" onclick={kameraAn}>Kamera einschalten</button>
   <p class="leise">
-    Zum Lesen von Kleingedrucktem und als Taschenlampe. Beides zusammen ist der größte
-    Akkufresser der App – deshalb läuft die Kamera nur, solange du sie einschaltest.
+    Für QR-Codes auf Schildern und Zetteln. Die Kamera ist der größte Akkufresser der
+    App – deshalb läuft sie nur, solange du sie einschaltest.
   </p>
 {:else}
   <!-- svelte-ignore a11y_media_has_caption -->
   <video bind:this={bild} playsinline muted autoplay></video>
   <div class="gruppe">
-    <button type="button" onclick={lupeAus}>Kamera aus</button>
-    {#if kannLeuchten}
-      <button type="button" aria-pressed={licht} onclick={lichtschalter}>
-        {licht ? 'Licht aus' : 'Licht an'}
-      </button>
-    {/if}
+    <button type="button" onclick={kameraAus}>Kamera aus</button>
   </div>
   {#if codesGehen}
     <div class="gruppe">
@@ -146,27 +123,6 @@
     {/if}
   {:else}
     <p class="leise">Dieser Browser bringt keinen Codeleser mit.</p>
-  {/if}
-  {#if zoombereich}
-    <label class="zoom">
-      <span class="leise">Vergrößerung</span>
-      <input
-        type="range"
-        min={zoombereich.min}
-        max={zoombereich.max}
-        step={zoombereich.step}
-        value={zoomwert}
-        oninput={(e) => {
-          zoomwert = Number(e.currentTarget.value);
-          void zoomen(strom, zoomwert);
-        }}
-      />
-    </label>
-  {:else}
-    <p class="leise">Dieses Gerät kennt keinen Kamerazoom – halte das Handy näher heran.</p>
-  {/if}
-  {#if !kannLeuchten}
-    <p class="leise">Diese Kamera gibt ihr Licht über den Browser nicht frei.</p>
   {/if}
 {/if}
 
@@ -205,17 +161,6 @@
     border-radius: var(--radius);
     background: #000;
     margin-bottom: 8px;
-  }
-
-  .zoom {
-    display: grid;
-    gap: 4px;
-    margin-bottom: 8px;
-  }
-
-  .zoom input {
-    width: 100%;
-    min-height: var(--tap);
   }
 
   .fund {

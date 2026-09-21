@@ -1,7 +1,6 @@
 <script lang="ts">
   import { gespeichertesThema, setzeThema, THEMEN, type Thema } from '../lib/theme';
   import Nachtausruestung from '../ui/Nachtausruestung.svelte';
-  import Notizen from '../ui/Notizen.svelte';
 
   let thema = $state<Thema>(gespeichertesThema());
 
@@ -13,7 +12,6 @@
 
 <h2>Für die Nacht</h2>
 <Nachtausruestung />
-<Notizen />
 
 <h2>Darstellung</h2>
 <div class="themen">
@@ -32,7 +30,7 @@
 <h2>Über</h2>
 <p class="leise">
   huntkit läuft vollständig offline und ohne Server. Einmal geladen, bleibt alles
-  auf dem Gerät – auch Notizen und der Stand der Werkbank.
+  auf dem Gerät – auch der Stand der Werkbank und der Lösungswörter.
 </p>
 <p class="leise">
   Die Zeichen des Fingeralphabets stammen vom Landesverband Bayern der Gehörlosen
