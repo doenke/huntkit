@@ -1,4 +1,4 @@
-import type { Werkbankzustand } from './werkbank';
+import { ausAlterKette, istBlatt, type Blatt } from './blatt';
 
 /**
  * Werkbank-Zustand als Link.
@@ -41,23 +41,31 @@ async function entstauchen(daten: Uint8Array): Promise<Uint8Array | null> {
 const ROH = 'r';
 const GESTAUCHT = 'z';
 
-export async function alsFragment(zustand: Werkbankzustand): Promise<string> {
-  const daten = new TextEncoder().encode(JSON.stringify(zustand));
+export async function alsFragment(blatt: Blatt): Promise<string> {
+  const daten = new TextEncoder().encode(JSON.stringify(blatt));
   const gestaucht = await stauchen(daten);
   return gestaucht && gestaucht.length < daten.length
     ? GESTAUCHT + alsBase64(gestaucht)
     : ROH + alsBase64(daten);
 }
 
-export async function ausFragment(fragment: string): Promise<Werkbankzustand | null> {
+export async function ausFragment(fragment: string): Promise<Blatt | null> {
   if (fragment.length < 2) return null;
   try {
     const rest = ausBase64(fragment.slice(1));
     const daten = fragment[0] === GESTAUCHT ? await entstauchen(rest) : rest;
     if (!daten) return null;
-    const gelesen = JSON.parse(new TextDecoder().decode(daten)) as Partial<Werkbankzustand>;
-    if (typeof gelesen.eingabe !== 'string' || !Array.isArray(gelesen.schritte)) return null;
-    return { eingabe: gelesen.eingabe, schritte: gelesen.schritte };
+    const gelesen = JSON.parse(new TextDecoder().decode(daten)) as unknown;
+    if (istBlatt(gelesen)) {
+      return { spalten: gelesen.spalten, zeilen: gelesen.zeilen, sortierungen: gelesen.sortierungen ?? [] };
+    }
+    // Links aus der Zeit der Schrittkette bleiben lesbar – sie werden zu einem
+    // Blatt mit einer Zeile.
+    const alt = gelesen as { eingabe?: unknown; schritte?: unknown };
+    if (typeof alt.eingabe === 'string' && Array.isArray(alt.schritte)) {
+      return ausAlterKette({ eingabe: alt.eingabe, schritte: alt.schritte });
+    }
+    return null;
   } catch {
     // Ein beschädigter Link ist kein Grund, die App abstürzen zu lassen.
     return null;
@@ -65,16 +73,16 @@ export async function ausFragment(fragment: string): Promise<Werkbankzustand | n
 }
 
 /** Vollständiger Link auf den aktuellen Stand. */
-export async function alsLink(zustand: Werkbankzustand): Promise<string> {
+export async function alsLink(blatt: Blatt): Promise<string> {
   const ohneFragment = location.href.split('#')[0];
-  return `${ohneFragment}#/werkbank?w=${await alsFragment(zustand)}`;
+  return `${ohneFragment}#/werkbank?w=${await alsFragment(blatt)}`;
 }
 
 /** Liest einen geteilten Stand aus dem Fragment – und räumt es danach weg. */
-export async function ausAdresse(): Promise<Werkbankzustand | null> {
+export async function ausAdresse(): Promise<Blatt | null> {
   const treffer = location.hash.match(/[?&]w=([^&]+)/);
   if (!treffer) return null;
-  const zustand = await ausFragment(decodeURIComponent(treffer[1] as string));
-  if (zustand) history.replaceState(null, '', location.href.replace(/[?&]w=[^&]+/, ''));
-  return zustand;
+  const blatt = await ausFragment(decodeURIComponent(treffer[1] as string));
+  if (blatt) history.replaceState(null, '', location.href.replace(/[?&]w=[^&]+/, ''));
+  return blatt;
 }

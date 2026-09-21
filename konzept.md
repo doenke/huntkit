@@ -66,21 +66,48 @@ mehrspaltigen Arbeitsbereich aufklappen. Kein separates Produkt, nur ein anderes
 
 ## 3. Produktkonzept: die Bausteine
 
-### 3.1 Werkbank (der gemeinsame Puffer)
+### 3.1 Werkbank (das Blatt)
 
-Zentrales Element der App. Es gibt **einen aktuellen Text** und darauf eine **Kette von
-Schritten**:
+Zentrales Element der App: **Zeilen und Spalten**. Ein Rätsel liefert selten einen Text,
+sondern eine Handvoll – eine Zeile je Station, je Foto, je Fund.
 
 ```
-Eingabe:  -.-. .- . ... .- .-.
-  ├─ Schritt 1: Morse → Text          → CAESAR
-  ├─ Schritt 2: Caesar ROT-13         → PNRFNE
-  └─ Schritt 3: jeden 2. Buchstaben   → NFE
+ #  A (Morse-Tafel)         B: Morse→A   C: Platz S1   D: Stelle←B (aus C)
+ 2  .- -. -.- . .-.         ANKER        1             A
+ 3  -... .-.. ..- -- .      BLUME        2             L
+ 1  -.-. .- . ... .- .-.    CAESAR       3             E
+                                              S1: sortiere nach B, alphabetisch
 ```
 
-Jeder Schritt ist einzeln editierbar, deaktivierbar, umsortierbar. Das ersetzt das
-Copy-Paste-Pingpong zwischen Einzeltools und ist gleichzeitig ein Protokoll dessen, was man
-schon probiert hat – im Hunt um 3 Uhr nachts mehr wert, als es klingt.
+- **Eingabespalte**: freier Text je Zeile, auf Wunsch mit einer **Codetafel**. Wer Morse
+  eintippt, sieht auch Morse – die Zelle speichert das Eingetippte, nicht eine Übersetzung
+  davon. Tasten und antippbares Raster der Tafel schreiben direkt in die Zelle.
+- **Werkzeugspalte**: ein Codec auf einer früheren Spalte. Jede Option ist entweder fest
+  eingestellt **oder kommt je Zeile aus einer Spalte** – „nimm den n-ten Buchstaben“ mit
+  einem n, das pro Zeile woanders steht, ist der halbe Rätselalltag.
+- **Positionsspalte**: der Platz der Zeile in einer bestimmten Reihenfolge.
+
+**Sortieren.** Weil jede Zelle aus ihrer eigenen Zeile rechnet, ändert Sortieren keinen
+Wert, sondern nur die Reihenfolge. Inhaltlich wirksam wird sie erst über eine
+Positionsspalte – und genau deshalb sind Sortierschritte **Daten, keine einmalige Aktion**:
+
+- Schritte stehen als Liste (S1, S2, …) und sind jederzeit änderbar; alles rechnet neu.
+- Jeder Schritt erzeugt eine **Ordnung**: O0 ist die Eingabereihenfolge, O1 die nach S1.
+  Sortiert wird **stabil**, bei Gleichstand bleibt die vorherige Reihenfolge.
+- Eine Positionsspalte zeigt auf eine bestimmte Ordnung. Damit lässt sich „erst nach D
+  sortieren, dann E, F, G auf dieser Basis bauen, dann nach G sortieren“ wörtlich abbilden.
+- **Nachvollziehbarkeit**: Die Eingabenummer steht links und bleibt der Zeile für immer;
+  daneben die Verschiebung gegenüber der Ordnung davor (↑3). Jede frühere Ordnung lässt
+  sich wieder anzeigen.
+- Ein Ring – ein Schritt, der nach einer Spalte sortiert, die ihn selbst braucht – wird
+  gemeldet, statt die Oberfläche aufzuhängen.
+
+**Untersuchung je Zelle**: Auto-Erkennung, Buchstabenhäufigkeit und die Brute-Force-Wand
+arbeiten auf einer angetippten Zelle. Ein Treffer wird als **Spalte** übernommen und gilt
+damit für alle Zeilen, nicht nur für die, an der man ihn gefunden hat.
+
+Eine Zeile mit einer Spalte ist genau der frühere Fall „ein Text, eine Kette von
+Schritten“; alte Stände und geteilte Links werden beim Öffnen in ein Blatt übersetzt.
 
 ### 3.2 Codec-Registry (die Bausteine)
 
