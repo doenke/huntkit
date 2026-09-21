@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Codec } from '../codecs/types';
   import { standardOptionen } from '../codecs/types';
-  import { anWerkbank } from '../lib/werkbank';
+  import { anWerkbank } from '../lib/blatt';
   import Optionen from './Optionen.svelte';
 
   /**

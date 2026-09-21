@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { join, posix, relative, sep } from 'node:path';
-import type { Plugin } from 'vite';
+import { isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
+import type { Plugin, ResolvedConfig } from 'vite';
 
 /**
  * Erzeugt nach dem Bauen einen Service Worker, der die komplette App beim
@@ -13,11 +13,20 @@ import type { Plugin } from 'vite';
  * tatsaechlichen Build-Ergebnis erzeugt, kann also nichts vergessen.
  */
 export function offlineCache(): Plugin {
+  // Das Ausgabeverzeichnis kommt aus der Konfiguration, nicht aus einer
+  // Annahme: Ein Build nach woanders (Vorschau, Test) soll denselben Service
+  // Worker bekommen und nicht an einem fest verdrahteten „dist“ scheitern.
+  let konfiguration: ResolvedConfig | null = null;
   return {
     name: 'huntkit-offline-cache',
     apply: 'build',
+    configResolved(gelesen) {
+      konfiguration = gelesen;
+    },
     closeBundle() {
-      const verzeichnis = 'dist';
+      const ausgabe = konfiguration?.build.outDir ?? 'dist';
+      const wurzel = konfiguration?.root ?? process.cwd();
+      const verzeichnis = isAbsolute(ausgabe) ? ausgabe : resolve(wurzel, ausgabe);
       const dateien = sammleDateien(verzeichnis, verzeichnis).sort();
       // Die Version wechselt genau dann, wenn sich Inhalte aendern – damit
       // ersetzt der Service Worker seinen Cache nicht bei jedem Deployment neu.

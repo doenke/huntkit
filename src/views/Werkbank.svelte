@@ -1,79 +1,172 @@
 <script lang="ts">
-  import { alleVerschiebungen } from '../codecs/caesar';
-  import { CODECS, codec } from '../codecs/registry';
-  import { erkenne, optionenText, type Fund } from '../lib/erkennen';
-  import { sprachwert } from '../lib/sprachwert';
-  import { analysiere } from '../lib/frequenz';
-  import { alsLink, ausAdresse } from '../lib/teilen';
+  import { codec as findeCodec } from '../codecs/registry';
+  import type { OptionWerte } from '../codecs/types';
   import {
-    anwenden,
+    hoechsteNummer,
     laden,
-    leererZustand,
-    neuerSchritt,
+    leeresBlatt,
+    neueEingabespalte,
+    neuePositionsspalte,
+    neueWerkzeugspalte,
+    neueZeile,
+    rechne,
     sichern,
-    type Werkbankzustand
-  } from '../lib/werkbank';
-  import Optionen from '../ui/Optionen.svelte';
-  import Textfeld from '../ui/Textfeld.svelte';
+    spaltenname,
+    spaltenzeichen,
+    kennung,
+    type Spalte,
+    type SpaltenId
+  } from '../lib/blatt';
+  import { alsLink, ausAdresse } from '../lib/teilen';
+  import Spalteneinstellung from '../ui/Spalteneinstellung.svelte';
+  import Tafeleingabe from '../ui/Tafeleingabe.svelte';
+  import Zellenanalyse from '../ui/Zellenanalyse.svelte';
 
-  let zustand = $state<Werkbankzustand>(laden());
-  let wandOffen = $state(false);
-  let erkennungOffen = $state(false);
-  let haeufigkeitenOffen = $state(false);
+  /**
+   * Die Werkbank als Blatt: Zeilen und Spalten statt eines einzelnen Textes.
+   *
+   * Erste Spalte eintippen – auf Wunsch mit einer Codetafel, dann sieht man
+   * auch Morse als Morse. Jede weitere Spalte ist entweder wieder Eingabe oder
+   * ein Werkzeug auf einer früheren Spalte. Sortierschritte stehen als Liste
+   * darunter; jede Zeile behält dabei ihre Eingabenummer.
+   */
+
+  let blatt = $state(laden());
+  let anzeige = $state<number | null>(null);
+  let gewaehlt = $state<{ spalte: SpaltenId; zeile: string } | null>(null);
+  let einstellung = $state<SpaltenId | null>(null);
   let linkStand = $state('');
+  let leerenGefragt = $state(false);
 
   // Ein geteilter Link bringt einen fertigen Stand mit; er hat Vorrang vor dem,
   // was zuletzt auf diesem Gerät offen war.
   $effect(() => {
     void ausAdresse().then((geteilt) => {
-      if (geteilt) zustand = geteilt;
+      if (geteilt) blatt = geteilt;
     });
   });
 
-  const staende = $derived(anwenden(zustand));
-  const ergebnis = $derived(staende[staende.length - 1]);
-  const funde = $derived(erkennungOffen ? erkenne(ergebnis?.text ?? '') : []);
-
-  /** Die 26 Verschiebungen samt Sprachwert – der beste wird hervorgehoben. */
-  const wand = $derived.by(() => {
-    if (!wandOffen) return [];
-    const reihen = alleVerschiebungen(ergebnis?.text ?? '').map((r) => ({
-      ...r,
-      wert: sprachwert(r.text)
-    }));
-    const bester = Math.max(...reihen.map((r) => r.wert));
-    return reihen.map((r) => ({ ...r, beste: bester > 0.15 && r.wert === bester }));
-  });
-
   $effect(() => {
-    sichern(zustand);
+    sichern(blatt);
   });
 
-  function hinzufuegen(event: Event) {
-    const ziel = event.currentTarget as HTMLSelectElement;
-    if (!ziel.value) return;
-    zustand.schritte.push(neuerSchritt(ziel.value));
-    ziel.value = '';
+  const stufe = $derived(
+    anzeige === null ? blatt.sortierungen.length : Math.min(anzeige, blatt.sortierungen.length)
+  );
+  const berechnung = $derived(rechne(blatt, stufe));
+  const spalteEinstellung = $derived(blatt.spalten.find((s) => s.id === einstellung));
+  const zelle = $derived.by(() => {
+    const wahl = gewaehlt;
+    if (!wahl) return null;
+    const reihe = berechnung.zeilen.find((z) => z.zeile.id === wahl.zeile);
+    const spalte = blatt.spalten.find((s) => s.id === wahl.spalte);
+    if (!reihe || !spalte) return null;
+    return { reihe, spalte, inhalt: reihe.zellen[spalte.id] ?? { text: '', luecken: [] } };
+  });
+
+  function kopfname(spalte: Spalte): string {
+    if (spalte.titel?.trim()) return spalte.titel.trim();
+    if (spalte.art === 'eingabe') return spalte.tafel ? (findeCodec(spalte.tafel)?.name ?? 'Eingabe') : 'Eingabe';
+    if (spalte.art === 'position') return `Platz ${ordnungskurz(spalte.ordnung)}`;
+    return findeCodec(spalte.codecId)?.name ?? spalte.codecId;
   }
 
-  function schiebe(index: number, um: number) {
-    const neu = index + um;
-    if (neu < 0 || neu >= zustand.schritte.length) return;
-    const [schritt] = zustand.schritte.splice(index, 1);
-    if (schritt) zustand.schritte.splice(neu, 0, schritt);
+  function ordnungskurz(stufeNr: number): string {
+    return stufeNr === 0 ? 'Eingabe' : `S${stufeNr}`;
   }
 
-  function uebernehmen(text: string) {
-    zustand.eingabe = text;
-    zustand.schritte = [];
+  function untertitel(spalte: Spalte): string {
+    if (spalte.art === 'werkzeug') {
+      const richtung = spalte.richtung === 'decode' ? '→' : '←';
+      return `${richtung} ${spaltenname(blatt, spalte.quelle)}`;
+    }
+    if (spalte.art === 'eingabe' && spalte.tafel) return 'Tafel';
+    return '';
   }
 
-  function leeren() {
-    zustand = leererZustand();
+  function zeileHinzufuegen() {
+    blatt.zeilen.push(neueZeile(hoechsteNummer(blatt) + 1));
+  }
+
+  function zeileLoeschen(id: string) {
+    blatt.zeilen = blatt.zeilen.filter((z) => z.id !== id);
+    if (gewaehlt?.zeile === id) gewaehlt = null;
+  }
+
+  function spalteHinzufuegen(art: 'eingabe' | 'werkzeug' | 'position') {
+    const letzte = blatt.spalten[blatt.spalten.length - 1];
+    const neu =
+      art === 'eingabe'
+        ? neueEingabespalte()
+        : art === 'position'
+          ? neuePositionsspalte(blatt.sortierungen.length)
+          : letzte
+            ? neueWerkzeugspalte(letzte.id, 'morse')
+            : neueEingabespalte();
+    blatt.spalten.push(neu);
+    einstellung = neu.id;
+  }
+
+  /**
+   * Eine Spalte fällt weg – alles, was auf sie zeigte, muss mit. Quellen
+   * rücken auf die Spalte davor, gebundene Optionen werden wieder fest, und
+   * Sortierschritte nach dieser Spalte verschwinden.
+   */
+  function spalteLoeschen(id: SpaltenId) {
+    const stelle = blatt.spalten.findIndex((s) => s.id === id);
+    if (stelle < 0) return;
+    const ersatz = blatt.spalten[stelle - 1]?.id;
+    blatt.spalten = blatt.spalten.filter((s) => s.id !== id);
+    for (const spalte of blatt.spalten) {
+      if (spalte.art !== 'werkzeug') continue;
+      if (spalte.quelle === id) spalte.quelle = ersatz ?? blatt.spalten[0]?.id ?? '';
+      for (const [optionId, bindung] of Object.entries(spalte.optionen)) {
+        if (bindung.art === 'spalte' && bindung.spalte === id) {
+          const spec = findeCodec(spalte.codecId)?.optionen?.find((o) => o.id === optionId);
+          spalte.optionen[optionId] = { art: 'fest', wert: spec?.standard ?? '' };
+        }
+      }
+    }
+    blatt.sortierungen = blatt.sortierungen.filter((s) => s.spalte !== id);
+    for (const zeile of blatt.zeilen) delete zeile.werte[id];
+    if (einstellung === id) einstellung = null;
+    if (gewaehlt?.spalte === id) gewaehlt = null;
+  }
+
+  function sortierungHinzufuegen() {
+    const spalte = blatt.spalten[blatt.spalten.length - 1];
+    if (!spalte) return;
+    blatt.sortierungen.push({ id: kennung(), spalte: spalte.id, richtung: 'auf', art: 'text' });
+    anzeige = null;
+  }
+
+  function sortierungLoeschen(stelle: number) {
+    blatt.sortierungen.splice(stelle, 1);
+    // Positionsspalten, die auf einen weggefallenen Schritt zeigten, rücken mit.
+    for (const spalte of blatt.spalten) {
+      if (spalte.art === 'position' && spalte.ordnung > blatt.sortierungen.length) {
+        spalte.ordnung = blatt.sortierungen.length;
+      }
+    }
+    anzeige = null;
+  }
+
+  /** Einen Treffer der Untersuchung auf das ganze Blatt anwenden. */
+  function alsSpalte(codecId: string, optionen: OptionWerte) {
+    const quelle = gewaehlt?.spalte ?? blatt.spalten[blatt.spalten.length - 1]?.id;
+    if (!quelle) return;
+    const neu = neueWerkzeugspalte(quelle, codecId);
+    for (const [id, wert] of Object.entries(optionen)) neu.optionen[id] = { art: 'fest', wert };
+    blatt.spalten.push(neu);
+  }
+
+  function setzeWert(zeileId: string, spalteId: SpaltenId, wert: string) {
+    const zeile = blatt.zeilen.find((z) => z.id === zeileId);
+    if (zeile) zeile.werte[spalteId] = wert;
   }
 
   async function linkTeilen() {
-    const link = await alsLink(zustand);
+    const link = await alsLink(blatt);
     try {
       await navigator.clipboard.writeText(link);
       linkStand = 'Link kopiert';
@@ -83,340 +176,481 @@
     setTimeout(() => (linkStand = ''), 4000);
   }
 
-  /** Einen Vorschlag der Erkennung als Schritt übernehmen. */
-  function uebernimmFund(fund: Fund) {
-    const schritt = neuerSchritt(fund.codec.id);
-    schritt.optionen = { ...fund.optionen };
-    zustand.schritte.push(schritt);
-    erkennungOffen = false;
+  function leeren() {
+    blatt = leeresBlatt();
+    gewaehlt = null;
+    einstellung = null;
+    anzeige = null;
+    leerenGefragt = false;
+  }
+
+  async function kopieren(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Ohne Zwischenablage bleibt Markieren von Hand.
+    }
   }
 </script>
 
-<h2>Werkbank</h2>
-
-<label class="eingabe">
-  <span>Eingabe</span>
-  <textarea
-    bind:value={zustand.eingabe}
-    rows="3"
-    placeholder="Text, Morse, Zahlen – was auch immer vor dir liegt"
-    spellcheck="false"
-    autocapitalize="off"
-    autocomplete="off"
-  ></textarea>
-</label>
-
-<ol class="kette">
-  {#each zustand.schritte as schritt, index (schritt.id)}
-    {@const gewaehlt = codec(schritt.codecId)}
-    {@const stand = staende[index + 1]}
-    <li class:aus={!schritt.aktiv}>
-      <div class="zeile">
-        <strong>{gewaehlt?.name ?? schritt.codecId}</strong>
-        <div class="steuerung">
-          {#if !gewaehlt?.einseitig}
-            <button
-              type="button"
-              onclick={() => (schritt.richtung = schritt.richtung === 'decode' ? 'encode' : 'decode')}
-              title="Richtung umschalten"
-            >
-              {schritt.richtung === 'decode' ? 'entschlüsseln' : 'verschlüsseln'}
-            </button>
-          {/if}
-          <button
-            type="button"
-            aria-pressed={!schritt.aktiv}
-            onclick={() => (schritt.aktiv = !schritt.aktiv)}
-            title="Schritt aus- oder einschalten"
-          >
-            {schritt.aktiv ? 'an' : 'aus'}
-          </button>
-          <button type="button" onclick={() => schiebe(index, -1)} title="nach oben">↑</button>
-          <button type="button" onclick={() => schiebe(index, 1)} title="nach unten">↓</button>
-          <button type="button" onclick={() => zustand.schritte.splice(index, 1)} title="entfernen">
-            ✕
-          </button>
-        </div>
-      </div>
-
-      {#if gewaehlt?.optionen}
-        <div class="optionen">
-          <Optionen codec={gewaehlt} werte={schritt.optionen} />
-        </div>
-      {/if}
-
-      {#if stand?.fehlt}
-        <p class="hinweis">Diesen Code gibt es nicht (mehr).</p>
-      {:else if stand}
-        <output class="mono zwischen">{stand.text}</output>
-        {#if stand.luecken.length > 0}
-          <p class="hinweis">
-            {stand.luecken.length}
-            {stand.luecken.length === 1 ? 'Zeichen' : 'Zeichen'} nicht übersetzbar:
-            <span class="mono">{stand.luecken.map((l) => l.zeichen).join(' ')}</span>
-          </p>
-        {/if}
-      {/if}
-    </li>
-  {/each}
-</ol>
-
-<div class="anbau">
-  <select onchange={hinzufuegen} aria-label="Schritt hinzufügen">
-    <option value="">Schritt hinzufügen …</option>
-    {#each CODECS.filter((c) => !c.nurNachschlagen) as eintrag (eintrag.id)}
-      <option value={eintrag.id}>{eintrag.name}</option>
-    {/each}
-  </select>
-  {#if zustand.schritte.length > 0 || zustand.eingabe.length > 0}
-    <button type="button" onclick={leeren}>alles leeren</button>
-    <button type="button" onclick={linkTeilen}>Link teilen</button>
-  {/if}
+<div class="kopf">
+  <h2>Werkbank</h2>
+  <div class="leiste">
+    <button type="button" onclick={zeileHinzufuegen}>+ Zeile</button>
+    <select
+      aria-label="Spalte hinzufügen"
+      value=""
+      onchange={(e) => {
+        const art = e.currentTarget.value as 'eingabe' | 'werkzeug' | 'position';
+        if (art) spalteHinzufuegen(art);
+        e.currentTarget.value = '';
+      }}
+    >
+      <option value="">+ Spalte …</option>
+      <option value="eingabe">Eingabe</option>
+      <option value="werkzeug">Werkzeug auf eine Spalte</option>
+      <option value="position">Platz in einer Reihenfolge</option>
+    </select>
+  </div>
 </div>
 
-<Textfeld text={ergebnis?.text ?? ''} uebernehmen={() => uebernehmen(ergebnis?.text ?? '')} />
-
-{#if linkStand}
-  <p class="linkstand mono">{linkStand}</p>
+{#if blatt.sortierungen.length > 0}
+  <div class="ordnung">
+    <span class="marke">Anzeige</span>
+    <select
+      value={String(stufe)}
+      onchange={(e) => (anzeige = Number(e.currentTarget.value))}
+    >
+      {#each Array.from({ length: blatt.sortierungen.length + 1 }, (_, i) => i) as nr (nr)}
+        <option value={String(nr)}>
+          {nr === 0 ? 'Eingabereihenfolge' : `nach Schritt ${nr}`}
+        </option>
+      {/each}
+    </select>
+  </div>
 {/if}
 
-<section class="erkennung">
-  <button type="button" class="aufklapp" onclick={() => (erkennungOffen = !erkennungOffen)}>
-    {erkennungOffen ? '▾' : '▸'} Was ist das? · Code erkennen
-  </button>
-  {#if erkennungOffen}
-    {#if funde.length === 0}
-      <p class="hinweis">Dazu fällt mir nichts ein – zu kurz oder kein bekannter Code.</p>
-    {:else}
-      <ol class="funde">
-        {#each funde as fund (fund.codec.id)}
-          <li>
-            <button type="button" onclick={() => uebernimmFund(fund)}>
-              <span class="kopfzeile">
-                <strong>{fund.codec.name}</strong>
-                {#if optionenText(fund)}<span class="leise">{optionenText(fund)}</span>{/if}
-                <span class="balken" aria-hidden="true">
-                  <span style="width: {Math.round(fund.bewertung * 100)}%"></span>
-                </span>
-              </span>
-              <span class="mono vorschau">{fund.text.slice(0, 90)}</span>
+<div class="tabelle">
+  <table>
+    <thead>
+      <tr>
+        <th class="ecke" title="Nummer der Eingabe">#</th>
+        {#each blatt.spalten as spalte, i (spalte.id)}
+          <th>
+            <button type="button" class="spaltenkopf" onclick={() => (einstellung = einstellung === spalte.id ? null : spalte.id)}>
+              <span class="buchstabe">{spaltenzeichen(i)}</span>
+              <span class="name">{kopfname(spalte)}</span>
+              {#if untertitel(spalte)}<span class="quelle">{untertitel(spalte)}</span>{/if}
             </button>
-          </li>
+          </th>
         {/each}
-      </ol>
-      <p class="hinweis">
-        Tippen fügt den Schritt hinzu. Der Balken zeigt, wie sehr das Ergebnis nach Sprache
-        aussieht – eine Hilfe, kein Urteil.
-      </p>
-    {/if}
-  {/if}
-</section>
+        <th class="rand"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {#each berechnung.zeilen as reihe (reihe.zeile.id)}
+        <tr>
+          <th class="nr">
+            <span class="nummer">{reihe.zeile.nummer}</span>
+            {#if reihe.vorher !== reihe.platz}
+              <span class="bewegung" title="Verschiebung gegenüber der Reihenfolge davor">
+                {reihe.vorher > reihe.platz ? '↑' : '↓'}{Math.abs(reihe.vorher - reihe.platz)}
+              </span>
+            {/if}
+          </th>
+          {#each blatt.spalten as spalte (spalte.id)}
+            {@const inhalt = reihe.zellen[spalte.id]}
+            <td
+              class:aktiv={gewaehlt?.spalte === spalte.id && gewaehlt?.zeile === reihe.zeile.id}
+              class:fehler={Boolean(inhalt?.fehler)}
+            >
+              {#if spalte.art === 'eingabe'}
+                <input
+                  class="mono"
+                  value={reihe.zeile.werte[spalte.id] ?? ''}
+                  spellcheck="false"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  oninput={(e) => setzeWert(reihe.zeile.id, spalte.id, e.currentTarget.value)}
+                  onfocus={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
+                  onclick={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
+                />
+              {:else}
+                <button
+                  type="button"
+                  class="wert mono"
+                  onclick={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
+                >
+                  {inhalt?.fehler ? '⚠' : inhalt?.text}
+                </button>
+              {/if}
+            </td>
+          {/each}
+          <td class="rand">
+            <button
+              type="button"
+              class="weg"
+              onclick={() => zeileLoeschen(reihe.zeile.id)}
+              aria-label={`Zeile ${reihe.zeile.nummer} löschen`}
+            >
+              ✕
+            </button>
+          </td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+</div>
 
-<section class="erkennung">
-  <button type="button" class="aufklapp" onclick={() => (haeufigkeitenOffen = !haeufigkeitenOffen)}>
-    {haeufigkeitenOffen ? '▾' : '▸'} Häufigkeiten · welche Art Chiffre?
-  </button>
-  {#if haeufigkeitenOffen}
-    {@const analyse = analysiere(ergebnis?.text ?? '')}
+{#if berechnung.fehler.length > 0}
+  <ul class="fehlerliste">
+    {#each berechnung.fehler as text (text)}
+      <li>{text}</li>
+    {/each}
+  </ul>
+{/if}
+
+{#if spalteEinstellung}
+  <Spalteneinstellung
+    {blatt}
+    spalte={spalteEinstellung}
+    schliessen={() => (einstellung = null)}
+    entfernen={() => spalteLoeschen(spalteEinstellung.id)}
+  />
+{/if}
+
+<section class="sortierung">
+  <div class="zeile">
+    <strong>Sortieren</strong>
+    <button type="button" onclick={sortierungHinzufuegen} disabled={blatt.spalten.length === 0}>
+      + Schritt
+    </button>
+  </div>
+
+  {#if blatt.sortierungen.length === 0}
     <p class="hinweis">
-      {analyse.laenge} Buchstaben · Koinzidenzindex {analyse.koinzidenz.toFixed(3)}
+      Noch keine Sortierung. Jeder Schritt erzeugt eine Reihenfolge, die eine Positionsspalte
+      wieder benutzen kann – die Eingabenummer links bleibt davon unberührt.
     </p>
-    <p class="deutung">{analyse.deutung}</p>
-    <ol class="saeulen">
-      {#each analyse.haeufigkeiten.slice(0, 26) as eintrag (eintrag.zeichen)}
+  {:else}
+    <ol>
+      {#each blatt.sortierungen as schritt, i (schritt.id)}
         <li>
-          <span class="saeule" style="height: {Math.round(eintrag.anteil * 400)}px"></span>
-          <span class="buchstabe">{eintrag.zeichen}</span>
-          <span class="anzahl">{eintrag.anzahl}</span>
+          <span class="stufe">S{i + 1}</span>
+          <select value={schritt.spalte} onchange={(e) => (schritt.spalte = e.currentTarget.value)}>
+            {#each blatt.spalten as spalte (spalte.id)}
+              <option value={spalte.id}>{spaltenname(blatt, spalte.id)}</option>
+            {/each}
+          </select>
+          <select
+            value={schritt.art}
+            onchange={(e) => (schritt.art = e.currentTarget.value as typeof schritt.art)}
+          >
+            <option value="text">alphabetisch</option>
+            <option value="zahl">numerisch</option>
+            <option value="laenge">nach Länge</option>
+          </select>
+          <button
+            type="button"
+            onclick={() => (schritt.richtung = schritt.richtung === 'auf' ? 'ab' : 'auf')}
+            title="Richtung umschalten"
+          >
+            {schritt.richtung === 'auf' ? '↑' : '↓'}
+          </button>
+          <button type="button" class="weg" onclick={() => sortierungLoeschen(i)} aria-label="Schritt löschen">
+            ✕
+          </button>
         </li>
       {/each}
     </ol>
   {/if}
 </section>
 
-<section class="wand">
-  <button type="button" class="aufklapp" onclick={() => (wandOffen = !wandOffen)}>
-    {wandOffen ? '▾' : '▸'} Brute-Force-Wand · alle 26 Verschiebungen
-  </button>
-  {#if wandOffen}
-    {#if (ergebnis?.text ?? '').length === 0}
-      <p class="hinweis">Noch kein Text da.</p>
+{#if zelle}
+  <section class="zelle">
+    <div class="zeile">
+      <strong>
+        {spaltenname(blatt, zelle.spalte.id)} · Zeile {zelle.reihe.zeile.nummer}
+      </strong>
+      <span class="knoepfe">
+        <button type="button" onclick={() => kopieren(zelle.inhalt.text)} disabled={!zelle.inhalt.text}>
+          kopieren
+        </button>
+        <button type="button" onclick={() => (gewaehlt = null)}>schließen</button>
+      </span>
+    </div>
+
+    {#if zelle.spalte.art === 'eingabe'}
+      <textarea
+        class="mono"
+        rows="2"
+        value={zelle.reihe.zeile.werte[zelle.spalte.id] ?? ''}
+        spellcheck="false"
+        autocapitalize="off"
+        oninput={(e) => setzeWert(zelle.reihe.zeile.id, zelle.spalte.id, e.currentTarget.value)}
+      ></textarea>
+      {#if zelle.spalte.tafel}
+        <Tafeleingabe
+          codecId={zelle.spalte.tafel}
+          wert={zelle.reihe.zeile.werte[zelle.spalte.id] ?? ''}
+          setzen={(neu) => setzeWert(zelle.reihe.zeile.id, zelle.spalte.id, neu)}
+        />
+      {/if}
     {:else}
-      <ol class="verschiebungen">
-        {#each wand as reihe (reihe.schritte)}
-          <li>
-            <button
-              type="button"
-              class:beste={reihe.beste}
-              onclick={() => uebernehmen(reihe.text)}
-              title={`Sprachwert ${reihe.wert.toFixed(2)} – als Eingabe übernehmen`}
-            >
-              <span class="nummer">{reihe.schritte}</span>
-              <span class="mono">{reihe.text}</span>
-            </button>
-          </li>
-        {/each}
-      </ol>
+      <output class="mono ergebnis">{zelle.inhalt.text}</output>
+      {#if zelle.inhalt.fehler}
+        <p class="hinweis warn">{zelle.inhalt.fehler}</p>
+      {:else if zelle.inhalt.luecken.length > 0}
+        <p class="hinweis">
+          {zelle.inhalt.luecken.length} nicht übersetzbar:
+          <span class="mono">{zelle.inhalt.luecken.map((l) => l.zeichen).join(' ')}</span>
+        </p>
+      {/if}
     {/if}
+
+    <Zellenanalyse text={zelle.inhalt.text} {alsSpalte} />
+  </section>
+{/if}
+
+<div class="fuss">
+  <button type="button" onclick={linkTeilen}>Link teilen</button>
+  {#if leerenGefragt}
+    <button type="button" class="ernst" onclick={leeren}>wirklich alles löschen</button>
+    <button type="button" onclick={() => (leerenGefragt = false)}>abbrechen</button>
+  {:else}
+    <button type="button" onclick={() => (leerenGefragt = true)}>Blatt leeren</button>
   {/if}
-</section>
+</div>
+
+{#if linkStand}
+  <p class="linkstand mono">{linkStand}</p>
+{/if}
 
 <style>
-  .eingabe {
-    display: block;
-    margin-bottom: 16px;
-  }
-
-  .eingabe span {
-    display: block;
-    margin-bottom: 4px;
-    color: var(--text-leise);
-    font-size: 0.85rem;
-  }
-
-  textarea {
-    width: 100%;
-    font: inherit;
-    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    color: var(--text);
-    background: var(--flaeche);
-    border: 1px solid var(--rand);
-    border-radius: var(--radius);
-    padding: 10px;
-    resize: vertical;
-  }
-
-  .kette {
-    list-style: none;
-    margin: 0 0 12px;
-    padding: 0;
-    display: grid;
-    gap: 10px;
-  }
-
-  .kette li {
-    border: 1px solid var(--rand);
-    border-left: 3px solid var(--akzent);
-    border-radius: var(--radius);
-    background: var(--flaeche);
-    padding: 10px;
-  }
-
-  .kette li.aus {
-    border-left-color: var(--rand);
-    opacity: 0.55;
-  }
-
-  .zeile {
+  .kopf {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-  }
-
-  .steuerung {
-    display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    margin-bottom: 8px;
   }
 
-  .steuerung button {
-    min-height: 40px;
-    min-width: 40px;
-    padding: 0 8px;
-    font-size: 0.85rem;
-  }
-
-  .optionen {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 8px;
-  }
-
-  .zwischen {
-    display: block;
-    margin-top: 8px;
-    padding: 8px;
-    background: var(--grund);
-    border-radius: 8px;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-  }
-
-  .hinweis {
-    margin: 8px 0 0;
-    color: var(--warn);
-    font-size: 0.85rem;
-  }
-
-  .anbau {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  select {
-    font: inherit;
-    color: var(--text);
-    background: var(--flaeche-hoch);
-    border: 1px solid var(--rand);
-    border-radius: var(--radius);
-    min-height: var(--tap);
-    padding: 0 10px;
-  }
-
-  .wand {
-    margin-top: 20px;
-  }
-
-  .aufklapp {
-    width: 100%;
-    text-align: left;
-    background: none;
-    border: none;
-    color: var(--text-leise);
-    padding: 0 0 8px;
-  }
-
-  .verschiebungen {
-    list-style: none;
+  h2 {
     margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 2px;
   }
 
-  .verschiebungen button {
+  .leiste {
     display: flex;
-    gap: 10px;
-    width: 100%;
-    text-align: left;
-    background: var(--flaeche);
-    border-radius: 6px;
-    min-height: 40px;
-    align-items: center;
-    overflow-wrap: anywhere;
+    gap: 6px;
   }
 
-  .nummer {
-    flex: 0 0 2rem;
+  .leiste button,
+  .leiste select {
+    min-height: 38px;
+    font-size: 0.8rem;
+  }
+
+  .ordnung {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .marke,
+  .hinweis {
     color: var(--text-leise);
     font-size: 0.8rem;
   }
 
-  .verschiebungen button.beste {
-    background: var(--flaeche-hoch);
-    border-left: 3px solid var(--akzent);
+  select,
+  input,
+  textarea {
+    font: inherit;
+    color: var(--text);
+    background: var(--flaeche);
+    border: 1px solid var(--rand);
+    border-radius: var(--radius);
+    min-height: 38px;
+    padding: 0 8px;
   }
 
-  .erkennung {
-    margin-top: 20px;
+  textarea {
+    width: 100%;
+    padding: 6px 10px;
+    height: 3.4rem;
+    resize: vertical;
   }
 
-  .funde {
+  .mono {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  /* Die Tabelle rollt seitlich; die Nummernspalte bleibt stehen, damit man
+     auch nach dem Sortieren weiß, welche Zeile man vor sich hat. */
+  .tabelle {
+    overflow-x: auto;
+    border: 1px solid var(--rand);
+    border-radius: var(--radius);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  th,
+  td {
+    border-bottom: 1px solid var(--rand);
+    border-right: 1px solid var(--rand);
+    padding: 0;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  thead th {
+    background: var(--flaeche);
+    position: sticky;
+    top: 0;
+  }
+
+  .ecke,
+  .nr {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--flaeche);
+    min-width: 3.2rem;
+    padding: 4px 6px;
+    font-size: 0.75rem;
+    color: var(--text-leise);
+    font-weight: 500;
+  }
+
+  .nummer {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .bewegung {
+    margin-left: 4px;
+    color: var(--akzent);
+  }
+
+  .spaltenkopf {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    width: 100%;
+    min-width: 6.5rem;
+    min-height: 44px;
+    padding: 4px 8px;
+    background: none;
+    border: none;
+    border-radius: 0;
+    text-align: left;
+  }
+
+  .buchstabe {
+    font-size: 0.65rem;
+    color: var(--text-leise);
+    letter-spacing: 0.08em;
+  }
+
+  .name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .quelle {
+    font-size: 0.65rem;
+    color: var(--text-leise);
+  }
+
+  td input,
+  td .wert {
+    width: 100%;
+    min-width: 6.5rem;
+    min-height: 40px;
+    border: none;
+    border-radius: 0;
+    background: none;
+    font-size: 0.85rem;
+    text-align: left;
+    padding: 0 8px;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  td .wert {
+    color: var(--text-leise);
+  }
+
+  td.aktiv {
+    outline: 2px solid var(--akzent);
+    outline-offset: -2px;
+  }
+
+  td.fehler .wert {
+    color: var(--warn);
+  }
+
+  .rand {
+    border-right: none;
+    min-width: 2.4rem;
+  }
+
+  .weg {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--text-leise);
+  }
+
+  .fehlerliste {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 8px 10px;
+    border: 1px solid var(--warn);
+    border-radius: var(--radius);
+    color: var(--warn);
+    font-size: 0.8rem;
+    display: grid;
+    gap: 2px;
+  }
+
+  section {
+    margin-top: 16px;
+  }
+
+  section .zeile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .knoepfe {
+    display: flex;
+    gap: 6px;
+  }
+
+  .knoepfe button,
+  section .zeile button {
+    min-height: 34px;
+    font-size: 0.78rem;
+  }
+
+  .sortierung ol {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -424,92 +658,74 @@
     gap: 6px;
   }
 
-  .funde button {
-    display: grid;
-    gap: 4px;
-    width: 100%;
-    text-align: left;
-    padding: 8px 10px;
-    min-height: 0;
-  }
-
-  .kopfzeile {
+  .sortierung li {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+  }
+
+  .sortierung select {
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: 0.8rem;
+  }
+
+  .stufe {
+    flex: 0 0 auto;
+    font-size: 0.75rem;
+    color: var(--akzent);
+    font-weight: 700;
+  }
+
+  .sortierung li button {
+    flex: 0 0 auto;
+    min-height: 38px;
+    min-width: 38px;
+    padding: 0;
+  }
+
+  section.zelle {
+    border: 1px solid var(--akzent);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+
+  .ergebnis {
+    display: block;
+    padding: 8px 10px;
+    background: var(--flaeche);
+    border: 1px solid var(--rand);
+    border-radius: var(--radius);
+    min-height: 2.4rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .warn {
+    color: var(--warn);
+  }
+
+  .fuss {
+    display: flex;
+    gap: 6px;
+    margin-top: 20px;
     flex-wrap: wrap;
   }
 
-  .leise {
-    color: var(--text-leise);
-    font-size: 0.8rem;
+  .fuss button {
+    min-height: 40px;
+    font-size: 0.85rem;
   }
 
-  .balken {
-    flex: 1 0 60px;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--grund);
-    overflow: hidden;
-  }
-
-  .balken span {
-    display: block;
-    height: 100%;
-    background: var(--akzent);
+  .ernst {
+    border-color: var(--warn);
+    color: var(--warn);
   }
 
   .linkstand {
-    color: var(--text-leise);
-    font-size: 0.8rem;
-    overflow-wrap: anywhere;
-    margin: 0 0 12px;
-  }
-
-  .deutung {
-    margin: 0 0 10px;
-    font-size: 0.9rem;
-  }
-
-  .saeulen {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    align-items: flex-end;
-    gap: 3px;
-    overflow-x: auto;
-  }
-
-  .saeulen li {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    min-width: 1.3rem;
-  }
-
-  .saeule {
-    display: block;
-    width: 100%;
-    min-height: 2px;
-    max-height: 90px;
-    background: var(--akzent);
-    border-radius: 2px 2px 0 0;
-  }
-
-  .buchstabe {
+    margin-top: 8px;
     font-size: 0.75rem;
-  }
-
-  .anzahl {
-    font-size: 0.65rem;
     color: var(--text-leise);
-  }
-
-  .vorschau {
-    color: var(--text-leise);
-    font-size: 0.85rem;
     overflow-wrap: anywhere;
   }
 </style>

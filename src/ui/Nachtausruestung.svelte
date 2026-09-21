@@ -3,7 +3,7 @@
     Bildschirmwaechter, codeleser, kameraStarten, kameraStoppen, kannCodesLesen,
     kannWachhalten, leuchten, zoomen
   } from '../lib/nacht';
-  import { anWerkbank } from '../lib/werkbank';
+  import { anWerkbank } from '../lib/blatt';
 
   const waechter = new Bildschirmwaechter();
   let wachhalten = $state(false);
