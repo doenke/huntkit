@@ -54,10 +54,10 @@ describe('Code in Gruppen zerlegen', () => {
 describe('Morse zeichnen', () => {
   it('macht aus Punkt und Strich Balken in einer Spur', () => {
     const glyph = morse.zeichneCode!('.-')!;
-    // Punkt 6 breit, Lücke 6, Strich 18 – zusammen 30 in einer 10 hohen Spur.
-    expect(glyph.viewBox).toBe('0 0 30 10');
-    expect(glyph.inhalt).toContain('x="0" y="2" width="6" height="6"');
-    expect(glyph.inhalt).toContain('x="12" y="2" width="18" height="6"');
+    // Punkt 3 breit, Lücke 3, Strich 9 – zusammen 15 in einer 10 hohen Spur.
+    expect(glyph.viewBox).toBe('0 0 15 10');
+    expect(glyph.inhalt).toContain('x="0" y="3.5" width="3" height="3"');
+    expect(glyph.inhalt).toContain('x="6" y="3.5" width="9" height="3"');
   });
 
   it('legt jeden Balken in dieselbe Spur, egal wie lang die Gruppe ist', () => {
@@ -65,7 +65,7 @@ describe('Morse zeichnen', () => {
     // macht Morse als Text so mühsam.
     for (const code of ['.', '-', '...--..']) {
       const inhalt = morse.zeichneCode!(code)!.inhalt;
-      expect([...inhalt.matchAll(/y="([\d.]+)"/g)].every((t) => t[1] === '2')).toBe(true);
+      expect([...inhalt.matchAll(/y="([\d.]+)"/g)].every((t) => t[1] === '3.5')).toBe(true);
     }
   });
 

@@ -56,7 +56,7 @@ export const morse: Codec = {
     // drei davon lang. Die Spur ist höher als der Balken – diese Luft darüber
     // und darunter macht den schlanken Eindruck, ohne dass die Zeichnung
     // kleiner wird.
-    const DICKE = 6;
+    const DICKE = 3;
     const SPUR = 10;
     const oben = (SPUR - DICKE) / 2;
     let x = 0;
