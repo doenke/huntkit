@@ -3,6 +3,7 @@
   import Werkbank from './views/Werkbank.svelte';
   import Codes from './views/Codes.svelte';
   import Nachschlagen from './views/Nachschlagen.svelte';
+  import Loesungen from './views/Loesungen.svelte';
   import Mehr from './views/Mehr.svelte';
 
   let seite = $state<Seite>(aktuelleSeite());
@@ -25,6 +26,8 @@
     <Codes />
   {:else if seite === 'nachschlagen'}
     <Nachschlagen />
+  {:else if seite === 'loesungen'}
+    <Loesungen />
   {:else}
     <Mehr />
   {/if}
@@ -81,7 +84,11 @@
     border: none;
     border-radius: var(--radius);
     color: var(--text-leise);
-    font-size: 0.85rem;
+    /* Fuenf Bereiche muessen auch auf ein schmales Handy passen: Die Schrift
+       schrumpft mit der Breite, bleibt auf grossen Schirmen aber normal. */
+    font-size: clamp(0.62rem, 2.6vw, 0.85rem);
+    padding: 0 2px;
+    white-space: nowrap;
   }
 
   nav button[aria-current='page'] {

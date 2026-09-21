@@ -11,7 +11,11 @@
 </script>
 
 {#if gewaehlt}
-  <Codekarte codec={gewaehlt} zurueck={() => (offen = null)} />
+  <!-- Eigene Karte je Code: Die Einstellungen eines Codes dürfen nicht im
+       nächsten weiterleben, wenn man direkt umschaltet. -->
+  {#key gewaehlt.id}
+    <Codekarte codec={gewaehlt} zurueck={() => (offen = null)} />
+  {/key}
 {:else}
   <h2>Codes</h2>
   <ul class="liste">
