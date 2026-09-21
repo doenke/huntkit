@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ausWoertern, gitter, gitterLesen, jedesN, stellen } from './extrahieren';
+import { ausWoertern, gitter, gitterLesen, jedesN, stellen, zaehlen } from './extrahieren';
 
 describe('Jeden n-ten', () => {
   it('nimmt jeden dritten Buchstaben ab der ersten Stelle', () => {
@@ -98,5 +98,32 @@ describe('Einseitigkeit', () => {
       expect(helfer.decode('ABCDEF', { n: 2, versatz: 1, breite: 3, liste: '1', stelle: 1 }).text)
         .toBe(helfer.encode('ABCDEF', { n: 2, versatz: 1, breite: 3, liste: '1', stelle: 1 }).text);
     }
+  });
+});
+
+describe('Zeichen zählen', () => {
+  it('zählt, wie oft ein Zeichen vorkommt', () => {
+    expect(zaehlen.encode('NACHTSCHICHT', { suche: 'C', schreibung: 'egal' }).text).toBe('3');
+    expect(zaehlen.encode('NACHTSCHICHT', { suche: 'X', schreibung: 'egal' }).text).toBe('0');
+  });
+
+  it('nimmt Groß- und Kleinschreibung standardmäßig nicht wichtig', () => {
+    expect(zaehlen.encode('Anna', { suche: 'a', schreibung: 'egal' }).text).toBe('2');
+    expect(zaehlen.encode('Anna', { suche: 'a', schreibung: 'genau' }).text).toBe('1');
+  });
+
+  it('zählt auch mehrstellige Suchen, ohne sich zu überlappen', () => {
+    expect(zaehlen.encode('.- .- ...', { suche: '.-', schreibung: 'genau' }).text).toBe('2');
+    // AAAA enthält AA zweimal, wenn man wie von Hand weiterzählt.
+    expect(zaehlen.encode('AAAA', { suche: 'AA', schreibung: 'genau' }).text).toBe('2');
+  });
+
+  it('zählt Leerzeichen und Satzzeichen mit, wenn man danach sucht', () => {
+    expect(zaehlen.encode('A B C', { suche: ' ', schreibung: 'egal' }).text).toBe('2');
+  });
+
+  it('behauptet bei leerer Eingabe oder leerer Suche keine Null', () => {
+    expect(zaehlen.encode('', { suche: 'E', schreibung: 'egal' }).text).toBe('');
+    expect(zaehlen.encode('EEE', { suche: '', schreibung: 'egal' }).text).toBe('');
   });
 });
