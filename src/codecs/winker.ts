@@ -54,7 +54,7 @@ export const winker: Codec = {
   id: 'winker',
   name: 'Winkeralphabet',
   beschreibung:
-    'Zwei Flaggen in je acht Richtungen. Ziffern 1–9 und 0 stehen nach dem Zahlzeichen für A–I und K.',
+    'Zwei Flaggen in je acht Richtungen.',
   encode: (eingabe) => zeichen.encode(eingabe),
   decode: (eingabe) => zeichen.decode(eingabe),
   tabelle: () => zeichen.tabelle(),

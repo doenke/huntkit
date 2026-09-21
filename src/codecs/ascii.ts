@@ -21,6 +21,20 @@ function darstelle(codepunkt: number, basis: number, breite: number): string {
 /** Druckbares ASCII – das, was auf einem Rätselzettel stehen kann. */
 const ZEICHENVORRAT = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i));
 
+/**
+ * 95 Zeichen passen auf kein Handy. In vier Abschnitten findet man sie wieder –
+ * in dieser Reihenfolge, nicht in der des Zeichensatzes: Sonst stünde das
+ * Leerzeichen (Code 32) vorn und die Buchstaben zuhinterst.
+ */
+const GRUPPEN = ['A–Z', 'a–z', '0–9', 'Sonderzeichen'] as const;
+
+function gruppe(zeichen: string): (typeof GRUPPEN)[number] {
+  if (/[A-Z]/.test(zeichen)) return 'A–Z';
+  if (/[a-z]/.test(zeichen)) return 'a–z';
+  if (/[0-9]/.test(zeichen)) return '0–9';
+  return 'Sonderzeichen';
+}
+
 export const ascii: Codec = {
   id: 'ascii',
   name: 'ASCII',
@@ -74,10 +88,13 @@ export const ascii: Codec = {
 
   tabelle(optionen): ReadonlyArray<TabellenEintrag> {
     const { basis, breite } = basisAus(optionen);
-    return ZEICHENVORRAT.map((z) => ({
-      zeichen: z === ' ' ? '␣' : z,
-      darstellung: darstelle(z.charCodeAt(0), basis, breite)
-    }));
+    return GRUPPEN.flatMap((name) =>
+      ZEICHENVORRAT.filter((z) => gruppe(z) === name).map((z) => ({
+        zeichen: z === ' ' ? '␣' : z,
+        darstellung: darstelle(z.charCodeAt(0), basis, breite),
+        gruppe: name
+      }))
+    );
   },
 
   passt(eingabe) {

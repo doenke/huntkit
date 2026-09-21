@@ -40,8 +40,7 @@ export const hexahueMuster = MUSTER;
 export const hexahue: Codec = {
   id: 'hexahue',
   name: 'Hexahue',
-  beschreibung:
-    'Sechs Farbfelder, 2 breit und 3 hoch. Als Text: M magenta, R rot, G grün, Y gelb, B blau, C cyan.',
+  beschreibung: 'Sechs Farbfelder, 2 breit und 3 hoch.',
   encode: (eingabe) => zeichen.encode(eingabe),
   decode: (eingabe) => zeichen.decode(eingabe),
   tabelle: () => zeichen.tabelle(),

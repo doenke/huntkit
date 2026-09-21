@@ -20,7 +20,7 @@ export const nato: Codec = {
   beschreibung: 'Buchstabiertafel der NATO, Ziffern in deutscher Schreibweise.',
   encode: (eingabe) => zeichen.encode(eingabe),
   decode: (eingabe) => zeichen.decode(eingabe),
-  tabelle: () => zeichen.tabelle(),
+  tabelle: () => zeichen.tabelle().map((e) => ({ ...e, gruppe: /[0-9]/.test(e.zeichen) ? 'Zahlen' : 'Buchstaben' })),
   passt(eingabe) {
     const woerter = eingabe.trim().split(/[\s/]+/).filter((w) => w.length > 0);
     if (woerter.length === 0) return 0;

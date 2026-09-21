@@ -241,7 +241,7 @@ const TASTEN: ReadonlyArray<readonly [string, string]> = [
 export const handytasten: Codec = {
   id: 'handytasten',
   name: 'Handytastatur',
-  beschreibung: 'Alte Handytasten: A ist 2, B ist 22, C ist 222. Gruppen durch Leerzeichen trennen.',
+  beschreibung: 'Alte Handytasten: A ist 2, B ist 22, C ist 222.',
   encode(eingabe) {
     const luecken: Luecke[] = [];
     const teile: string[] = [];
@@ -273,6 +273,26 @@ export const handytasten: Codec = {
     TASTEN.flatMap(([ziffer, buchstaben]) =>
       [...buchstaben].map((zeichen, i) => ({ zeichen, darstellung: ziffer.repeat(i + 1) }))
     ),
+  zeichne(gesucht) {
+    const zeichen = gesucht.toUpperCase();
+    const taste = TASTEN.find(([, buchstaben]) => buchstaben.includes(zeichen));
+    if (!taste) return null;
+    const [ziffer, buchstaben] = taste;
+    const druecke = buchstaben.indexOf(zeichen) + 1;
+    // Die Taste, wie sie auf dem Gerät aussah: Ziffer groß, Buchstaben klein,
+    // darunter so viele Punkte wie Tastendrücke.
+    const punkte = Array.from({ length: druecke }, (_, i) =>
+      `<circle cx="${34 + (i - (druecke - 1) / 2) * 13}" cy="76" r="4" fill="currentColor"/>`
+    ).join('');
+    return {
+      viewBox: '0 0 68 92',
+      inhalt:
+        `<rect x="2" y="2" width="64" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="2.5"/>` +
+        `<text x="34" y="30" text-anchor="middle" font-size="22" font-weight="600" fill="currentColor">${ziffer}</text>` +
+        `<text x="34" y="50" text-anchor="middle" font-size="13" fill="currentColor" opacity="0.75">${buchstaben}</text>` +
+        punkte
+    };
+  },
   passt: (eingabe) => {
     const gruppen = eingabe.trim().split(/[^2-9]+/).filter((s) => s.length > 0);
     if (gruppen.length === 0) return 0;

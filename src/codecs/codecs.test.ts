@@ -196,3 +196,45 @@ describe('Periodensystem als Schlüssel', () => {
     expect(c().encode('Xx', { von: 'symbol', nach: 'name' }).luecken).toHaveLength(1);
   });
 });
+
+/**
+ * Abschnitte der Codekarten: Lange Tabellen passen nur gruppiert aufs Handy.
+ * Die Karte zeigt immer genau einen Abschnitt – deshalb muss jeder Eintrag
+ * einen haben, und die Abschnitte zusammen müssen die Tabelle ergeben.
+ */
+describe('Abschnitte langer Tabellen', () => {
+  it('teilt ASCII in vier Abschnitte, Buchstaben zuerst', () => {
+    const eintraege = codec('ascii')!.tabelle!({ basis: '10' });
+    const abschnitte = [...new Set(eintraege.map((e) => e.gruppe))];
+    expect(abschnitte).toEqual(['A–Z', 'a–z', '0–9', 'Sonderzeichen']);
+    expect(eintraege).toHaveLength(95);
+    expect(eintraege.filter((e) => e.gruppe === 'A–Z')).toHaveLength(26);
+    // Das Leerzeichen hat den kleinsten Code, steht aber nicht vorn.
+    expect(eintraege[0]?.zeichen).toBe('A');
+  });
+
+  it('teilt das Periodensystem in sieben Perioden', () => {
+    const eintraege = codec('elemente')!.tabelle!({ von: 'symbol', nach: 'ordnungszahl' });
+    expect(eintraege).toHaveLength(118);
+    expect([...new Set(eintraege.map((e) => e.gruppe))]).toEqual([
+      'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'
+    ]);
+    expect(eintraege.filter((e) => e.gruppe === 'P1').map((e) => e.zeichen)).toEqual(['H', 'He']);
+  });
+
+  it('zeigt im Periodensystem das eingestellte Paar – eine Zelle tippt, was encode liefert', () => {
+    const c = codec('elemente')!;
+    const werte = { von: 'symbol', nach: 'name' };
+    const eintrag = c.tabelle!(werte).find((e) => e.zeichen === 'Au');
+    expect(eintrag?.darstellung).toBe('Gold');
+    expect(eintrag?.darstellung).toBe(c.encode('Au', werte).text);
+  });
+
+  it('lässt Elemente ohne Wert aus, statt leere Zellen zu zeigen', () => {
+    // Nicht jedes Element hat eine Elektronegativität – Edelgase etwa nicht.
+    const eintraege = codec('elemente')!.tabelle!({ von: 'symbol', nach: 'elektronegativitaet' });
+    expect(eintraege.length).toBeLessThan(118);
+    expect(eintraege.every((e) => e.darstellung.length > 0)).toBe(true);
+    expect(eintraege.some((e) => e.zeichen === 'He')).toBe(false);
+  });
+});

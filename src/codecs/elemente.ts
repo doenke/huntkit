@@ -1,4 +1,5 @@
 import elementeDaten from '../../data/elements.json';
+import { periode } from '../lib/periodensystem';
 import { ergebnis, text } from './hilfen';
 import type { Codec, Luecke, OptionWerte } from './types';
 
@@ -64,7 +65,7 @@ function uebersetze(eingabe: string, von: Feld, nach: Feld) {
 export const elemente: Codec = {
   id: 'elemente',
   name: 'Periodensystem',
-  beschreibung: 'Elementangaben ineinander übersetzen, z.B. Symbol zu Ordnungszahl.',
+  beschreibung: 'Elementangaben ineinander übersetzen.',
   optionen: [
     { id: 'von', titel: 'von', art: 'auswahl', standard: 'symbol', werte: FELDER },
     { id: 'nach', titel: 'nach', art: 'auswahl', standard: 'ordnungszahl', werte: FELDER }
@@ -96,9 +97,19 @@ export const elemente: Codec = {
     uebersetze(eingabe, feldAus(optionen, 'von', 'symbol'), feldAus(optionen, 'nach', 'ordnungszahl')),
   decode: (eingabe, optionen) =>
     uebersetze(eingabe, feldAus(optionen, 'nach', 'ordnungszahl'), feldAus(optionen, 'von', 'symbol')),
-  tabelle: () =>
-    elementeDaten.map((element) => ({
-      zeichen: element.symbol,
-      darstellung: `${element.ordnungszahl} · ${element.name}`
-    }))
+  // Die Tabelle zeigt genau das eingestellte Paar – wer eine Zelle antippt,
+  // hängt denselben Wert an, den auch encode geliefert hätte.
+  tabelle(optionen) {
+    const von = feldAus(optionen, 'von', 'symbol');
+    const nach = feldAus(optionen, 'nach', 'ordnungszahl');
+    return elementeDaten
+      .map((element) => ({
+        zeichen: alsText(element, von),
+        darstellung: alsText(element, nach),
+        // Perioden als Abschnitte: 118 Elemente auf einmal sind auf dem Handy
+        // unlesbar, und die Periode ist die Zeile, in der man ohnehin sucht.
+        gruppe: `P${periode(element.ordnungszahl)}`
+      }))
+      .filter((eintrag) => eintrag.zeichen.length > 0 && eintrag.darstellung.length > 0);
+  }
 };
