@@ -560,6 +560,12 @@ davon.
   wird cache-first ausgeliefert → **funktioniert im Flugmodus vollständig**, das ist
   Abnahmekriterium. Die Dateiliste erzeugt der Build, damit nichts vergessen wird.
 - Scope und Pfade relativ, damit der Service Worker auch in einem Unterordner greift.
+- **Neue Fassungen drängeln sich nicht vor.** Der neue Worker legt seinen Cache an und
+  wartet; die App zeigt „Neue Fassung geladen" über der Leiste und wechselt erst auf Zuruf
+  – oder von selbst, sobald die letzte Seite zu ist. Vorher tauschte er den Cache unter der
+  laufenden Seite aus, und das mitten in einem Rätsel. Beim Zurückkommen zur App wird
+  nachgesehen, höchstens einmal je Minute, sonst erführe man von einem Upload nichts, der
+  während einer offenen Sitzung passiert.
 - Große Daten (Elementdetails, Wörterbuch, n-Gramme) als getrennte Chunks, im Hintergrund
   nachgeladen und in IndexedDB gehalten – die App startet auch ohne sie.
 - Bewusst **vor** der Veranstaltung einmal „vollständig laden"-Knopf anbieten.
