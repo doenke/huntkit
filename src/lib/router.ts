@@ -3,12 +3,13 @@
  * Rewrite-Regel, die Deep-Links auf index.html umbiegt. Mit Hash braucht es
  * keine – die App laeuft auch in einem Unterverzeichnis.
  */
-export type Seite = 'werkbank' | 'codes' | 'nachschlagen' | 'mehr';
+export type Seite = 'werkbank' | 'codes' | 'nachschlagen' | 'loesungen' | 'mehr';
 
 export const SEITEN: ReadonlyArray<{ id: Seite; titel: string }> = [
   { id: 'werkbank', titel: 'Werkbank' },
   { id: 'codes', titel: 'Codes' },
   { id: 'nachschlagen', titel: 'Nachschlagen' },
+  { id: 'loesungen', titel: 'Lösungen' },
   { id: 'mehr', titel: 'Mehr' }
 ];
 

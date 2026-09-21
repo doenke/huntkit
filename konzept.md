@@ -64,7 +64,7 @@ mehrspaltigen Arbeitsbereich aufklappen. Kein separates Produkt, nur ein anderes
 
 ---
 
-## 3. Produktkonzept: vier Bausteine
+## 3. Produktkonzept: die Bausteine
 
 ### 3.1 Werkbank (der gemeinsame Puffer)
 
@@ -132,6 +132,29 @@ Buchstaben / Zahlen / Umlaute / Sonderzeichen, ASCII A–Z / a–z / 0–9 / Son
 Periodensystem die sieben Perioden. Damit passt jede Karte ohne Seitenscrollen auf ein
 Handy (390×844 geprüft); gerollt wird höchstens im Raster, während Textfelder und Tasten
 stehen bleiben.
+
+### 3.5 Lösungswörter (steht für sich)
+
+Rätselrallyes und Bilderrätsel bestehen aus vielen kleinen Rätseln, die je ein Lösungswort
+ergeben; die Wörter wandern anschließend in ein Wortgitter. Wer ein Wort gefunden hat, weiß
+deshalb noch nicht, wo es hingehört – im Gitter stehen nur Längen.
+
+Der Bereich hat mit dem Rest der App bewusst nichts zu tun: kein Codec, keine Werkbank,
+keine Erkennung. Er rechnet nur eines aus, dafür durchgehend:
+
+- **Längen aus dem Gitter** als Liste eintippen (`5, 7, 7, 3`), dazu die gefundenen Wörter.
+- Die Liste ist **nach Länge sortiert**; jede Lücke bekommt eine Zeile, auch die leeren.
+- **Eindeutig** heißt: Für diese Länge ist genau eine Lücke offen und genau ein Wort
+  bereit – nur dann darf man es ohne Raten ins Gitter schreiben. Zwei Wörter auf zwei
+  gleich langen Lücken sind es nicht.
+- **Abhaken**, was eingetragen ist. Das macht andere Wörter eindeutig, und genau davon
+  lebt das Verfahren.
+- **Was nirgends passt**, steht oben: ein Wort, dessen Länge im Gitter nicht vorkommt, oder
+  mehr Wörter als Lücken einer Länge. Meist hat man sich verzählt.
+- Jeder Buchstabe trägt **seine Stelle** unter sich, und ein Tipp darauf hebt ihn überall
+  hervor – so findet man Kreuzungspunkte, ohne zu zählen.
+
+Der Stand bleibt auf dem Gerät (`localStorage`) und übersteht das Neuladen.
 
 ---
 
