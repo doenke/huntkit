@@ -19,18 +19,32 @@
   const codec = $derived(findeCodec(codecId));
   const teile = $derived(codec ? zerlegeCode(codec, text) : []);
 
-  /**
-   * Wie hoch ein Bild sein soll, hängt an seiner Form: Morse ist eine flache
-   * Balkenreihe und darf niedrig bleiben, ein Hexahue-Block oder ein Winker
-   * wäre in derselben Höhe nicht mehr zu erkennen.
-   */
-  function hoehe(viewBox: string): number {
-    const masse = viewBox.trim().split(/[\s,]+/).map(Number);
-    const breite = masse[2] ?? 1;
-    const hoch = masse[3] ?? 1;
-    if (!Number.isFinite(breite) || !Number.isFinite(hoch) || breite <= 0) return 22;
-    return hoch / breite < 0.5 ? 12 : 24;
+  function masse(viewBox: string): { breite: number; hoch: number } | null {
+    const zahlen = viewBox.trim().split(/[\s,]+/).map(Number);
+    const breite = zahlen[2];
+    const hoch = zahlen[3];
+    if (!breite || !hoch || !Number.isFinite(breite) || !Number.isFinite(hoch)) return null;
+    return { breite, hoch };
   }
+
+  /**
+   * Wie hoch die Bilder sein sollen, entscheidet die Form des Codes – nicht die
+   * der einzelnen Gruppe. Morse ist eine flache Balkenreihe und darf niedrig
+   * bleiben, ein Hexahue-Block wäre so nicht mehr zu erkennen.
+   *
+   * Gefragt wird die ganze Tabelle, nicht der gerade angezeigte Text: Sonst
+   * geriete ausgerechnet ein einzelner Punkt – das E – doppelt so hoch wie
+   * seine Nachbarn, weil er für sich genommen hoch statt breit ist.
+   */
+  const hoehe = $derived.by(() => {
+    let breiteste = 0;
+    for (const eintrag of codec?.tabelle?.() ?? []) {
+      const glyph = codec?.zeichneCode?.(eintrag.darstellung) ?? codec?.zeichne?.(eintrag.zeichen);
+      const gemessen = glyph ? masse(glyph.viewBox) : null;
+      if (gemessen) breiteste = Math.max(breiteste, gemessen.breite / gemessen.hoch);
+    }
+    return breiteste > 2 ? 12 : 24;
+  });
 </script>
 
 <span class="anzeige" class:einzeilig>
@@ -40,7 +54,7 @@
     {:else}
       <span class="gruppe" class:fremd={!teil.glyph} title={teil.zeichen ?? teil.text}>
         {#if teil.glyph}
-          <svg viewBox={teil.glyph.viewBox} style="height: {hoehe(teil.glyph.viewBox)}px" aria-hidden="true">
+          <svg viewBox={teil.glyph.viewBox} style="height: {hoehe}px" aria-hidden="true">
             <!-- eslint-disable-next-line svelte/no-at-html-tags -->
             {@html teil.glyph.inhalt}
           </svg>

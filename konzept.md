@@ -234,11 +234,10 @@ Nach Nutzen-pro-Aufwand sortiert – die oberen zahlen sich im Hunt am schnellst
 | **Frequenzanalyse** | Buchstabenhäufigkeit + Koinzidenzindex sagen einem, *welche* Chiffre vorliegt | S |
 | **Wortmuster-Suche** | Offline-Wörterbuch mit Platzhaltern (`?A??LE`) und Regex – ersetzt Nutrimatic im Funkloch | M |
 | **Anagramm-Löser** | über dasselbe Wörterbuch | S |
-| **QR-/Barcode-Scanner** | Kamera, offline, ohne fremde App mit Werbung | M |
 | **Koordinaten-Umrechner** | DD ↔ DMS ↔ UTM, Peilung/Kompass – für einen Stadt-Hunt naheliegend | S |
 | **Römische Zahlen, Base64/32** | Kleinkram, oft gebraucht | S |
 | **Team-Sharing per Link** | kompletter Werkbank-Zustand im URL-Fragment → per Messenger teilen, ganz ohne Server | M |
-| **Nacht-Ausrüstung** | Wake Lock, Rotlicht-Theme, QR-Codeleser | S |
+| **Nacht-Ausrüstung** | Wake Lock, Rotlicht-Theme | S |
 
 ### 4.3 Bewusst außen vor
 
@@ -663,7 +662,7 @@ Push auf main
 | **2 – Visuelle Codes** ✅ | SVG-Glyphen + Visual Picker für Braille, Winker, Hexahue, Flaggen, Templer, Fingeralphabet | Der eigentliche Unterschied zu Webseiten-Tools |
 | **3 – Periodensystem & Widerstände** ✅ | Gitter mit Layouts, Zoom, Suche, Markierungsebenen, Musteransicht (§5.2/5.3), Widerstandscode | `development.md` vollständig abgedeckt |
 | **4 – Identify** ✅ | Sniffer, n-Gramm-Sprachmodell, Rangliste | „Was ist das überhaupt?" in einem Schritt |
-| **5 – Hunt-Extras** ✅ | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, QR-Scan, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
+| **5 – Hunt-Extras** ✅ | Extraktionshelfer, weitere Chiffren, Wortmuster/Anagramm, Koordinaten, Link-Sharing, Nacht-Ausrüstung | Wettbewerbsfähig auch beim Mystery Hunt |
 
 Phasen 0–3 liefern das, was in `development.md` steht. 4 und 5 sind der Vorschlag darüber
 hinaus – Phase 1 ist bereits allein benutzbar, jede weitere Phase ist ein eigenständiger
@@ -720,13 +719,10 @@ Dazu kamen die übrigen Hunt-Extras: die klassischen Chiffren (Atbash, Vigenère
 Polybios, Zaunmuster, Handytastatur), römische Zahlen und Base64/32, die Häufigkeitsanalyse
 mit Koinzidenzindex, der Element-Speller mit allen Zerlegungen, Wortmuster- und
 Anagrammsuche über ein Wörterbuch im Gerät, der Koordinaten-Umrechner in der Schreibweise
-der Nachtschicht, das Lesen von QR- und Barcodes und das Teilen des Werkbank-Stands als
-Link.
+der Nachtschicht und das Teilen des Werkbank-Stands als Link.
 
-Zwei Entscheidungen dabei: Der Codeleser ist der des Browsers, nicht eine eingebundene
-Bibliothek – die wäre die größte Abhängigkeit der App geworden, für etwas, das viele Geräte
-mitbringen. Und der geteilte Link trägt alles im Fragment hinter dem Doppelkreuz, das der
-Browser nie an einen Server schickt: Teilen im Team, ohne dass die App ein Backend bekäme.
+Der geteilte Link trägt alles im Fragment hinter dem Doppelkreuz, das der Browser nie an
+einen Server schickt: Teilen im Team, ohne dass die App ein Backend bekäme.
 
 Das Periodensystem ist bewusst auf zwei Phasen verteilt: Die Schlüsselfunktion (§5.1) ist
 reine Datenarbeit ohne eigene Ansicht und läuft schon in Phase 1 mit; das Gitter mit
@@ -752,11 +748,11 @@ ohne die visuellen Codes zu verzögern.
   schlechten Displays sind Farbcodes heikel. Zusätzlich Farbnamen einblenden.
 - **iOS-Eigenheiten.** Safari räumt den Speicher installierter PWAs unter Umständen auf.
   Vor der Veranstaltung auf dem echten Gerät testen, nicht nur im Simulator.
-- **Akku.** Kamera und Wake Lock sind die größten Verbraucher. Sparsam einsetzen und den
-  Wake Lock automatisch freigeben.
-- **Taschenlampe und Lupe sind wieder draußen.** Die Web-API dafür ist geräteabhängig und
-  auf iOS kaum brauchbar – und beides kann das Handy von Haus aus besser. Von der Kamera
-  bleibt der Codeleser.
+- **Akku.** Der Wake Lock ist der größte Verbraucher der App. Sparsam einsetzen und
+  automatisch freigeben.
+- **Die Kamera ist wieder draußen** – Taschenlampe, Lupe und Codeleser. Die Web-APIs dafür
+  sind geräteabhängig und auf iOS kaum brauchbar, und alle drei kann das Handy von Haus aus
+  besser. Von der Nacht-Ausrüstung bleibt der Bildschirmwächter.
 - ~~**Regeln der Veranstaltung.**~~ Geklärt: Das Regelheft nennt als Hilfsmittel
   ausdrücklich „Grips, Infoheft und Ausrüstungsgegenstände" und hält fest, dass „die
   Nutzung des Internets bei manchen Rätseln hilfreich sein" kann. Die App ist also

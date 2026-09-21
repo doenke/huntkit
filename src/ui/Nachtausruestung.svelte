@@ -1,21 +1,16 @@
 <script lang="ts">
-  import {
-    Bildschirmwaechter, codeleser, kameraStarten, kameraStoppen, kannCodesLesen,
-    kannWachhalten
-  } from '../lib/nacht';
-  import { anWerkbank } from '../lib/blatt';
+  import { Bildschirmwaechter, kannWachhalten } from '../lib/nacht';
+
+  /**
+   * Was die App für die Nacht mitbringt: Der Bildschirm bleibt an, solange man
+   * abtippt. Mehr nicht – Taschenlampe, Lupe und Codeleser kann das Handy von
+   * Haus aus besser, und jede davon kostete hier Akku und Sonderfälle.
+   */
 
   const waechter = new Bildschirmwaechter();
   let wachhalten = $state(false);
   let wachhaltenGeht = kannWachhalten();
-
-  let strom = $state<MediaStream | null>(null);
   let fehler = $state('');
-  let bild = $state<HTMLVideoElement | null>(null);
-  let sucheCode = $state(false);
-  let gefundenerCode = $state('');
-  let codesGehen = kannCodesLesen();
-  let sucher: number | null = null;
 
   $effect(() => {
     const beiWechsel = () => void waechter.beiSichtbarkeit();
@@ -23,7 +18,6 @@
     return () => {
       document.removeEventListener('visibilitychange', beiWechsel);
       void waechter.aus();
-      kameraStoppen(strom);
     };
   });
 
@@ -35,50 +29,6 @@
       wachhalten = await waechter.an();
       if (!wachhalten) fehler = 'Der Bildschirmwächter lässt sich hier nicht einschalten.';
     }
-  }
-
-  async function kameraAn() {
-    fehler = '';
-    try {
-      strom = await kameraStarten();
-      if (bild) {
-        bild.srcObject = strom;
-        await bild.play().catch(() => undefined);
-      }
-    } catch {
-      fehler = 'Kein Zugriff auf die Kamera – erlaubt der Browser sie für diese Seite?';
-    }
-  }
-
-  function codesuche() {
-    if (sucheCode) {
-      sucheCode = false;
-      if (sucher !== null) clearInterval(sucher);
-      sucher = null;
-      return;
-    }
-    const leser = codeleser();
-    if (!leser || !bild) return;
-    sucheCode = true;
-    gefundenerCode = '';
-    sucher = setInterval(async () => {
-      if (!bild) return;
-      try {
-        const treffer = await leser.detect(bild);
-        if (treffer.length > 0 && treffer[0]) {
-          gefundenerCode = treffer[0].rawValue;
-          codesuche();
-        }
-      } catch {
-        // Einzelne Bilder scheitern immer wieder – einfach das nächste nehmen.
-      }
-    }, 400) as unknown as number;
-  }
-
-  function kameraAus() {
-    if (sucheCode) codesuche();
-    kameraStoppen(strom);
-    strom = null;
   }
 </script>
 
@@ -93,37 +43,6 @@
   </p>
 {:else}
   <p class="leise">Dieses Gerät bietet dem Browser keine Bildschirmsperre an.</p>
-{/if}
-
-<h3>Code lesen</h3>
-{#if !strom}
-  <button type="button" onclick={kameraAn}>Kamera einschalten</button>
-  <p class="leise">
-    Für QR-Codes auf Schildern und Zetteln. Die Kamera ist der größte Akkufresser der
-    App – deshalb läuft sie nur, solange du sie einschaltest.
-  </p>
-{:else}
-  <!-- svelte-ignore a11y_media_has_caption -->
-  <video bind:this={bild} playsinline muted autoplay></video>
-  <div class="gruppe">
-    <button type="button" onclick={kameraAus}>Kamera aus</button>
-  </div>
-  {#if codesGehen}
-    <div class="gruppe">
-      <button type="button" aria-pressed={sucheCode} onclick={codesuche}>
-        {sucheCode ? 'Suche läuft …' : 'QR-Code suchen'}
-      </button>
-    </div>
-    {#if gefundenerCode}
-      <output class="fund mono">{gefundenerCode}</output>
-      <div class="gruppe">
-        <button type="button" onclick={() => anWerkbank(gefundenerCode)}>an die Werkbank</button>
-        <button type="button" onclick={() => (gefundenerCode = '')}>verwerfen</button>
-      </div>
-    {/if}
-  {:else}
-    <p class="leise">Dieser Browser bringt keinen Codeleser mit.</p>
-  {/if}
 {/if}
 
 {#if fehler}
@@ -143,34 +62,6 @@
   button[aria-pressed='true'] {
     border-color: var(--akzent);
     color: var(--akzent);
-  }
-
-  .gruppe {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-
-  video {
-    display: block;
-    width: 100%;
-    max-height: 50vh;
-    object-fit: cover;
-    border: 1px solid var(--rand);
-    border-radius: var(--radius);
-    background: #000;
-    margin-bottom: 8px;
-  }
-
-  .fund {
-    display: block;
-    padding: 10px;
-    background: var(--flaeche);
-    border: 1px solid var(--akzent);
-    border-radius: var(--radius);
-    margin-bottom: 8px;
-    overflow-wrap: anywhere;
   }
 
   .leise {

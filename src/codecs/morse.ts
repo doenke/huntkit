@@ -52,16 +52,21 @@ export const morse: Codec = {
   zeichneCode(gruppe): Glyph | null {
     const symbole = [...gruppe];
     if (symbole.length === 0 || symbole.some((s) => s !== '.' && s !== '-')) return null;
-    const DICKE = 10;
-    const LUECKE = 10;
+    // Strichstärke, Punktbreite und Lücke sind dieselbe Einheit; der Strich ist
+    // drei davon lang. Die Spur ist höher als der Balken – diese Luft darüber
+    // und darunter macht den schlanken Eindruck, ohne dass die Zeichnung
+    // kleiner wird.
+    const DICKE = 6;
+    const SPUR = 10;
+    const oben = (SPUR - DICKE) / 2;
     let x = 0;
     const teile = symbole.map((symbol) => {
       const breite = symbol === '.' ? DICKE : DICKE * 3;
-      const rechteck = `<rect x="${x}" y="0" width="${breite}" height="${DICKE}" rx="${DICKE / 2}" fill="currentColor"/>`;
-      x += breite + LUECKE;
+      const rechteck = `<rect x="${x}" y="${oben}" width="${breite}" height="${DICKE}" rx="${DICKE / 2}" fill="currentColor"/>`;
+      x += breite + DICKE;
       return rechteck;
     });
-    return { viewBox: `0 0 ${x - LUECKE} ${DICKE}`, inhalt: teile.join('') };
+    return { viewBox: `0 0 ${x - DICKE} ${SPUR}`, inhalt: teile.join('') };
   },
 
   // Sehr aussagekräftig: Eine Eingabe aus nur Punkten und Strichen ist praktisch
