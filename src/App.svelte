@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { beobachteVersion, browserUmgebung, type Versionswache } from './lib/neuversion';
   import { aktuelleSeite, geheZu, SEITEN, type Seite } from './lib/router';
   import Werkbank from './views/Werkbank.svelte';
   import Codes from './views/Codes.svelte';
@@ -12,6 +13,33 @@
     const beiWechsel = () => (seite = aktuelleSeite());
     addEventListener('hashchange', beiWechsel);
     return () => removeEventListener('hashchange', beiWechsel);
+  });
+
+  /**
+   * Neue Fassung: Der Service Worker liefert aus dem Cache, also arbeitet eine
+   * offene App nach einem Deployment mit dem alten Stand weiter. Statt ihn
+   * unterzuschieben, fragen wir – erst recht nicht mitten im Rätsel.
+   */
+  let neueVersion = $state(false);
+  let weggeklickt = $state(false);
+  let wache = $state<Versionswache | null>(null);
+
+  $effect(() => {
+    const umgebung = browserUmgebung();
+    if (!umgebung || !import.meta.env.PROD) return;
+    wache = beobachteVersion((bereit) => (neueVersion = bereit), umgebung);
+
+    // Beim Zurückkommen nachsehen: Wer die App den ganzen Abend offen hat,
+    // erfährt sonst nie von einer Fassung, die zwischendurch hochgeladen wurde.
+    let zuletzt = 0;
+    const beiSicht = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - zuletzt < 60_000) return;
+      zuletzt = Date.now();
+      wache?.pruefe();
+    };
+    addEventListener('visibilitychange', beiSicht);
+    return () => removeEventListener('visibilitychange', beiSicht);
   });
 </script>
 
@@ -32,6 +60,16 @@
     <Mehr />
   {/if}
 </main>
+
+{#if neueVersion && !weggeklickt}
+  <div class="neuversion" role="status">
+    <span>Neue Fassung geladen.</span>
+    <span class="knoepfe">
+      <button type="button" class="jetzt" onclick={() => wache?.uebernehmen()}>neu starten</button>
+      <button type="button" onclick={() => (weggeklickt = true)}>später</button>
+    </span>
+  </div>
+{/if}
 
 <nav aria-label="Hauptbereiche">
   {#each SEITEN as eintrag (eintrag.id)}
@@ -94,6 +132,47 @@
   nav button[aria-current='page'] {
     background: var(--flaeche-hoch);
     color: var(--text);
+  }
+
+  /* Sitzt über der Leiste und nimmt keinen Platz im Inhalt weg – die Arbeit
+     soll weitergehen können, auch wenn der Hinweis stehen bleibt. */
+  .neuversion {
+    position: fixed;
+    inset: auto 8px calc(var(--tap) + 22px + env(safe-area-inset-bottom)) 8px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px 8px 14px;
+    background: var(--flaeche-hoch);
+    border: 1px solid var(--akzent);
+    border-radius: var(--radius);
+    box-shadow: 0 6px 20px rgb(0 0 0 / 0.35);
+    font-size: 0.85rem;
+  }
+
+  .neuversion .knoepfe {
+    display: flex;
+    gap: 6px;
+  }
+
+  .neuversion button {
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 0.8rem;
+  }
+
+  .neuversion .jetzt {
+    border-color: var(--akzent);
+    color: var(--akzent);
+  }
+
+  @media (min-width: 40rem) {
+    .neuversion {
+      inset: auto 16px 16px auto;
+      max-width: 26rem;
+    }
   }
 
   @media (min-width: 40rem) {

@@ -59,8 +59,16 @@ function serviceWorker(version: string, dateien: string[]): string {
 const CACHE = 'huntkit-${version}';
 const DATEIEN = ${JSON.stringify(['./', ...dateien], null, 1)};
 
+// Der neue Worker draengelt sich nicht vor: Er legt seinen Cache an und
+// wartet. Sonst wuerde mitten im Raetsel der Unterbau unter der laufenden
+// Seite ausgetauscht. Uebernommen wird er erst auf Zuruf - oder von selbst,
+// sobald die letzte Seite zu ist.
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(DATEIEN)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(DATEIEN)));
+});
+
+self.addEventListener('message', (e) => {
+  if (e.data === 'uebernehmen') self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
