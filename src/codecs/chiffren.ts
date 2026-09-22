@@ -1,4 +1,4 @@
-import { ALPHABET, anteil, ergebnis, text, zahl } from './hilfen';
+import { ALPHABET, anteil, ergebnis, ohneUmlaute, text, zahl } from './hilfen';
 import type { Codec, Luecke, OptionWerte } from './types';
 
 /**
@@ -9,7 +9,9 @@ import type { Codec, Luecke, OptionWerte } from './types';
  */
 
 function nurAZ(eingabe: string): string {
-  return eingabe.toUpperCase().replace(/[^A-Z]/g, '');
+  // Umlaute zuerst auflösen, sonst fielen sie hier stillschweigend heraus und
+  // aus „GRÜSSE“ würde „GRSSE“.
+  return ohneUmlaute(eingabe).toUpperCase().replace(/[^A-Z]/g, '');
 }
 
 // --------------------------------------------------------------------------
@@ -20,7 +22,7 @@ export const atbash: Codec = {
   beschreibung: 'Alphabet umgedreht: A wird Z, B wird Y.',
   encode: (eingabe) =>
     ergebnis(
-      [...eingabe]
+      [...ohneUmlaute(eingabe)]
         .map((zeichen) => {
           const gross = zeichen.toUpperCase();
           const i = ALPHABET.indexOf(gross);
@@ -42,7 +44,7 @@ function vigenere(eingabe: string, schluessel: string, richtung: 1 | -1) {
   const key = nurAZ(schluessel);
   if (key.length === 0) return ergebnis(eingabe);
   let stelle = 0;
-  const heraus = [...eingabe]
+  const heraus = [...ohneUmlaute(eingabe)]
     .map((zeichen) => {
       const gross = zeichen.toUpperCase();
       const i = ALPHABET.indexOf(gross);

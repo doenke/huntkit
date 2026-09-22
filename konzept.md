@@ -679,8 +679,14 @@ Dortmunder Nachtschicht 2026 – damit gelten genau die Varianten der Veranstalt
 beim Templercode den Ausschlag gibt. Herkunft und Proben stehen in
 [`src/codecs/QUELLE.md`](src/codecs/QUELLE.md).
 
-Dazu aus demselben Regelheft die Umlautregel als eigenes Werkzeug: Lösungswörter werden
-dort „wie in gängigen Kreuzworträtseln" geschrieben, Ä als AE und ß als SS.
+Dazu aus demselben Regelheft die Umlautregel – aber **nicht als Werkzeug, sondern von
+selbst**: Lösungswörter werden dort „wie in gängigen Kreuzworträtseln" geschrieben, Ä als
+AE und ß als SS. Ein eigener Schritt dafür war eine Stolperstelle: Wer ihn vergisst,
+bekommt ein falsches Wort, und wer ihn setzt, wo der Code Umlaute selbst kennt, auch.
+Deshalb löst jetzt jeder Code, dem ein Umlaut fehlt, ihn beim Verschlüsseln selbst auf –
+und nur der. Morse, Braille und das Fingeralphabet haben eigene Zeichen für Ä, Ö, Ü und ß
+und behalten sie. Die Rückrichtung bleibt außen vor: Aus AE wieder Ä zu machen ist geraten,
+„QUELLE" wäre sonst nicht sicher.
 
 Das **Fingeralphabet** ist der einzige Code, dessen Zeichen keine eigene Zeichnung sind:
 Die Tafel des Landesverbands Bayern der Gehörlosen e. V. steht unter CC BY-SA 4.0 und ist

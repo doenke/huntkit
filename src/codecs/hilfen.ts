@@ -17,6 +17,32 @@ export function text(optionen: OptionWerte | undefined, id: string, standard: st
   return wert === undefined ? standard : String(wert);
 }
 
+const UMLAUTE: ReadonlyArray<readonly [string, string]> = [
+  ['Ä', 'AE'], ['Ö', 'OE'], ['Ü', 'UE'],
+  ['ä', 'ae'], ['ö', 'oe'], ['ü', 'ue']
+];
+
+/**
+ * Umlaute auflösen – keine Geheimschrift, sondern eine Regel der Veranstaltung:
+ * „Umlaute wie in gängigen Kreuzworträtseln, z.B. Ä → AE, ß → SS, sofern nicht
+ * anders auf dem Rätsel vermerkt.“ (Regelheft der Dortmunder Nachtschicht 2026)
+ *
+ * Das ist kein eigenes Werkzeug mehr, sondern passiert von selbst – aber nur
+ * dort, wo ein Code den Umlaut nicht selbst kennt. Morse und Braille haben
+ * eigene Zeichen für Ä, Ö, Ü und ß; dort wäre die Auflösung schlicht falsch.
+ */
+export function ohneUmlaute(eingabe: string): string {
+  // Das Eszett hat keine Großform: In durchgehend großgeschriebenem Text wird
+  // es zu SS, sonst zu ss. Sonst käme aus „Straße“ ein „StraSSe“. Das Eszett
+  // selbst muss dabei aus der Prüfung heraus – 'ß'.toUpperCase() ist 'SS',
+  // wodurch jeder Text mit Eszett als gemischt geschrieben gälte.
+  const ohneEszett = eingabe.split('ß').join('');
+  const nurGross = ohneEszett === ohneEszett.toUpperCase();
+  let heraus = eingabe.split('ß').join(nurGross ? 'SS' : 'ss');
+  for (const [umlaut, ersatz] of UMLAUTE) heraus = heraus.split(umlaut).join(ersatz);
+  return heraus;
+}
+
 /**
  * Bauplan für alle Codes, die Zeichen einzeln übersetzen – ABC123, NATO, Morse,
  * ASCII und später Braille, Hexahue, Flaggen. Sie unterscheiden sich nur in der
@@ -63,8 +89,20 @@ export function zeichenCodec(plan: ZeichenCodecPlan): ZeichenCodec {
           return;
         }
         const darstellung = nachschlagen(rohzeichen);
-        if (darstellung === undefined) luecken.push({ position, zeichen: rohzeichen });
-        else teile.push(darstellung);
+        if (darstellung !== undefined) {
+          teile.push(darstellung);
+          return;
+        }
+        // Kennt dieser Code den Umlaut nicht, wird er aufgelöst: Ä zu AE.
+        const ersatz = ohneUmlaute(rohzeichen);
+        if (ersatz !== rohzeichen) {
+          const stuecke = [...ersatz].map(nachschlagen);
+          if (stuecke.every((d) => d !== undefined)) {
+            teile.push(...(stuecke as string[]));
+            return;
+          }
+        }
+        luecken.push({ position, zeichen: rohzeichen });
       });
       woerter.push(teile.join(plan.trenner));
 

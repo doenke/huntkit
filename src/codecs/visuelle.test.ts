@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { hexahue, hexahueMuster } from './hexahue';
 import { templer } from './templer';
-import { umlaute } from './umlaute';
 import { winker } from './winker';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -121,19 +120,5 @@ describe('Templercode', () => {
       expect(glyph, buchstabe).not.toBeNull();
       expect(glyph!.inhalt.match(/<path/g)?.length, buchstabe).toBe(4);
     }
-  });
-});
-
-describe('Umlaute', () => {
-  it('löst Umlaute so auf, wie die Veranstaltung es verlangt', () => {
-    expect(umlaute.encode('STRASSE ÜBER DEN FLÖZWEG').text).toBe('STRASSE UEBER DEN FLOEZWEG');
-    expect(umlaute.encode('Fördertürme').text).toBe('Foerdertuerme');
-    // Das Eszett kennt keine Großform – in gemischtem Text also ss, nicht SS.
-    expect(umlaute.encode('Straße').text).toBe('Strasse');
-    expect(umlaute.encode('STRAßE').text).toBe('STRASSE');
-  });
-
-  it('stellt sie wieder her', () => {
-    expect(umlaute.decode('FOERDERTUERME').text).toBe('FÖRDERTÜRME');
   });
 });

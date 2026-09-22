@@ -1,9 +1,11 @@
-import { ALPHABET, anteil, ergebnis, zahl } from './hilfen';
+import { ALPHABET, anteil, ergebnis, ohneUmlaute, zahl } from './hilfen';
 import type { Codec, OptionWerte, TabellenEintrag } from './types';
 
 export function verschiebe(eingabe: string, schritte: number): string {
   const versatz = ((schritte % 26) + 26) % 26;
-  return [...eingabe]
+  // Umlaute werden vorher aufgelöst; das Alphabet der Chiffre kennt sie nicht,
+  // und ein stehengelassenes Ü verschiebt nichts, sondern verrät nur den Rest.
+  return [...ohneUmlaute(eingabe)]
     .map((zeichen) => {
       const gross = zeichen.toUpperCase();
       const index = ALPHABET.indexOf(gross);

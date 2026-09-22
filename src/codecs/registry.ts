@@ -12,7 +12,6 @@ import { morse } from './morse';
 import { base32, base64, roemisch } from './zahlen';
 import { nato } from './nato';
 import { templer } from './templer';
-import { umlaute } from './umlaute';
 import { winker } from './winker';
 import type { Codec } from './types';
 
@@ -42,7 +41,6 @@ export const CODECS: ReadonlyArray<Codec> = [
   roemisch,
   base64,
   base32,
-  umlaute,
   jedesN,
   stellen,
   ausWoertern,

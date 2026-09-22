@@ -1,4 +1,4 @@
-import { anteil, ergebnis, text } from './hilfen';
+import { anteil, ergebnis, ohneUmlaute, text } from './hilfen';
 import type { Codec, Luecke, OptionWerte, TabellenEintrag } from './types';
 
 const BASEN = {
@@ -59,7 +59,9 @@ export const ascii: Codec = {
     const { basis, breite } = basisAus(optionen);
     // Leerzeichen sind hier echte Zeichen (Code 32) und kein Worttrenner –
     // deshalb nicht der gemeinsame Bauplan, sondern zeichenweise über alles.
-    const teile = [...eingabe].map((z) => darstelle(z.codePointAt(0) ?? 0, basis, breite));
+    // Umlaute werden aufgelöst: Ü hat den Codepunkt 220 und ist damit gerade
+    // kein ASCII; gemeint ist in einem Rätsel immer UE.
+    const teile = [...ohneUmlaute(eingabe)].map((z) => darstelle(z.codePointAt(0) ?? 0, basis, breite));
     return ergebnis(teile.join(' '));
   },
 

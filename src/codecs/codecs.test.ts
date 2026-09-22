@@ -166,8 +166,11 @@ describe('Caesar-Wand', () => {
     expect(wand[13]?.text).toBe('NOP');
   });
 
-  it('lässt Ziffern, Umlaute und Satzzeichen stehen', () => {
-    expect(verschiebe('Ä 7 b!', 1)).toBe('Ä 7 c!');
+  it('lässt Ziffern und Satzzeichen stehen, löst Umlaute aber auf', () => {
+    // Ä wird zu AE und dann verschoben: BF. Alles, was kein Buchstabe ist,
+    // bleibt unberührt stehen.
+    expect(verschiebe('Ä 7 b!', 1)).toBe('BF 7 c!');
+    expect(verschiebe('7 b!', 1)).toBe('7 c!');
   });
 
   it('behandelt negative und überlange Verschiebungen richtig', () => {
