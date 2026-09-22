@@ -87,11 +87,16 @@ sondern eine Handvoll – eine Zeile je Station, je Foto, je Fund.
   einem n, das pro Zeile woanders steht, ist der halbe Rätselalltag.
 - **Positionsspalte**: der Platz der Zeile in einer bestimmten Reihenfolge.
 
-Im Spaltenkopf lässt sich die **Anzeige umschalten**, wo der Inhalt in einem Code steht,
-den wir zeichnen können: Zeichen oder Bild. Das gilt für Eingabespalten mit Tafel und für
+**Das Bild ist die Standardansicht.** Wo der Inhalt in einem Code steht, den wir zeichnen
+können, zeigt die Spalte ihn gezeichnet – auf dem Zettel steht der Code schließlich auch
+als Bild, und die Zeichenfolge ist nur die Krücke fürs Tippen. Ein Schalter im Spaltenkopf
+dreht das je Spalte wieder auf Zeichen. Das gilt für Eingabespalten mit Tafel und für
 Werkzeugspalten, die in einen Code übersetzen – beim Entschlüsseln kommt Klartext heraus,
 und der hat kein Bild. Gerechnet und sortiert wird immer mit den Zeichen; sonst hinge das
 Ergebnis davon ab, wie man gerade hinschaut.
+
+Dasselbe gilt in den Codekarten: Wo ein Code sich zeichnen lässt, steht in der Tabelle die
+Zeichnung unter dem Buchstaben statt der Zeichenfolge.
 
 **Sortieren.** Weil jede Zelle aus ihrer eigenen Zeile rechnet, ändert Sortieren keinen
 Wert, sondern nur die Reihenfolge. Inhaltlich wirksam wird sie erst über eine

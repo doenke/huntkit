@@ -34,9 +34,12 @@ interface Grundspalte {
   /** Eigener Name; ohne Angabe steht der Buchstabe der Spalte da. */
   titel?: string;
   /**
-   * Wie die Zellen aussehen sollen: als Zeichen oder gezeichnet. Das ist reine
-   * Anzeige – gerechnet wird immer mit den Zeichen, sonst hinge das Ergebnis
-   * davon ab, wie man gerade hinschaut.
+   * Wie die Zellen aussehen sollen. Ohne Angabe gilt das Bild – ein Code steht
+   * auf dem Zettel als Bild, und als Zeichenfolge ist er nur eine Krücke fürs
+   * Tippen. Wo es nichts zu zeichnen gibt, bleibt es ohnehin bei den Zeichen.
+   *
+   * Das ist reine Anzeige: Gerechnet und sortiert wird immer mit den Zeichen,
+   * sonst hinge das Ergebnis davon ab, wie man gerade hinschaut.
    */
   darstellung?: 'zeichen' | 'grafik';
 }
@@ -340,6 +343,11 @@ function sortierwert(art: Sortierart, text: string): string | number | null {
     return Number.isFinite(zahl) ? zahl : null;
   }
   return text.toUpperCase();
+}
+
+/** Zeigt diese Spalte Bilder? Ohne ausdrückliche Wahl: ja. */
+export function zeigtBild(spalte: Spalte): boolean {
+  return spalte.darstellung !== 'zeichen';
 }
 
 /**

@@ -15,6 +15,7 @@
     spaltenname,
     spaltenzeichen,
     kennung,
+    zeigtBild,
     type Spalte,
     type SpaltenId
   } from '../lib/blatt';
@@ -98,7 +99,7 @@
   }
 
   function anzeigeUmschalten(spalte: Spalte) {
-    spalte.darstellung = spalte.darstellung === 'grafik' ? 'zeichen' : 'grafik';
+    spalte.darstellung = zeigtBild(spalte) ? 'zeichen' : 'grafik';
   }
 
   function zeileHinzufuegen() {
@@ -264,12 +265,12 @@
                 <button
                   type="button"
                   class="umschalter"
-                  aria-pressed={spalte.darstellung === 'grafik'}
-                  title={spalte.darstellung === 'grafik' ? 'Anzeige: Bild – auf Zeichen umstellen' : 'Anzeige: Zeichen – auf Bild umstellen'}
-                  aria-label={spalte.darstellung === 'grafik' ? 'Anzeige auf Zeichen umstellen' : 'Anzeige auf Bild umstellen'}
+                  aria-pressed={zeigtBild(spalte)}
+                  title={zeigtBild(spalte) ? 'Anzeige: Bild – auf Zeichen umstellen' : 'Anzeige: Zeichen – auf Bild umstellen'}
+                  aria-label={zeigtBild(spalte) ? 'Anzeige auf Zeichen umstellen' : 'Anzeige auf Bild umstellen'}
                   onclick={() => anzeigeUmschalten(spalte)}
                 >
-                  {spalte.darstellung === 'grafik' ? '▦' : 'Aa'}
+                  {zeigtBild(spalte) ? '▦' : 'Aa'}
                 </button>
               {/if}
             </div>
@@ -295,7 +296,7 @@
               class:aktiv={gewaehlt?.spalte === spalte.id && gewaehlt?.zeile === reihe.zeile.id}
               class:fehler={Boolean(inhalt?.fehler)}
             >
-              {#if spalte.darstellung === 'grafik' && tafelVon(spalte)}
+              {#if zeigtBild(spalte) && tafelVon(spalte)}
                 <!-- Gezeichnet wird nur angezeigt; getippt wird in der Zelle unten. -->
                 <button
                   type="button"

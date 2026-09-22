@@ -56,6 +56,7 @@
   <div class="raster" class:mitBild={Boolean(tafel.zeichne)}>
     {#each sichtbar as eintrag, stelle (stelle)}
       {@const glyph = tafel.zeichne?.(eintrag.zeichen) ?? null}
+      {@const codebild = glyph ? null : (tafel.zeichneCode?.(eintrag.darstellung) ?? null)}
       <button type="button" onclick={() => anhaengen(eintrag.darstellung)}>
         {#if glyph}
           <svg viewBox={glyph.viewBox} aria-hidden="true">
@@ -65,7 +66,14 @@
           <span class="zeichen">{eintrag.zeichen}</span>
         {:else}
           <span class="zeichen">{eintrag.zeichen}</span>
-          <span class="mono code">{eintrag.darstellung}</span>
+          {#if codebild}
+            <svg class="codebild" viewBox={codebild.viewBox} aria-hidden="true">
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              {@html codebild.inhalt}
+            </svg>
+          {:else}
+            <span class="mono code">{eintrag.darstellung}</span>
+          {/if}
         {/if}
       </button>
     {/each}
@@ -158,6 +166,13 @@
     color: var(--text-leise);
     font-size: 0.7rem;
     letter-spacing: 0.06em;
+  }
+
+  .codebild {
+    height: 10px;
+    width: auto;
+    max-width: 90%;
+    margin-top: 3px;
   }
 
   .mono {

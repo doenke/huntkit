@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  anzeigetafel,
   ausAlterKette,
   neueEingabespalte,
   neuePositionsspalte,
@@ -7,6 +8,7 @@ import {
   neueZeile,
   rechne,
   spaltenzeichen,
+  zeigtBild,
   type Blatt,
   type SpaltenId
 } from './blatt';
@@ -212,5 +214,33 @@ describe('Alte Werkbank übernehmen', () => {
       schritte: [{ codecId: 'morse', richtung: 'encode', optionen: {}, aktiv: false }]
     });
     expect(blatt.spalten).toHaveLength(1);
+  });
+});
+
+describe('Anzeige der Spalten', () => {
+  it('zeigt ohne ausdrückliche Wahl das Bild', () => {
+    // Ein Code steht auf dem Zettel als Bild; die Zeichenfolge ist nur die
+    // Krücke fürs Tippen. Deshalb ist das Bild der Standard.
+    const spalte = neueEingabespalte('morse');
+    expect(zeigtBild(spalte)).toBe(true);
+  });
+
+  it('respektiert die Wahl in beide Richtungen', () => {
+    const spalte = neueEingabespalte('morse');
+    spalte.darstellung = 'zeichen';
+    expect(zeigtBild(spalte)).toBe(false);
+    spalte.darstellung = 'grafik';
+    expect(zeigtBild(spalte)).toBe(true);
+  });
+
+  it('nennt die Tafel nur, wo der Inhalt wirklich im Code steht', () => {
+    expect(anzeigetafel(neueEingabespalte('morse'))).toBe('morse');
+    expect(anzeigetafel(neueEingabespalte())).toBeNull();
+    const werkzeug = neueWerkzeugspalte('a', 'morse');
+    // Entschlüsselt kommt Klartext heraus – der hat kein Bild.
+    werkzeug.richtung = 'decode';
+    expect(anzeigetafel(werkzeug)).toBeNull();
+    werkzeug.richtung = 'encode';
+    expect(anzeigetafel(werkzeug)).toBe('morse');
   });
 });
