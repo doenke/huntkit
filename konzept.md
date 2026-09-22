@@ -100,12 +100,17 @@ und der hat kein Bild. Gerechnet und sortiert wird immer mit den Zeichen; sonst 
 Ergebnis davon ab, wie man gerade hinschaut.
 
 Dasselbe gilt in den Codekarten: Wo ein Code sich zeichnen lässt, steht in der Tabelle die
-Zeichnung unter dem Buchstaben statt der Zeichenfolge.
+Zeichnung unter dem Buchstaben statt der Zeichenfolge. Alle Zeichnungen sind dabei gleich
+groß: Die Spur hat eine feste Höhe, statt jedes Bild in sein Feld einzupassen – sonst
+bekäme das kurze E dickere Balken als ein langes Sonderzeichen, und der Punkt sähe in
+jeder Zeile anders aus.
 
 Getippt wird trotzdem direkt in der Zelle: In einer Eingabespalte liegt das Feld unsichtbar
 über dem Bild. Ein Tipp landet sofort darin, die Tastatur geht auf, und solange man tippt,
 deckt das Feld das Bild zu und zeigt den Code, wie er dasteht. Danach steht wieder die
-Zeichnung da – ohne dass man die Spalte umschalten müsste.
+Zeichnung da – ohne dass man die Spalte umschalten müsste. Das Feld füllt die Zelle ganz
+aus, auch wenn die Zeichnung schmaler ist: Ein toter Streifen rechts daneben, in dem ein
+Tipp ins Leere geht, wäre von außen nicht zu unterscheiden von „öffnet im Bildmodus nicht“.
 
 **Sortieren.** Weil jede Zelle aus ihrer eigenen Zeile rechnet, ändert Sortieren keinen
 Wert, sondern nur die Reihenfolge. Inhaltlich wirksam wird sie erst über eine

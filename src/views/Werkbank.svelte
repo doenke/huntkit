@@ -696,13 +696,18 @@
     padding: 4px 8px;
   }
 
-  /* Das Bild gibt der Zelle ihre Breite, das Feld legt sich darüber. */
+  /*
+   * Das Bild gibt der Zelle ihre Breite, das Feld legt sich darüber – und
+   * beides füllt die Zelle ganz aus. Sonst bleibt rechts neben einer kurzen
+   * Zeichnung ein toter Streifen, in dem ein Tipp ins Leere geht, während
+   * dieselbe Stelle im Textmodus das Feld trifft.
+   */
   .bildzelle {
     position: relative;
     display: flex;
     align-items: center;
-    min-width: 6.5rem;
-    width: max-content;
+    min-width: max(6.5rem, max-content);
+    width: 100%;
     min-height: 40px;
   }
 

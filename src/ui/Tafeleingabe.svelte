@@ -168,10 +168,16 @@
     letter-spacing: 0.06em;
   }
 
-  .codebild {
+  /*
+   * Feste Einheit statt Einpassen: Sonst skaliert der Browser jede Zeichnung
+   * auf die Feldhöhe, und ein kurzes E bekäme dickere Balken als ein langes
+   * Sonderzeichen. Die Höhe der Spur ist bei jedem Code dieselbe, also ist
+   * auch der Punkt überall gleich groß; die Breite darf wachsen.
+   */
+  .raster .codebild {
     height: 10px;
     width: auto;
-    max-width: 90%;
+    max-width: none;
     margin-top: 3px;
   }
 
