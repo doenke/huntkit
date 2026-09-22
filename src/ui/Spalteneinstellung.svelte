@@ -1,7 +1,14 @@
 <script lang="ts">
   import { CODECS, codec as findeCodec } from '../codecs/registry';
   import { standardOptionen } from '../codecs/types';
-  import { spaltenDavor, spaltenname, spaltenzeichen, type Blatt, type Spalte } from '../lib/blatt';
+  import {
+    begleiteTafel,
+    spaltenDavor,
+    spaltenname,
+    spaltenzeichen,
+    type Blatt,
+    type Spalte
+  } from '../lib/blatt';
 
   /**
    * Was eine Spalte ist und woher sie ihre Werte nimmt. Der interessante Teil
@@ -26,11 +33,21 @@
     if (spalte.art !== 'werkzeug') return;
     const gewaehlt = findeCodec(id);
     spalte.codecId = id;
+    // Von Hand umgestellt: Die Spalte gehört jetzt der Person und wird beim
+    // nächsten Tafelwechsel nicht mehr mitgezogen.
+    delete spalte.ausTafel;
     spalte.optionen = {};
     for (const [optionId, wert] of Object.entries(gewaehlt ? standardOptionen(gewaehlt) : {})) {
       spalte.optionen[optionId] = { art: 'fest', wert };
     }
     if (gewaehlt?.einseitig) spalte.richtung = 'encode';
+  }
+
+  /** Tafel gewählt: Die passende Entschlüsselung entsteht gleich daneben. */
+  function setzeTafel(id: string) {
+    if (spalte.art !== 'eingabe') return;
+    spalte.tafel = id || undefined;
+    begleiteTafel(blatt, spalte);
   }
 
   function bindung(optionId: string) {
@@ -81,10 +98,7 @@
   {#if spalte.art === 'eingabe'}
     <label>
       <span>Codetafel für die Eingabe</span>
-      <select
-        value={spalte.tafel ?? ''}
-        onchange={(e) => (spalte.tafel = e.currentTarget.value || undefined)}
-      >
+      <select value={spalte.tafel ?? ''} onchange={(e) => setzeTafel(e.currentTarget.value)}>
         <option value="">Klartext</option>
         {#each tafeln as eintrag (eintrag.id)}
           <option value={eintrag.id}>{eintrag.name}</option>
@@ -92,8 +106,8 @@
       </select>
     </label>
     <p class="hinweis">
-      Die Zelle behält, was eingetippt wurde – Morse bleibt Morse. Übersetzt wird erst in
-      einer Werkzeugspalte.
+      Die Zelle behält, was eingetippt wurde – Morse bleibt Morse. Die passende
+      Entschlüsselung entsteht gleich als Spalte daneben.
     </p>
   {/if}
 

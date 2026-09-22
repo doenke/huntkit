@@ -59,6 +59,13 @@ export interface Werkzeugspalte extends Grundspalte {
   codecId: string;
   richtung: Richtung;
   optionen: Record<string, Optionswert>;
+  /**
+   * Automatisch zur Codetafel der Quellspalte entstanden. Nur eine so
+   * gekennzeichnete Spalte wird beim Tafelwechsel mitgeführt – eine von Hand
+   * eingerichtete Spalte gehört der Person, auch wenn sie zufällig daneben
+   * steht und auf dieselbe Quelle zeigt.
+   */
+  ausTafel?: boolean;
 }
 
 export interface Positionsspalte extends Grundspalte {
@@ -343,6 +350,38 @@ function sortierwert(art: Sortierart, text: string): string | number | null {
     return Number.isFinite(zahl) ? zahl : null;
   }
   return text.toUpperCase();
+}
+
+/**
+ * Eine Eingabespalte mit Codetafel bekommt die passende Entschlüsselung gleich
+ * daneben. Wer eine Spalte in Morse anlegt, will sie in aller Regel auch lesen –
+ * und legt sonst jedes Mal von Hand dieselbe Werkzeugspalte an.
+ *
+ * Wechselt die Tafel, wird die vorhandene Begleitspalte umgestellt statt eine
+ * zweite anzulegen. Reine Nachschlagecodes bekommen keine: Aus dem
+ * Fingeralphabet rechnet niemand etwas zurück.
+ */
+export function begleiteTafel(blatt: Blatt, spalte: Eingabespalte): Werkzeugspalte | null {
+  const tafel = spalte.tafel;
+  const gewaehlt = tafel ? codec(tafel) : undefined;
+  if (!tafel || !gewaehlt || gewaehlt.nurNachschlagen) return null;
+
+  const stelle = blatt.spalten.findIndex((s) => s.id === spalte.id);
+  if (stelle < 0) return null;
+
+  const daneben = blatt.spalten[stelle + 1];
+  if (daneben?.art === 'werkzeug' && daneben.ausTafel && daneben.quelle === spalte.id) {
+    daneben.codecId = tafel;
+    daneben.richtung = 'decode';
+    daneben.optionen = neueWerkzeugspalte(spalte.id, tafel).optionen;
+    return daneben;
+  }
+
+  const begleiter = neueWerkzeugspalte(spalte.id, tafel);
+  begleiter.richtung = 'decode';
+  begleiter.ausTafel = true;
+  blatt.spalten.splice(stelle + 1, 0, begleiter);
+  return begleiter;
 }
 
 /** Zeigt diese Spalte Bilder? Ohne ausdrückliche Wahl: ja. */

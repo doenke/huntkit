@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   anzeigetafel,
   ausAlterKette,
+  begleiteTafel,
   neueEingabespalte,
   neuePositionsspalte,
   neueWerkzeugspalte,
@@ -242,5 +243,76 @@ describe('Anzeige der Spalten', () => {
     expect(anzeigetafel(werkzeug)).toBeNull();
     werkzeug.richtung = 'encode';
     expect(anzeigetafel(werkzeug)).toBe('morse');
+  });
+});
+
+describe('Begleitspalte zur Codetafel', () => {
+  function blattMitEingabe() {
+    const a = neueEingabespalte();
+    return { blatt: { spalten: [a], zeilen: [neueZeile(1)], sortierungen: [] } as Blatt, a };
+  }
+
+  it('legt neben einer Tafelspalte die Entschlüsselung an', () => {
+    const { blatt, a } = blattMitEingabe();
+    a.tafel = 'morse';
+    const begleiter = begleiteTafel(blatt, a);
+    expect(begleiter).not.toBeNull();
+    expect(blatt.spalten).toHaveLength(2);
+    expect(blatt.spalten[1]).toBe(begleiter);
+    expect(begleiter!.quelle).toBe(a.id);
+    expect(begleiter!.codecId).toBe('morse');
+    expect(begleiter!.richtung).toBe('decode');
+  });
+
+  it('setzt sie direkt daneben, nicht ans Ende', () => {
+    const { blatt, a } = blattMitEingabe();
+    const hinten = neueEingabespalte();
+    blatt.spalten.push(hinten);
+    a.tafel = 'morse';
+    begleiteTafel(blatt, a);
+    expect(blatt.spalten.map((s) => s.art)).toEqual(['eingabe', 'werkzeug', 'eingabe']);
+    expect(blatt.spalten[2]).toBe(hinten);
+  });
+
+  it('stellt eine vorhandene Begleitspalte um, statt eine zweite anzulegen', () => {
+    const { blatt, a } = blattMitEingabe();
+    a.tafel = 'morse';
+    const erste = begleiteTafel(blatt, a);
+    a.tafel = 'braille';
+    const zweite = begleiteTafel(blatt, a);
+    expect(zweite).toBe(erste);
+    expect(blatt.spalten).toHaveLength(2);
+    expect(erste!.codecId).toBe('braille');
+  });
+
+  it('lässt eine von Hand angelegte Nachbarspalte in Ruhe', () => {
+    // Sie zeigt auf dieselbe Quelle und entschlüsselt auch – trotzdem gehört
+    // sie der Person und darf nicht zu Morse umgeschrieben werden.
+    const { blatt, a } = blattMitEingabe();
+    const fremd = neueWerkzeugspalte(a.id, 'caesar');
+    blatt.spalten.push(fremd);
+    a.tafel = 'morse';
+    begleiteTafel(blatt, a);
+    expect(blatt.spalten).toHaveLength(3);
+    expect(blatt.spalten[1]?.art).toBe('werkzeug');
+    expect(blatt.spalten[2]).toBe(fremd);
+    expect(fremd.codecId).toBe('caesar');
+  });
+
+  it('legt für Klartext und reine Nachschlagecodes nichts an', () => {
+    const { blatt, a } = blattMitEingabe();
+    expect(begleiteTafel(blatt, a)).toBeNull();
+    // Aus dem Fingeralphabet rechnet niemand etwas zurück.
+    a.tafel = 'fingeralphabet';
+    expect(begleiteTafel(blatt, a)).toBeNull();
+    expect(blatt.spalten).toHaveLength(1);
+  });
+
+  it('rechnet danach sofort durch', () => {
+    const { blatt, a } = blattMitEingabe();
+    blatt.zeilen[0]!.werte[a.id] = '... --- ...';
+    a.tafel = 'morse';
+    const begleiter = begleiteTafel(blatt, a)!;
+    expect(rechne(blatt).zeilen[0]?.zellen[begleiter.id]?.text).toBe('SOS');
   });
 });

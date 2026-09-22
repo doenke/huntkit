@@ -81,7 +81,11 @@ sondern eine Handvoll – eine Zeile je Station, je Foto, je Fund.
 
 - **Eingabespalte**: freier Text je Zeile, auf Wunsch mit einer **Codetafel**. Wer Morse
   eintippt, sieht auch Morse – die Zelle speichert das Eingetippte, nicht eine Übersetzung
-  davon. Tasten und antippbares Raster der Tafel schreiben direkt in die Zelle.
+  davon. Tasten und antippbares Raster der Tafel schreiben direkt in die Zelle. Mit der
+  Tafel entsteht gleich daneben die **passende Entschlüsselung** als eigene Spalte; wer
+  eine Spalte in Morse anlegt, will sie in aller Regel auch lesen. Wechselt die Tafel,
+  wird diese Begleitspalte mitgeführt – eine von Hand eingerichtete Spalte dagegen nie,
+  auch wenn sie zufällig daneben steht.
 - **Werkzeugspalte**: ein Codec auf einer früheren Spalte. Jede Option ist entweder fest
   eingestellt **oder kommt je Zeile aus einer Spalte** – „nimm den n-ten Buchstaben“ mit
   einem n, das pro Zeile woanders steht, ist der halbe Rätselalltag.
