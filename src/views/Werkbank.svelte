@@ -296,8 +296,32 @@
               class:aktiv={gewaehlt?.spalte === spalte.id && gewaehlt?.zeile === reihe.zeile.id}
               class:fehler={Boolean(inhalt?.fehler)}
             >
-              {#if zeigtBild(spalte) && tafelVon(spalte)}
-                <!-- Gezeichnet wird nur angezeigt; getippt wird in der Zelle unten. -->
+              {#if zeigtBild(spalte) && tafelVon(spalte) && spalte.art === 'eingabe'}
+                <!--
+                  Bild und Eingabefeld in derselben Zelle: Das Feld liegt
+                  unsichtbar über dem Bild, damit ein Tipp sofort dort landet
+                  und die Tastatur aufgeht. Beim Tippen deckt es das Bild zu und
+                  zeigt den Code im Klartext; danach steht wieder die Zeichnung
+                  da. Umschalten muss man dafür nichts.
+                -->
+                <div class="bildzelle">
+                  <span class="bild">
+                    <Codeanzeige codecId={tafelVon(spalte) ?? ''} text={inhalt?.text ?? ''} einzeilig />
+                  </span>
+                  <input
+                    class="mono ueber"
+                    value={reihe.zeile.werte[spalte.id] ?? ''}
+                    spellcheck="false"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    aria-label={`${spaltenname(blatt, spalte.id)}, Zeile ${reihe.zeile.nummer}`}
+                    oninput={(e) => setzeWert(reihe.zeile.id, spalte.id, e.currentTarget.value)}
+                    onfocus={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
+                    onclick={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
+                  />
+                </div>
+              {:else if zeigtBild(spalte) && tafelVon(spalte)}
+                <!-- Gerechnete Spalten sind nicht tippbar – nur anzeigen. -->
                 <button
                   type="button"
                   class="wert bild"
@@ -670,6 +694,41 @@
     white-space: normal;
     width: max-content;
     padding: 4px 8px;
+  }
+
+  /* Das Bild gibt der Zelle ihre Breite, das Feld legt sich darüber. */
+  .bildzelle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 6.5rem;
+    width: max-content;
+    min-height: 40px;
+  }
+
+  .bildzelle .bild {
+    padding: 4px 8px;
+  }
+
+  .bildzelle input.ueber {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    min-width: 0;
+    padding: 0 8px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: transparent;
+    caret-color: transparent;
+    font-size: 0.85rem;
+  }
+
+  /* Beim Tippen deckt das Feld das Bild zu und zeigt den Code, wie er dasteht. */
+  .bildzelle input.ueber:focus {
+    background: var(--flaeche);
+    color: var(--text);
+    caret-color: var(--akzent);
   }
 
   .vorschau {
