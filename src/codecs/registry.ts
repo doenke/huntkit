@@ -1,4 +1,5 @@
 import { abc123 } from './abc123';
+import { griechisch, kyrillisch } from './alphabete';
 import { ascii } from './ascii';
 import { basen } from './basen';
 import { braille } from './braille';
@@ -36,6 +37,8 @@ export const CODECS: ReadonlyArray<Codec> = [
   fingeralphabet,
   flaggen,
   ipa,
+  griechisch,
+  kyrillisch,
   caesar,
   atbash,
   vigenereCodec,
