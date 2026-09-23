@@ -2,7 +2,6 @@
   import { wachsen } from '../lib/wachsen';
   import type { Codec } from '../codecs/types';
   import { standardOptionen } from '../codecs/types';
-  import { anWerkbank } from '../lib/sammlung';
   import { einzelzeichen, zeichenbar } from '../lib/codeanzeige';
   import Codeanzeige from './Codeanzeige.svelte';
   import Quellen from './Quellen.svelte';
@@ -90,7 +89,6 @@
       Klartext
       <span class="knoepfe">
         <button type="button" onclick={() => kopieren(klartext)} disabled={!klartext}>kopieren</button>
-        <button type="button" onclick={() => anWerkbank(klartext)} disabled={!klartext}>Werkbank</button>
       </span>
     </span>
     <textarea
@@ -113,7 +111,6 @@
         {/if}
         <button type="button" onclick={() => ausKodiert('')} disabled={!kodiert}>leeren</button>
         <button type="button" onclick={() => kopieren(kodiert)} disabled={!kodiert}>kopieren</button>
-        <button type="button" onclick={() => anWerkbank(kodiert)} disabled={!kodiert}>Werkbank</button>
       </span>
     </span>
     <textarea
