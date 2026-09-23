@@ -12,6 +12,7 @@ Templercode ist das der entscheidende Punkt.
 | Morse | E | bestätigt gegen die vorhandene Tabelle |
 | Templercode | F | Formen und Buchstabenpaare abgelesen, Beschriftungen bei 700 dpi geprüft |
 | Winkeralphabet | G | Armstellungen abgelesen, teilweise zusätzlich aus den Pixeln bestimmt; Ziffern (A–I, K nach „Zahl“), Zahlzeichen und Leerzeichen von der Tafel |
+| IPA-Lautschrift | J | 38 Laute mit Lautwert und Beispiel abgeschrieben; die Schreibung je Laut (ʃ → SCH, ŋ → NG …) ist ergänzt |
 | Hexahue | M | Farbfelder maschinell ausgelesen, Ziffern, Punkt, Komma und Leerzeichen ebenso |
 | Widerstandsfarbcode | O | bestätigt, samt beider Beispiele der Tafel |
 | Umlautregel | Regelteil | „Ä → AE, ß → SS, sofern nicht anders auf dem Rätsel vermerkt“ |

@@ -160,7 +160,11 @@
   </div>
 {/if}
 
-<div class="raster" class:mitBild={Boolean(codec.zeichne)}>
+<div
+  class="raster"
+  class:mitBild={Boolean(codec.zeichne)}
+  class:mitHinweis={eintraege.some((e) => e.hinweis)}
+>
   {#if codec.uebersicht}
     <!-- Das Gesamtbild rollt mit der Tabelle, statt den festen Teil der Karte
          zu verlängern – sonst bliebe am Handy kaum Platz für das Raster. -->
@@ -182,6 +186,13 @@
           {@html glyph.inhalt}
         </svg>
         <span class="zeichen">{eintrag.zeichen}</span>
+      {:else if eintrag.hinweis}
+        <!-- Nachschlagetafel mit Erklärung: das Codezeichen groß, daneben was es bedeutet. -->
+        <span class="gross">{eintrag.darstellung}</span>
+        <span class="erklaerung">
+          <span class="zeichen">{eintrag.zeichen}</span>
+          <span class="hinweis">{eintrag.hinweis}</span>
+        </span>
       {:else}
         <span class="zeichen">{eintrag.zeichen}</span>
         {#if codebild}
@@ -370,6 +381,42 @@
 
   .raster.mitBild {
     grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
+  }
+
+  /* Einträge mit Erklärung brauchen Breite statt Höhe: Zeichen links, Text rechts. */
+  .raster.mitHinweis {
+    grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+    /* Sonst staucht das rollende Raster die Zeilen auf Tastenhöhe und schneidet
+       lange Erklärungen oben und unten ab. */
+    grid-auto-rows: min-content;
+  }
+
+  .raster.mitHinweis button {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 6px 8px;
+    text-align: left;
+  }
+
+  .gross {
+    flex: 0 0 2.4rem;
+    text-align: center;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--akzent);
+  }
+
+  .erklaerung {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .erklaerung .hinweis {
+    color: var(--text-leise);
+    font-size: 0.7rem;
+    line-height: 1.25;
   }
 
   .uebersicht {

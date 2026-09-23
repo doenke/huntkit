@@ -9,6 +9,7 @@ import { elemente } from './elemente';
 import { ersetzen } from './ersetzen';
 import { fingeralphabet } from './fingeralphabet';
 import { hexahue } from './hexahue';
+import { ipa } from './ipa';
 import { morse } from './morse';
 import { base32, base64, roemisch } from './zahlen';
 import { nato } from './nato';
@@ -31,6 +32,7 @@ export const CODECS: ReadonlyArray<Codec> = [
   hexahue,
   templer,
   fingeralphabet,
+  ipa,
   caesar,
   atbash,
   vigenereCodec,

@@ -59,6 +59,8 @@ export interface TabellenEintrag {
    * darüber, ob man scrollen muss.
    */
   gruppe?: string;
+  /** Erklärung zum Eintrag, etwa Lautwert und Beispielwort bei der IPA-Tabelle. */
+  hinweis?: string;
 }
 
 /**
