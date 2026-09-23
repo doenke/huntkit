@@ -164,7 +164,8 @@
 <div
   class="raster"
   class:mitBild={Boolean(codec.zeichne)}
-  class:mitHinweis={eintraege.some((e) => e.hinweis)}
+  class:mitHinweis={!codec.zeichne && eintraege.some((e) => e.hinweis || [...e.zeichen].length > 4)}
+  class:hoch={Boolean(codec.zeichne) && eintraege.some((e) => e.hinweis)}
 >
   {#if codec.uebersicht}
     <!-- Das Gesamtbild rollt mit der Tabelle, statt den festen Teil der Karte
@@ -187,6 +188,7 @@
           {@html glyph.inhalt}
         </svg>
         <span class="zeichen">{eintrag.zeichen}</span>
+        {#if eintrag.hinweis}<span class="hinweis">{eintrag.hinweis}</span>{/if}
       {:else if eintrag.hinweis}
         <!-- Nachschlagetafel mit Erklärung: das Codezeichen groß, daneben was es bedeutet. -->
         <span class="gross">{eintrag.darstellung}</span>
@@ -387,7 +389,18 @@
     grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
   }
 
-  /* Einträge mit Erklärung brauchen Breite statt Höhe: Zeichen links, Text rechts. */
+  /* Bild, Name und Wert untereinander: Die Zeile wächst mit, statt das Bild
+     zu stauchen. */
+  .raster.hoch {
+    grid-auto-rows: min-content;
+  }
+
+  .raster.hoch svg {
+    flex-shrink: 0;
+  }
+
+  /* Einträge mit Erklärung oder langem Namen (Ländern) brauchen Breite statt
+     Höhe: Zeichen links, Text rechts. */
   .raster.mitHinweis {
     grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
     /* Sonst staucht das rollende Raster die Zeilen auf Tastenhöhe und schneidet
@@ -421,6 +434,13 @@
     color: var(--text-leise);
     font-size: 0.7rem;
     line-height: 1.25;
+  }
+
+  /* Unter einem Bild: klein und einzeilig, etwa der Farbwert. */
+  .raster.mitBild .hinweis {
+    color: var(--text-leise);
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.65rem;
   }
 
   .uebersicht {
@@ -475,6 +495,11 @@
     color: var(--text-leise);
     font-size: 0.75rem;
     font-weight: 500;
+    /* Lange Namen wie BlanchedAlmond brechen um, statt abgeschnitten zu werden. */
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-align: center;
+    line-height: 1.2;
   }
 
   .code {

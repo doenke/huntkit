@@ -9,11 +9,13 @@ import { atbash, bacon, handytasten, polybios, vigenereCodec, zaun } from './chi
 import { ausWoertern, gitter, jedesN, laenge, stellen, zaehlen } from './extrahieren';
 import { elemente } from './elemente';
 import { ersetzen } from './ersetzen';
+import { farben } from './farben';
 import { fingeralphabet } from './fingeralphabet';
 import { flaggen } from './flaggen';
 import { hexahue } from './hexahue';
 import { ipa } from './ipa';
 import { klopfcode } from './klopfcode';
+import { laendercodes } from './laendercodes';
 import { morse } from './morse';
 import { base32, base64, roemisch } from './zahlen';
 import { nato } from './nato';
@@ -41,6 +43,8 @@ export const CODECS: ReadonlyArray<Codec> = [
   griechisch,
   kyrillisch,
   aminosaeuren,
+  laendercodes,
+  farben,
   caesar,
   atbash,
   vigenereCodec,

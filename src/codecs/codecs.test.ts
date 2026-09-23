@@ -126,9 +126,10 @@ describe('Vollständigkeit der Tabellen', () => {
 
   it('vergibt innerhalb eines Codes keine Darstellung doppelt', () => {
     // Ausnahmen, die so in der Quelle stehen: Im Templercode liegen I und J auf
-    // derselben Form, im Klopfcode teilen sich C und K ein Feld. Beim
-    // Entschlüsseln bleibt die Stelle deshalb mehrdeutig.
-    const erlaubt: Record<string, number> = { templer: 1, klopfcode: 1 };
+    // derselben Form, im Klopfcode teilen sich C und K ein Feld, und Aqua und
+    // Cyan sind dieselbe Farbe. Beim Entschlüsseln bleibt die Stelle deshalb
+    // mehrdeutig.
+    const erlaubt: Record<string, number> = { templer: 1, klopfcode: 1, farben: 1 };
     for (const c of CODECS) {
       if (!c.tabelle) continue;
       const darstellungen = c.tabelle(standardOptionen(c)).map((e) => e.darstellung);
