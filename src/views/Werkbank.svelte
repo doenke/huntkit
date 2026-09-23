@@ -13,9 +13,11 @@
     neueZeile,
     rechne,
     sichern,
+    sortierungOhne,
     spaltenname,
     spaltenzeichen,
     zeigtBild,
+    type Sortierung,
     type Spalte,
     type SpaltenId
   } from '../lib/blatt';
@@ -28,6 +30,7 @@
     umlauteAufloesenGespeichert
   } from '../lib/umlautschalter';
   import Codeanzeige from '../ui/Codeanzeige.svelte';
+  import Sortierwahl from '../ui/Sortierwahl.svelte';
   import Spalteneinstellung from '../ui/Spalteneinstellung.svelte';
   import Tafeleingabe from '../ui/Tafeleingabe.svelte';
   import Zellenanalyse from '../ui/Zellenanalyse.svelte';
@@ -85,9 +88,12 @@
     }
     if (spalte.art === 'eingabe' && spalte.tafel) return 'Tafel';
     if (spalte.art === 'position') {
-      return spalte.nach
-        ? `nach ${spaltenname(blatt, spalte.nach.spalte)} ${spalte.nach.richtung === 'auf' ? '↑' : '↓'}`
-        : 'in der Eingabe';
+      const nach = spalte.nach;
+      if (!nach) return 'in der Eingabe';
+      const erste = `nach ${spaltenname(blatt, nach.spalte)} ${nach.richtung === 'auf' ? '↑' : '↓'}`;
+      return nach.dann
+        ? `${erste}, dann ${spaltenname(blatt, nach.dann.spalte)} ${nach.dann.richtung === 'auf' ? '↑' : '↓'}`
+        : erste;
     }
     return '';
   }
@@ -141,8 +147,13 @@
     const ersatz = blatt.spalten[stelle - 1]?.id;
     blatt.spalten = blatt.spalten.filter((s) => s.id !== id);
     for (const spalte of blatt.spalten) {
-      // Zählte eine Position nach der gelöschten Spalte, fällt sie auf ihre Ordnung zurück.
-      if (spalte.art === 'position' && spalte.nach?.spalte === id) delete spalte.nach;
+      // Zählte eine Position nach der gelöschten Spalte, rückt die zweite Stufe
+      // nach – oder sie zählt wieder in der Eingabereihenfolge.
+      if (spalte.art === 'position') {
+        const nach = sortierungOhne(spalte.nach, id);
+        if (nach) spalte.nach = nach;
+        else delete spalte.nach;
+      }
       if (spalte.art !== 'werkzeug') continue;
       if (spalte.quelle === id) spalte.quelle = ersatz ?? blatt.spalten[0]?.id ?? '';
       for (const [optionId, bindung] of Object.entries(spalte.optionen)) {
@@ -152,16 +163,17 @@
         }
       }
     }
-    if (blatt.sortierung?.spalte === id) delete blatt.sortierung;
+    const sortierung = sortierungOhne(blatt.sortierung, id);
+    if (sortierung) blatt.sortierung = sortierung;
+    else delete blatt.sortierung;
     for (const zeile of blatt.zeilen) delete zeile.werte[id];
     if (einstellung === id) einstellung = null;
     if (gewaehlt?.spalte === id) gewaehlt = null;
   }
 
-  /** Anzeige sortieren: leer heißt Eingabereihenfolge. Art und Richtung bleiben beim Spaltenwechsel. */
-  function sortiereNach(spalteId: SpaltenId) {
-    if (!spalteId) delete blatt.sortierung;
-    else blatt.sortierung = { art: 'text', richtung: 'auf', ...blatt.sortierung, spalte: spalteId };
+  function sortiereAnzeige(neu: Sortierung | undefined) {
+    if (neu) blatt.sortierung = neu;
+    else delete blatt.sortierung;
   }
 
   /** Einen Treffer der Untersuchung auf das ganze Blatt anwenden. */
@@ -329,6 +341,10 @@
                     <span class="sortiert" title="Die Tabelle ist nach dieser Spalte sortiert">
                       {blatt.sortierung.richtung === 'auf' ? '↑' : '↓'}
                     </span>
+                  {:else if blatt.sortierung?.dann?.spalte === spalte.id}
+                    <span class="sortiert zweite" title="Bei Gleichstand wird nach dieser Spalte sortiert">
+                      {blatt.sortierung.dann.richtung === 'auf' ? '↑' : '↓'}2
+                    </span>
                   {/if}
                 </span>
                 {#if untertitel(spalte)}<span class="quelle">{untertitel(spalte)}</span>{/if}
@@ -469,39 +485,7 @@
   <div class="zeile">
     <strong>Sortieren</strong>
   </div>
-  <div class="wahl">
-    <select
-      value={blatt.sortierung?.spalte ?? ''}
-      onchange={(e) => sortiereNach(e.currentTarget.value)}
-      aria-label="Anzeige sortieren nach"
-    >
-      <option value="">Eingabereihenfolge</option>
-      {#each blatt.spalten as spalte (spalte.id)}
-        <option value={spalte.id}>nach {spaltenname(blatt, spalte.id)}</option>
-      {/each}
-    </select>
-    {#if blatt.sortierung}
-      {@const sortierung = blatt.sortierung}
-      <select
-        value={sortierung.art}
-        onchange={(e) => (sortierung.art = e.currentTarget.value as typeof sortierung.art)}
-        aria-label="Sortierart"
-      >
-        <option value="text">alphabetisch</option>
-        <option value="zahl">numerisch</option>
-        <option value="laenge">nach Länge</option>
-      </select>
-      <button
-        type="button"
-        class="richtung"
-        onclick={() => (sortierung.richtung = sortierung.richtung === 'auf' ? 'ab' : 'auf')}
-        title="Richtung umschalten"
-        aria-label={sortierung.richtung === 'auf' ? 'aufsteigend – umschalten' : 'absteigend – umschalten'}
-      >
-        {sortierung.richtung === 'auf' ? '↑' : '↓'}
-      </button>
-    {/if}
-  </div>
+  <Sortierwahl {blatt} spalten={blatt.spalten} wert={blatt.sortierung} setzen={sortiereAnzeige} />
   <p class="hinweis">
     Sortiert nur die Anzeige – kein Wert ändert sich. Die Nummer links bleibt die der Eingabe,
     der Pfeil daneben zeigt, wie weit eine Zeile gewandert ist. Soll ein Platz in die Rechnung
@@ -902,29 +886,14 @@
     font-size: 0.78rem;
   }
 
-  .sortierung .wahl {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 6px;
-  }
-
-  .sortierung select {
-    flex: 1 1 0;
-    min-width: 0;
-    font-size: 0.8rem;
-  }
-
-  .sortierung button.richtung {
-    flex: 0 0 auto;
-    min-height: 38px;
-    min-width: 44px;
-    padding: 0;
-  }
-
   .sortiert {
     color: var(--akzent);
     margin-left: 2px;
+  }
+
+  .sortiert.zweite {
+    font-size: 0.7rem;
+    opacity: 0.8;
   }
 
   .sortierung .hinweis {

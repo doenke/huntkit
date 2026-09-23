@@ -91,11 +91,33 @@ export interface Zeile {
 
 export type Sortierart = 'text' | 'zahl' | 'laenge';
 
-/** Wonach sortiert wird – für die Anzeige wie für eine Positionsspalte. */
-export interface Sortierung {
+/** Eine Sortierstufe: Spalte, Art, Richtung. */
+export interface Sortierstufe {
   spalte: SpaltenId;
   richtung: 'auf' | 'ab';
   art: Sortierart;
+}
+
+/**
+ * Wonach sortiert wird – für die Anzeige wie für eine Positionsspalte.
+ * `dann` entscheidet bei Gleichstand; steht es auch dort gleich, gilt die
+ * Eingabereihenfolge.
+ */
+export interface Sortierung extends Sortierstufe {
+  dann?: Sortierstufe;
+}
+
+/**
+ * Eine Sortierung ohne die Spalte `id` – für das Löschen einer Spalte. Fällt
+ * die erste Stufe weg, rückt die zweite nach; fällt die zweite weg, bleibt
+ * nur die erste.
+ */
+export function sortierungOhne(sortierung: Sortierung | undefined, id: SpaltenId): Sortierung | undefined {
+  if (!sortierung) return undefined;
+  const { dann, ...erste } = sortierung;
+  const zweite = dann && dann.spalte !== id ? dann : undefined;
+  if (erste.spalte === id) return zweite ? { ...zweite } : undefined;
+  return zweite ? { ...erste, dann: zweite } : erste;
 }
 
 export interface Blatt {
@@ -298,18 +320,32 @@ export function rechne(blatt: Blatt): Berechnung {
     if (rangfolgeInArbeit.has(spalte.id)) return null;
     rangfolgeInArbeit.add(spalte.id);
     const reihe = sortiere(sortierung);
-    const ring = eingabe.some((z) => hole(sortierung.spalte, z).fehler?.includes('Ringbezug'));
+    const stufen = [sortierung.spalte, ...(sortierung.dann ? [sortierung.dann.spalte] : [])];
+    const ring = eingabe.some((z) => stufen.some((s) => hole(s, z).fehler?.includes('Ringbezug')));
     rangfolgeInArbeit.delete(spalte.id);
     rangfolgen.set(spalte.id, ring ? null : reihe);
     return ring ? null : reihe;
   }
 
-  /** Stabil sortiert: Bei Gleichstand bleibt die Eingabereihenfolge. */
+  /**
+   * Stabil sortiert: Bei Gleichstand entscheidet die zweite Stufe, steht es
+   * auch dort gleich, bleibt die Eingabereihenfolge. Eine Stufe, deren Spalte
+   * es nicht mehr gibt, zählt nicht.
+   */
   function sortiere(sortierung: Sortierung): Zeile[] {
-    return [...eingabe].sort((a, b) => vergleiche(sortierung, a, b));
+    const stufen = [sortierung, sortierung.dann].filter(
+      (stufe): stufe is Sortierstufe => stufe !== undefined && nachId.has(stufe.spalte)
+    );
+    return [...eingabe].sort((a, b) => {
+      for (const stufe of stufen) {
+        const ergebnis = vergleiche(stufe, a, b);
+        if (ergebnis !== 0) return ergebnis;
+      }
+      return 0;
+    });
   }
 
-  function vergleiche(sortierung: Sortierung, a: Zeile, b: Zeile): number {
+  function vergleiche(sortierung: Sortierstufe, a: Zeile, b: Zeile): number {
     const links = hole(sortierung.spalte, a).text.trim();
     const rechts = hole(sortierung.spalte, b).text.trim();
     // Leeres und Unlesbares steht immer hinten, in beiden Richtungen: Eine noch

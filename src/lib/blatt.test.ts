@@ -10,6 +10,7 @@ import {
   neueWerkzeugspalte,
   neueZeile,
   rechne,
+  sortierungOhne,
   spaltenzeichen,
   zeigtBild,
   type Blatt,
@@ -391,5 +392,78 @@ describe('Ältere Blätter', () => {
     const { blatt, a } = blattMit(['X']);
     blatt.sortierung = { spalte: a, richtung: 'auf', art: 'zahl' };
     expect(inHeutigerForm(blatt)).toEqual(blatt);
+  });
+});
+
+describe('Zweite Sortierspalte bei Gleichstand', () => {
+  /** Zwei Eingabespalten: Nachname und Vorname. */
+  function namen() {
+    const { blatt, a } = blattMit(['MEIER', 'ADAM', 'MEIER', 'ADAM']);
+    const b = neueEingabespalte();
+    blatt.spalten.push(b);
+    ['PAUL', 'ZOE', 'ANNA', 'BEN'].forEach((vorname, i) => (blatt.zeilen[i]!.werte[b.id] = vorname));
+    return { blatt, a, b: b.id };
+  }
+
+  it('entscheidet in der Anzeige, wo die erste Spalte gleich ist', () => {
+    const { blatt, a, b } = namen();
+    blatt.sortierung = { spalte: a, richtung: 'auf', art: 'text' };
+    // Ohne zweite Stufe bleibt bei Gleichstand die Eingabereihenfolge.
+    expect(rechne(blatt).zeilen.map((z) => z.zeile.nummer)).toEqual([2, 4, 1, 3]);
+    blatt.sortierung.dann = { spalte: b, richtung: 'auf', art: 'text' };
+    expect(rechne(blatt).zeilen.map((z) => z.zeile.nummer)).toEqual([4, 2, 3, 1]);
+    blatt.sortierung.dann = { spalte: b, richtung: 'ab', art: 'text' };
+    expect(rechne(blatt).zeilen.map((z) => z.zeile.nummer)).toEqual([2, 4, 1, 3]);
+  });
+
+  it('gilt genauso für eine Positionsspalte', () => {
+    const { blatt, a, b } = namen();
+    const platz = neuePositionsspalte({
+      spalte: a,
+      richtung: 'auf',
+      art: 'text',
+      dann: { spalte: b, richtung: 'auf', art: 'text' }
+    });
+    blatt.spalten.push(platz);
+    // MEIER PAUL, ADAM ZOE, MEIER ANNA, ADAM BEN → 4, 2, 3, 1
+    expect(spalte(blatt, platz.id)).toEqual(['4', '2', '3', '1']);
+  });
+
+  it('übergeht eine zweite Stufe, deren Spalte es nicht mehr gibt', () => {
+    const { blatt, a } = namen();
+    blatt.sortierung = { spalte: a, richtung: 'auf', art: 'text', dann: { spalte: 'weg', richtung: 'auf', art: 'text' } };
+    expect(rechne(blatt).zeilen.map((z) => z.zeile.nummer)).toEqual([2, 4, 1, 3]);
+  });
+
+  it('meldet einen Ring auch über die zweite Stufe', () => {
+    const { blatt, a } = namen();
+    const platz = neuePositionsspalte();
+    blatt.spalten.push(platz);
+    const werkzeug = neueWerkzeugspalte(platz.id, 'laenge');
+    blatt.spalten.push(werkzeug);
+    platz.nach = { spalte: a, richtung: 'auf', art: 'text', dann: { spalte: werkzeug.id, richtung: 'auf', art: 'zahl' } };
+    expect(rechne(blatt).zeilen[0]?.zellen[platz.id]?.fehler).toContain('Ringbezug');
+  });
+});
+
+describe('Sortierung ohne eine gelöschte Spalte', () => {
+  const erste = { spalte: 'a', richtung: 'auf', art: 'text' } as const;
+  const zweite = { spalte: 'b', richtung: 'ab', art: 'zahl' } as const;
+
+  it('lässt die erste Stufe, wenn die zweite wegfällt', () => {
+    expect(sortierungOhne({ ...erste, dann: zweite }, 'b')).toEqual(erste);
+  });
+
+  it('rückt die zweite Stufe nach, wenn die erste wegfällt', () => {
+    expect(sortierungOhne({ ...erste, dann: zweite }, 'a')).toEqual(zweite);
+  });
+
+  it('sortiert gar nicht mehr, wenn nichts übrig bleibt', () => {
+    expect(sortierungOhne(erste, 'a')).toBeUndefined();
+    expect(sortierungOhne(undefined, 'a')).toBeUndefined();
+  });
+
+  it('lässt eine Sortierung ohne diese Spalte, wie sie ist', () => {
+    expect(sortierungOhne({ ...erste, dann: zweite }, 'c')).toEqual({ ...erste, dann: zweite });
   });
 });

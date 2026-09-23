@@ -2,12 +2,14 @@
   import Textzeile from './Textzeile.svelte';
   import { CODECS, codec as findeCodec } from '../codecs/registry';
   import { standardOptionen } from '../codecs/types';
+  import Sortierwahl from './Sortierwahl.svelte';
   import {
     begleiteTafel,
     spaltenDavor,
     spaltenname,
     spaltenzeichen,
     type Blatt,
+    type Sortierung,
     type Spalte
   } from '../lib/blatt';
 
@@ -73,11 +75,11 @@
   /** Andere Spalten, nach denen eine Positionsspalte direkt zählen kann. */
   const vergleichsspalten = $derived(blatt.spalten.filter((s) => s.id !== spalte.id));
 
-  /** Leer heißt Eingabereihenfolge. Art und Richtung bleiben, wenn nur die Spalte wechselt. */
-  function setzeReihenfolge(spalteId: string) {
+  /** Ohne Sortierung zählt die Position in der Eingabereihenfolge. */
+  function setzeReihenfolge(neu: Sortierung | undefined) {
     if (spalte.art !== 'position') return;
-    if (!spalteId) delete spalte.nach;
-    else spalte.nach = { art: 'text', richtung: 'auf', ...spalte.nach, spalte: spalteId };
+    if (neu) spalte.nach = neu;
+    else delete spalte.nach;
   }
 </script>
 
@@ -113,39 +115,10 @@
   {/if}
 
   {#if spalte.art === 'position'}
-    <label>
-      <span>Platz in welcher Reihenfolge?</span>
-      <select
-        value={spalte.nach?.spalte ?? ''}
-        onchange={(e) => setzeReihenfolge(e.currentTarget.value)}
-      >
-        <option value="">Eingabereihenfolge</option>
-        {#each vergleichsspalten as andere (andere.id)}
-          <option value={andere.id}>nach {spaltenname(blatt, andere.id)}</option>
-        {/each}
-      </select>
-    </label>
-    {#if spalte.nach}
-      {@const nach = spalte.nach}
-      <div class="richtung">
-        <select
-          value={nach.art}
-          onchange={(e) => (nach.art = e.currentTarget.value as typeof nach.art)}
-          aria-label="Sortierart"
-        >
-          <option value="text">alphabetisch</option>
-          <option value="zahl">numerisch</option>
-          <option value="laenge">nach Länge</option>
-        </select>
-        <button
-          type="button"
-          onclick={() => (nach.richtung = nach.richtung === 'auf' ? 'ab' : 'auf')}
-          title="Richtung umschalten"
-        >
-          {nach.richtung === 'auf' ? '↑ aufsteigend' : '↓ absteigend'}
-        </button>
-      </div>
-    {/if}
+    <div class="gruppe">
+      <span class="marke">Platz in welcher Reihenfolge?</span>
+      <Sortierwahl {blatt} spalten={vergleichsspalten} wert={spalte.nach} setzen={setzeReihenfolge} />
+    </div>
     <p class="hinweis">
       Liefert je Zeile eine Zahl. Als Option einer Werkzeugspalte wird daraus „nimm den
       Buchstaben an der Stelle, auf der diese Zeile steht“. Wie die Tabelle gerade sortiert
@@ -265,7 +238,8 @@
     font-size: 0.8rem;
   }
 
-  label {
+  label,
+  .gruppe {
     display: grid;
     gap: 2px;
   }
@@ -298,7 +272,6 @@
     gap: 6px;
   }
 
-  .richtung select,
   .richtung button {
     flex: 1 1 0;
     min-height: 38px;

@@ -90,8 +90,8 @@ sondern eine Handvoll – eine Zeile je Station, je Foto, je Fund.
   eingestellt **oder kommt je Zeile aus einer Spalte** – „nimm den n-ten Buchstaben“ mit
   einem n, das pro Zeile woanders steht, ist der halbe Rätselalltag.
 - **Positionsspalte**: der Platz der Zeile – in der Eingabereihenfolge oder sortiert nach
-  einer anderen Spalte, mit Sortierart und Richtung. Bei Gleichstand gilt die
-  Eingabereihenfolge. Wie die Tabelle gerade angezeigt wird, spielt dafür keine Rolle.
+  einer anderen Spalte, mit Sortierart und Richtung und auf Wunsch einer zweiten Spalte
+  bei Gleichstand. Danach gilt die Eingabereihenfolge. Wie die Tabelle gerade angezeigt wird, spielt dafür keine Rolle.
 
 **Das Bild ist die Standardansicht.** Wo der Inhalt in einem Code steht, den wir zeichnen
 können, zeigt die Spalte ihn gezeichnet – auf dem Zettel steht der Code schließlich auch
@@ -133,7 +133,10 @@ Wert, sondern nur die Reihenfolge der **Anzeige**: eine Spalte, Art (alphabetisc
 numerisch, nach Länge), Richtung. Inhaltlich wirksam wird eine Reihenfolge nur über eine
 Positionsspalte, und die zählt unabhängig von der Anzeige.
 
-- Sortiert wird **stabil**, bei Gleichstand bleibt die Eingabereihenfolge.
+- **Bei Gleichstand** entscheidet auf Wunsch eine zweite Spalte (eigene Art und Richtung),
+  etwa Vorname nach Nachname; steht es auch dort gleich, bleibt die Eingabereihenfolge.
+  Die zweite Spalte trägt im Kopf eine kleine 2 am Pfeil. Wird die erste Spalte gelöscht,
+  rückt die zweite nach.
 - „Erst nach D sortieren, dann E, F, G auf dieser Basis bauen, dann nach G sortieren“
   heißt damit: eine Spalte „Platz nach D“, E, F, G rechnen mit diesem Platz, und die
   Anzeige wird nach G sortiert.
