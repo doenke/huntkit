@@ -1,6 +1,8 @@
 <script lang="ts">
   import { gespeichertesThema, setzeThema, THEMEN, type Thema } from '../lib/theme';
+  import { UEBUNGEN } from '../lib/uebungen';
   import Nachtausruestung from '../ui/Nachtausruestung.svelte';
+  import Uebung from '../ui/Uebung.svelte';
 
   let thema = $state<Thema>(gespeichertesThema());
 
@@ -9,6 +11,15 @@
     setzeThema(neu);
   }
 </script>
+
+<h2>Übungen</h2>
+<p class="leise">
+  Kleine Rätsel zum Kennenlernen der Werkzeuge. Gelöst wird mit der Werkbank –
+  wer nicht weiterkommt, deckt Tipps auf oder öffnet den Lösungsweg.
+</p>
+{#each UEBUNGEN as uebung (uebung.id)}
+  <Uebung {uebung} />
+{/each}
 
 <h2>Für die Nacht</h2>
 <Nachtausruestung />
