@@ -3,6 +3,7 @@ import {
   anzeigetafel,
   ausAlterKette,
   begleiteTafel,
+  inHeutigerForm,
   leeresBlatt,
   neueEingabespalte,
   neuePositionsspalte,
@@ -23,11 +24,11 @@ function blattMit(texte: string[]): { blatt: Blatt; a: SpaltenId } {
     zeile.werte[a.id] = text;
     return zeile;
   });
-  return { blatt: { spalten: [a], zeilen, sortierungen: [] }, a: a.id };
+  return { blatt: { spalten: [a], zeilen }, a: a.id };
 }
 
-function spalte(blatt: Blatt, id: SpaltenId, ordnung?: number): string[] {
-  return rechne(blatt, ordnung).zeilen.map((z) => z.zellen[id]?.text ?? '');
+function spalte(blatt: Blatt, id: SpaltenId): string[] {
+  return rechne(blatt).zeilen.map((z) => z.zellen[id]?.text ?? '');
 }
 
 describe('Spaltenzeichen', () => {
@@ -108,7 +109,7 @@ describe('Sortieren', () => {
   it('ändert die Reihenfolge, aber keinen Wert', () => {
     const { blatt, a } = blattMit(['CAESAR', 'ANKER', 'BLUME']);
     const vorher = rechne(blatt).zeilen.map((z) => z.zellen[a]?.text);
-    blatt.sortierungen.push({ id: 's1', spalte: a, richtung: 'auf', art: 'text' });
+    blatt.sortierung = { spalte: a, richtung: 'auf', art: 'text' };
     const nachher = rechne(blatt);
     expect(nachher.zeilen.map((z) => z.zellen[a]?.text)).toEqual(['ANKER', 'BLUME', 'CAESAR']);
     expect([...nachher.zeilen.map((z) => z.zellen[a]?.text)].sort()).toEqual([...vorher].sort());
@@ -116,85 +117,77 @@ describe('Sortieren', () => {
 
   it('behält die Eingabenummer, damit man die Zeile wiederfindet', () => {
     const { blatt, a } = blattMit(['CAESAR', 'ANKER', 'BLUME']);
-    blatt.sortierungen.push({ id: 's1', spalte: a, richtung: 'auf', art: 'text' });
+    blatt.sortierung = { spalte: a, richtung: 'auf', art: 'text' };
     const zeilen = rechne(blatt).zeilen;
     expect(zeilen.map((z) => z.zeile.nummer)).toEqual([2, 3, 1]);
-    // Platz jetzt und Platz davor – daraus wird die Verschiebung in der Anzeige.
-    expect(zeilen.map((z) => `${z.vorher}->${z.platz}`)).toEqual(['2->1', '3->2', '1->3']);
+    // Platz in der Eingabe und jetzt – daraus wird die Verschiebung in der Anzeige.
+    expect(zeilen.map((z) => `${z.eingabeplatz}->${z.platz}`)).toEqual(['2->1', '3->2', '1->3']);
   });
 
   it('sortiert nach Zahl, nach Länge und absteigend', () => {
     const { blatt, a } = blattMit(['9', '11', '2']);
-    blatt.sortierungen.push({ id: 's1', spalte: a, richtung: 'auf', art: 'zahl' });
+    blatt.sortierung = { spalte: a, richtung: 'auf', art: 'zahl' };
     expect(spalte(blatt, a)).toEqual(['2', '9', '11']);
-    blatt.sortierungen[0] = { id: 's1', spalte: a, richtung: 'ab', art: 'zahl' };
+    blatt.sortierung = { spalte: a, richtung: 'ab', art: 'zahl' };
     expect(spalte(blatt, a)).toEqual(['11', '9', '2']);
-    blatt.sortierungen[0] = { id: 's1', spalte: a, richtung: 'auf', art: 'text' };
+    blatt.sortierung = { spalte: a, richtung: 'auf', art: 'text' };
     expect(spalte(blatt, a)).toEqual(['11', '2', '9']);
-    blatt.sortierungen[0] = { id: 's1', spalte: a, richtung: 'auf', art: 'laenge' };
+    blatt.sortierung = { spalte: a, richtung: 'auf', art: 'laenge' };
     expect(spalte(blatt, a)).toEqual(['9', '2', '11']);
   });
 
   it('stellt Leeres immer hinten an, in beide Richtungen', () => {
     const { blatt, a } = blattMit(['B', '', 'A']);
-    blatt.sortierungen.push({ id: 's1', spalte: a, richtung: 'auf', art: 'text' });
+    blatt.sortierung = { spalte: a, richtung: 'auf', art: 'text' };
     expect(spalte(blatt, a)).toEqual(['A', 'B', '']);
-    blatt.sortierungen[0] = { id: 's1', spalte: a, richtung: 'ab', art: 'text' };
+    blatt.sortierung = { spalte: a, richtung: 'ab', art: 'text' };
     expect(spalte(blatt, a)).toEqual(['B', 'A', '']);
   });
 
-  it('ist stabil: bei Gleichstand bleibt die vorherige Reihenfolge', () => {
+  it('ist stabil: bei Gleichstand bleibt die Eingabereihenfolge', () => {
     const { blatt, a } = blattMit(['GLEICH', 'GLEICH', 'GLEICH']);
-    blatt.sortierungen.push({ id: 's1', spalte: a, richtung: 'auf', art: 'text' });
+    blatt.sortierung = { spalte: a, richtung: 'auf', art: 'text' };
     expect(rechne(blatt).zeilen.map((z) => z.zeile.nummer)).toEqual([1, 2, 3]);
   });
 
-  it('zeigt auf Wunsch eine frühere Ordnung', () => {
+  it('zeigt ohne Sortierung – oder nach einer gelöschten Spalte – die Eingabereihenfolge', () => {
     const { blatt, a } = blattMit(['C', 'A', 'B']);
-    blatt.sortierungen.push({ id: 's1', spalte: a, richtung: 'auf', art: 'text' });
-    expect(spalte(blatt, a, 0)).toEqual(['C', 'A', 'B']);
-    expect(spalte(blatt, a, 1)).toEqual(['A', 'B', 'C']);
+    expect(spalte(blatt, a)).toEqual(['C', 'A', 'B']);
+    blatt.sortierung = { spalte: 'gibt-es-nicht', richtung: 'auf', art: 'text' };
+    expect(spalte(blatt, a)).toEqual(['C', 'A', 'B']);
   });
 });
 
 describe('Positionsspalte', () => {
-  it('liefert den Platz in einer bestimmten Ordnung', () => {
+  it('liefert den Platz in der Eingabe oder nach einer Spalte – unabhängig von der Anzeige', () => {
     const { blatt, a } = blattMit(['C', 'A', 'B']);
-    blatt.sortierungen.push({ id: 's1', spalte: a, richtung: 'auf', art: 'text' });
-    const p0 = neuePositionsspalte(0);
-    const p1 = neuePositionsspalte(1);
-    blatt.spalten.push(p0, p1);
+    const eingabe = neuePositionsspalte();
+    const alphabetisch = neuePositionsspalte({ spalte: a, richtung: 'auf', art: 'text' });
+    blatt.spalten.push(eingabe, alphabetisch);
+    expect(spalte(blatt, eingabe.id)).toEqual(['1', '2', '3']);
+    expect(spalte(blatt, alphabetisch.id)).toEqual(['3', '1', '2']);
+    // Die Anzeige umzusortieren ändert keinen Platz, nur wo die Zeilen stehen.
+    blatt.sortierung = { spalte: a, richtung: 'ab', art: 'text' };
     const zeilen = rechne(blatt).zeilen;
-    // Angezeigt wird nach S1: A, B, C. In der Eingabe standen sie als C, A, B.
-    expect(zeilen.map((z) => z.zellen[p1.id]?.text)).toEqual(['1', '2', '3']);
-    expect(zeilen.map((z) => z.zellen[p0.id]?.text)).toEqual(['2', '3', '1']);
+    expect(zeilen.map((z) => z.zellen[a]?.text)).toEqual(['C', 'B', 'A']);
+    expect(zeilen.map((z) => z.zellen[alphabetisch.id]?.text)).toEqual(['3', '2', '1']);
+    expect(zeilen.map((z) => z.zellen[eingabe.id]?.text)).toEqual(['1', '3', '2']);
   });
 
   it('trägt den Platz als Option in ein Werkzeug – der ganze Sinn der Übung', () => {
-    // Erst nach Spalte A sortieren, dann je Zeile den n-ten Buchstaben ziehen,
-    // wobei n der Platz nach dieser Sortierung ist.
+    // Je Zeile den n-ten Buchstaben ziehen, wobei n der Platz nach Spalte A ist.
     const { blatt, a } = blattMit(['CAESAR', 'ANKER', 'BLUME']);
-    blatt.sortierungen.push({ id: 's1', spalte: a, richtung: 'auf', art: 'text' });
-    const platz = neuePositionsspalte(1);
+    const platz = neuePositionsspalte({ spalte: a, richtung: 'auf', art: 'text' });
     blatt.spalten.push(platz);
     const heraus = neueWerkzeugspalte(a, 'jedes-n');
     heraus.optionen['n'] = { art: 'fest', wert: 99 };
     heraus.optionen['versatz'] = { art: 'spalte', spalte: platz.id };
     blatt.spalten.push(heraus);
-    // ANKER Platz 1 -> A, BLUME Platz 2 -> L, CAESAR Platz 3 -> E: „ALE“.
-    expect(spalte(blatt, heraus.id)).toEqual(['A', 'L', 'E']);
-  });
-
-  it('meldet einen Ringbezug, statt sich aufzuhängen', () => {
-    const { blatt, a } = blattMit(['B', 'A']);
-    const platz = neuePositionsspalte(1);
-    blatt.spalten.push(platz);
-    // Schritt 1 sortiert nach einer Spalte, die ihrerseits Schritt 1 braucht.
-    blatt.sortierungen.push({ id: 's1', spalte: platz.id, richtung: 'auf', art: 'zahl' });
-    const ergebnis = rechne(blatt);
-    expect(ergebnis.fehler.join(' ')).toContain('Sortierschritt 1');
-    expect(ergebnis.zeilen).toHaveLength(2);
-    expect(spalte(blatt, a)).toEqual(['B', 'A']);
+    // CAESAR Platz 3 -> E, ANKER Platz 1 -> A, BLUME Platz 2 -> L.
+    expect(spalte(blatt, heraus.id)).toEqual(['E', 'A', 'L']);
+    // Nach dem Ergebnis sortiert angezeigt: A, E, L.
+    blatt.sortierung = { spalte: heraus.id, richtung: 'auf', art: 'text' };
+    expect(spalte(blatt, heraus.id)).toEqual(['A', 'E', 'L']);
   });
 });
 
@@ -250,7 +243,7 @@ describe('Anzeige der Spalten', () => {
 describe('Begleitspalte zur Codetafel', () => {
   function blattMitEingabe() {
     const a = neueEingabespalte();
-    return { blatt: { spalten: [a], zeilen: [neueZeile(1)], sortierungen: [] } as Blatt, a };
+    return { blatt: { spalten: [a], zeilen: [neueZeile(1)] } as Blatt, a };
   }
 
   it('legt neben einer Tafelspalte die Entschlüsselung an', () => {
@@ -323,7 +316,7 @@ describe('Positionsspalte nach einer Spalte', () => {
     const blatt = leeresBlatt();
     const eingabe = blatt.spalten[0]!;
     blatt.zeilen = werte.map((wert, i) => ({ ...neueZeile(i + 1), werte: { [eingabe.id]: wert } }));
-    const platz = neuePositionsspalte(0);
+    const platz = neuePositionsspalte();
     blatt.spalten.push(platz);
     return { blatt, eingabe, platz };
   }
@@ -364,5 +357,39 @@ describe('Positionsspalte nach einer Spalte', () => {
     platz.nach = { spalte: werkzeug.id, art: 'zahl', richtung: 'auf' };
     const berechnung = rechne(blatt);
     expect(berechnung.zeilen[0]?.zellen[platz.id]?.fehler).toContain('Ringbezug');
+  });
+});
+
+describe('Ältere Blätter', () => {
+  it('werden aus Sortierschritten in die heutige Form gebracht', () => {
+    const { blatt, a } = blattMit(['C', 'A', 'B']);
+    const alt = {
+      ...blatt,
+      spalten: [
+        ...blatt.spalten,
+        { art: 'position', id: 'p0', ordnung: 0 },
+        { art: 'position', id: 'p1', ordnung: 1 }
+      ],
+      sortierungen: [{ id: 's1', spalte: a, richtung: 'ab', art: 'text' }]
+    } as unknown as Blatt;
+    const neu = inHeutigerForm(alt);
+    // Die Anzeige sortiert wie der letzte Schritt …
+    expect(neu.sortierung).toEqual({ spalte: a, richtung: 'ab', art: 'text' });
+    expect('sortierungen' in neu).toBe(false);
+    // … „Platz in der Eingabe“ bleibt, „Platz nach Schritt 1“ zählt nach dessen Spalte.
+    expect(neu.spalten[1]).toEqual({ art: 'position', id: 'p0' });
+    expect(neu.spalten[2]).toEqual({
+      art: 'position',
+      id: 'p1',
+      nach: { spalte: a, richtung: 'ab', art: 'text' }
+    });
+    // Angezeigt absteigend (C, B, A) – und nach genau dieser Sortierung gezählt.
+    expect(spalte(neu, 'p1')).toEqual(['1', '2', '3']);
+  });
+
+  it('lassen ein heutiges Blatt, wie es ist', () => {
+    const { blatt, a } = blattMit(['X']);
+    blatt.sortierung = { spalte: a, richtung: 'auf', art: 'zahl' };
+    expect(inHeutigerForm(blatt)).toEqual(blatt);
   });
 });

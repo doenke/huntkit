@@ -72,11 +72,11 @@ Zentrales Element der App: **Zeilen und Spalten**. Ein Rätsel liefert selten ei
 sondern eine Handvoll – eine Zeile je Station, je Foto, je Fund.
 
 ```
- #  A (Morse-Tafel)         B: Morse→A   C: Platz S1   D: Stelle←B (aus C)
- 2  .- -. -.- . .-.         ANKER        1             A
- 3  -... .-.. ..- -- .      BLUME        2             L
- 1  -.-. .- . ... .- .-.    CAESAR       3             E
-                                              S1: sortiere nach B, alphabetisch
+ #  A (Morse-Tafel)         B: Morse→A   C: Platz nach B ↑   D: Stelle←B (aus C)
+ 2  .- -. -.- . .-.         ANKER        1                   A
+ 3  -... .-.. ..- -- .      BLUME        2                   L
+ 1  -.-. .- . ... .- .-.    CAESAR       3                   E
+                                              Anzeige sortiert nach B, alphabetisch
 ```
 
 - **Eingabespalte**: freier Text je Zeile, auf Wunsch mit einer **Codetafel**. Wer Morse
@@ -89,10 +89,9 @@ sondern eine Handvoll – eine Zeile je Station, je Foto, je Fund.
 - **Werkzeugspalte**: ein Codec auf einer früheren Spalte. Jede Option ist entweder fest
   eingestellt **oder kommt je Zeile aus einer Spalte** – „nimm den n-ten Buchstaben“ mit
   einem n, das pro Zeile woanders steht, ist der halbe Rätselalltag.
-- **Positionsspalte**: der Platz der Zeile in einer bestimmten Reihenfolge – einer
-  Ordnung des Blatts (Eingabe, nach Schritt n) oder direkt sortiert nach einer anderen
-  Spalte, mit Sortierart und Richtung. Letzteres braucht keinen Sortierschritt und lässt
-  die Anzeige, wie sie ist; bei Gleichstand gilt die Eingabereihenfolge.
+- **Positionsspalte**: der Platz der Zeile – in der Eingabereihenfolge oder sortiert nach
+  einer anderen Spalte, mit Sortierart und Richtung. Bei Gleichstand gilt die
+  Eingabereihenfolge. Wie die Tabelle gerade angezeigt wird, spielt dafür keine Rolle.
 
 **Das Bild ist die Standardansicht.** Wo der Inhalt in einem Code steht, den wir zeichnen
 können, zeigt die Spalte ihn gezeichnet – auf dem Zettel steht der Code schließlich auch
@@ -130,19 +129,24 @@ Zeilenumbruch innerhalb einer Zelle gibt es nicht; auch im Feld unter der Tabell
 und ein eingefügter wird zum Leerzeichen.
 
 **Sortieren.** Weil jede Zelle aus ihrer eigenen Zeile rechnet, ändert Sortieren keinen
-Wert, sondern nur die Reihenfolge. Inhaltlich wirksam wird sie erst über eine
-Positionsspalte – und genau deshalb sind Sortierschritte **Daten, keine einmalige Aktion**:
+Wert, sondern nur die Reihenfolge der **Anzeige**: eine Spalte, Art (alphabetisch,
+numerisch, nach Länge), Richtung. Inhaltlich wirksam wird eine Reihenfolge nur über eine
+Positionsspalte, und die zählt unabhängig von der Anzeige.
 
-- Schritte stehen als Liste (S1, S2, …) und sind jederzeit änderbar; alles rechnet neu.
-- Jeder Schritt erzeugt eine **Ordnung**: O0 ist die Eingabereihenfolge, O1 die nach S1.
-  Sortiert wird **stabil**, bei Gleichstand bleibt die vorherige Reihenfolge.
-- Eine Positionsspalte zeigt auf eine bestimmte Ordnung. Damit lässt sich „erst nach D
-  sortieren, dann E, F, G auf dieser Basis bauen, dann nach G sortieren“ wörtlich abbilden.
+- Sortiert wird **stabil**, bei Gleichstand bleibt die Eingabereihenfolge.
+- „Erst nach D sortieren, dann E, F, G auf dieser Basis bauen, dann nach G sortieren“
+  heißt damit: eine Spalte „Platz nach D“, E, F, G rechnen mit diesem Platz, und die
+  Anzeige wird nach G sortiert.
 - **Nachvollziehbarkeit**: Die Eingabenummer steht links und bleibt der Zeile für immer;
-  daneben die Verschiebung gegenüber der Ordnung davor (↑3). Jede frühere Ordnung lässt
-  sich wieder anzeigen.
-- Ein Ring – ein Schritt, der nach einer Spalte sortiert, die ihn selbst braucht – wird
-  gemeldet, statt die Oberfläche aufzuhängen.
+  daneben die Verschiebung gegenüber der Eingabereihenfolge (↑3). Die sortierte Spalte
+  trägt einen Pfeil im Kopf.
+- Ein Ring – eine Position, die nach einer Spalte zählt, die ihrerseits die Position
+  braucht – wird gemeldet, statt die Oberfläche aufzuhängen.
+- Früher gab es aufeinander aufbauende Sortierschritte mit je eigener Ordnung. Das war
+  doppelt, seit die Positionsspalte direkt nach einer Spalte zählt, und schwer zu
+  durchschauen. Ältere Blätter und Links werden beim Laden umgerechnet: Die Anzeige
+  sortiert wie der letzte Schritt, eine Position „nach Schritt n“ zählt nach der Spalte
+  dieses Schritts. Verloren geht nur die Verkettung mehrerer Schritte.
 
 **Untersuchung je Zelle**: Auto-Erkennung, Buchstabenhäufigkeit und die Brute-Force-Wand
 arbeiten auf einer angetippten Zelle. Ein Treffer wird als **Spalte** übernommen und gilt

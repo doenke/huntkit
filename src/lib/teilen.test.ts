@@ -11,7 +11,7 @@ const BLATT: Blatt = {
     { id: 'z1', nummer: 1, werte: { a: '-.-. .- . ... .- .-.' } },
     { id: 'z2', nummer: 2, werte: { a: '... --- ...' } }
   ],
-  sortierungen: [{ id: 's1', spalte: 'b', richtung: 'auf', art: 'text' }]
+  sortierung: { spalte: 'b', richtung: 'auf', art: 'text' }
 };
 
 describe('Teilen per Link', () => {

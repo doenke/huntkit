@@ -12,14 +12,16 @@ import { standardOptionen, type Codec, type Luecke, type OptionWerte, type Richt
  * Zwei Entscheidungen tragen das Ganze:
  *
  * 1. **Jede Zelle rechnet aus ihrer eigenen Zeile.** Sortieren ändert deshalb
- *    keinen einzigen Wert, sondern nur die Reihenfolge.
- * 2. **Sortierschritte sind Daten, keine einmalige Aktion.** Jeder Schritt
- *    erzeugt eine Ordnung – O0 ist die Eingabereihenfolge, O1 die nach dem
- *    ersten Schritt und so weiter. Eine Positionsspalte liefert den Platz in
- *    einer bestimmten Ordnung und kann damit Werkzeugoptionen füttern
- *    („n-ter Buchstabe, n = Platz nach der ersten Sortierung“). Erst dadurch
- *    wird die Reihenfolge überhaupt inhaltlich wirksam – und bleibt trotzdem
- *    nachvollziehbar, weil jede Zeile ihre Eingabenummer behält.
+ *    keinen einzigen Wert, sondern nur die Reihenfolge der Anzeige.
+ * 2. **Die Reihenfolge wird inhaltlich nur über eine Positionsspalte wirksam.**
+ *    Sie liefert den Platz einer Zeile – in der Eingabe oder sortiert nach
+ *    einer Spalte – und kann damit Werkzeugoptionen füttern („n-ter
+ *    Buchstabe, n = Platz nach Spalte D“). Wie die Tabelle gerade angezeigt
+ *    wird, spielt dafür keine Rolle, und jede Zeile behält ihre Eingabenummer.
+ *
+ * Früher gab es hier Sortierschritte, die aufeinander aufbauten und je eine
+ * eigene Ordnung erzeugten. Seit die Positionsspalte direkt nach einer Spalte
+ * zählen kann, war das doppelt – und schwer zu durchschauen.
  */
 
 export type SpaltenId = string;
@@ -70,12 +72,9 @@ export interface Werkzeugspalte extends Grundspalte {
 
 export interface Positionsspalte extends Grundspalte {
   art: 'position';
-  /** 0 = Eingabereihenfolge, n = Reihenfolge nach dem n-ten Sortierschritt. */
-  ordnung: number;
   /**
-   * Stattdessen direkt nach einer Spalte zählen – ohne dafür einen
-   * Sortierschritt anzulegen, der auch die Anzeige umsortiert. Gesetzt hat
-   * das Vorrang vor `ordnung`. Bei Gleichstand gilt die Eingabereihenfolge.
+   * Wonach gezählt wird. Ohne Angabe ist es der Platz in der Eingabe-
+   * reihenfolge. Bei Gleichstand entscheidet immer die Eingabereihenfolge.
    */
   nach?: Sortierung;
 }
@@ -92,21 +91,18 @@ export interface Zeile {
 
 export type Sortierart = 'text' | 'zahl' | 'laenge';
 
-/** Wonach sortiert wird – für einen Sortierschritt wie für eine Positionsspalte. */
+/** Wonach sortiert wird – für die Anzeige wie für eine Positionsspalte. */
 export interface Sortierung {
   spalte: SpaltenId;
   richtung: 'auf' | 'ab';
   art: Sortierart;
 }
 
-export interface Sortierschritt extends Sortierung {
-  id: string;
-}
-
 export interface Blatt {
   spalten: Spalte[];
   zeilen: Zeile[];
-  sortierungen: Sortierschritt[];
+  /** Wie die Tabelle angezeigt wird. Reine Ansicht – kein Wert hängt davon ab. */
+  sortierung?: Sortierung;
 }
 
 export interface Zelle {
@@ -119,16 +115,14 @@ export interface Zelle {
 export interface BerechneteZeile {
   zeile: Zeile;
   zellen: Record<SpaltenId, Zelle>;
-  /** Platz in der angezeigten Ordnung, ab 1. */
+  /** Platz in der Anzeige, ab 1. */
   platz: number;
-  /** Platz in der Ordnung davor – daraus ergibt sich die Verschiebung. */
-  vorher: number;
+  /** Platz in der Eingabereihenfolge – daraus ergibt sich die Verschiebung. */
+  eingabeplatz: number;
 }
 
 export interface Berechnung {
   zeilen: BerechneteZeile[];
-  /** Welche Ordnung gezeigt wird: 0 = Eingabe, n = nach dem n-ten Schritt. */
-  ordnung: number;
   fehler: string[];
 }
 
@@ -156,7 +150,7 @@ export function spaltenname(blatt: Blatt, id: SpaltenId): string {
 
 export function leeresBlatt(): Blatt {
   const spalte: Eingabespalte = { art: 'eingabe', id: kennung() };
-  return { spalten: [spalte], zeilen: [neueZeile(1)], sortierungen: [] };
+  return { spalten: [spalte], zeilen: [neueZeile(1)] };
 }
 
 export function neueZeile(nummer: number): Zeile {
@@ -183,8 +177,8 @@ export function neueWerkzeugspalte(quelle: SpaltenId, codecId: string): Werkzeug
   };
 }
 
-export function neuePositionsspalte(ordnung: number): Positionsspalte {
-  return { art: 'position', id: kennung(), ordnung };
+export function neuePositionsspalte(nach?: Sortierung): Positionsspalte {
+  return nach ? { art: 'position', id: kennung(), nach: { ...nach } } : { art: 'position', id: kennung() };
 }
 
 /** Spalten, die als Quelle oder Optionsgeber in Frage kommen: alle davor. */
@@ -196,22 +190,19 @@ export function spaltenDavor(blatt: Blatt, id: SpaltenId): Spalte[] {
 const LEER: Zelle = { text: '', luecken: [] };
 
 /**
- * Rechnet das ganze Blatt durch und liefert die Zeilen in der gewünschten
- * Ordnung. Zellen und Ordnungen hängen wechselseitig voneinander ab – eine
- * Positionsspalte braucht eine Ordnung, eine Ordnung braucht die Werte ihrer
- * Sortierspalte. Beides wird deshalb bei Bedarf berechnet und gemerkt; ein
- * Ring darin ist ein Bedienfehler und wird als solcher gemeldet, statt die
- * Oberfläche aufzuhängen.
+ * Rechnet das ganze Blatt durch und liefert die Zeilen in der Reihenfolge der
+ * Anzeige. Zellen werden bei Bedarf berechnet und gemerkt. Eine Positionsspalte
+ * braucht die Werte ihrer Sortierspalte; hängt die ihrerseits an der Position,
+ * ist das ein Ring – ein Bedienfehler, der gemeldet wird, statt die Oberfläche
+ * aufzuhängen.
  */
-export function rechne(blatt: Blatt, anzeige?: number): Berechnung {
-  const ordnung = Math.max(0, Math.min(anzeige ?? blatt.sortierungen.length, blatt.sortierungen.length));
+export function rechne(blatt: Blatt): Berechnung {
   const fehler: string[] = [];
   const nachId = new Map(blatt.spalten.map((s) => [s.id, s]));
   const zellen = new Map<string, Zelle>();
   const inArbeit = new Set<string>();
-  const ordnungen = new Map<number, Zeile[]>();
-  const ordnungInArbeit = new Set<number>();
-  /** Rangfolgen der Positionsspalten, die direkt nach einer Spalte zählen. */
+  const eingabe = [...blatt.zeilen].sort((a, b) => a.nummer - b.nummer);
+  /** Rangfolgen der Positionsspalten, die nach einer Spalte zählen. */
   const rangfolgen = new Map<SpaltenId, Zeile[] | null>();
   const rangfolgeInArbeit = new Set<SpaltenId>();
 
@@ -242,10 +233,8 @@ export function rechne(blatt: Blatt, anzeige?: number): Berechnung {
     }
 
     if (spalte.art === 'position') {
-      const reihe = spalte.nach ? rangfolgeVon(spalte) : ordnungVon(spalte.ordnung);
-      if (!reihe) {
-        return { text: '', luecken: [], fehler: spalte.nach ? 'Ringbezug' : 'Ordnung fehlt' };
-      }
+      const reihe = spalte.nach ? rangfolgeVon(spalte) : eingabe;
+      if (!reihe) return { text: '', luecken: [], fehler: 'Ringbezug' };
       const platz = reihe.findIndex((z) => z.id === zeile.id) + 1;
       return { text: platz > 0 ? String(platz) : '', luecken: [] };
     }
@@ -298,53 +287,35 @@ export function rechne(blatt: Blatt, anzeige?: number): Berechnung {
     return { werte };
   }
 
-  function ordnungVon(stufe: number): Zeile[] | null {
-    if (stufe <= 0) return [...blatt.zeilen].sort((a, b) => a.nummer - b.nummer);
-    if (stufe > blatt.sortierungen.length) return null;
-    const gemerkt = ordnungen.get(stufe);
-    if (gemerkt) return gemerkt;
-    if (ordnungInArbeit.has(stufe)) {
-      melde(`Sortierschritt ${stufe} benutzt eine Spalte, die es selbst erst sortiert.`);
-      return null;
-    }
-    ordnungInArbeit.add(stufe);
-    const vorher = ordnungVon(stufe - 1);
-    const schritt = blatt.sortierungen[stufe - 1];
-    let reihe: Zeile[] = vorher ? [...vorher] : [];
-    if (schritt && vorher) {
-      // Stabil: Bei Gleichstand bleibt die Reihenfolge des vorigen Schritts.
-      reihe = [...vorher].sort((a, b) => vergleiche(schritt, a, b));
-    }
-    ordnungInArbeit.delete(stufe);
-    ordnungen.set(stufe, reihe);
-    return reihe;
-  }
-
   /**
    * Die Zeilen, sortiert nach der Spalte einer Positionsspalte. Hängt die
    * Sortierspalte selbst von dieser Position ab, ist das ein Ring.
    */
   function rangfolgeVon(spalte: Positionsspalte): Zeile[] | null {
     const sortierung = spalte.nach;
-    if (!sortierung) return null;
+    if (!sortierung) return eingabe;
     if (rangfolgen.has(spalte.id)) return rangfolgen.get(spalte.id) ?? null;
     if (rangfolgeInArbeit.has(spalte.id)) return null;
     rangfolgeInArbeit.add(spalte.id);
-    const basis = ordnungVon(0) ?? [];
-    const reihe = [...basis].sort((a, b) => vergleiche(sortierung, a, b));
-    const ring = basis.some((z) => hole(sortierung.spalte, z).fehler?.includes('Ringbezug'));
+    const reihe = sortiere(sortierung);
+    const ring = eingabe.some((z) => hole(sortierung.spalte, z).fehler?.includes('Ringbezug'));
     rangfolgeInArbeit.delete(spalte.id);
     rangfolgen.set(spalte.id, ring ? null : reihe);
     return ring ? null : reihe;
   }
 
-  function vergleiche(schritt: Sortierung, a: Zeile, b: Zeile): number {
-    const links = hole(schritt.spalte, a).text.trim();
-    const rechts = hole(schritt.spalte, b).text.trim();
+  /** Stabil sortiert: Bei Gleichstand bleibt die Eingabereihenfolge. */
+  function sortiere(sortierung: Sortierung): Zeile[] {
+    return [...eingabe].sort((a, b) => vergleiche(sortierung, a, b));
+  }
+
+  function vergleiche(sortierung: Sortierung, a: Zeile, b: Zeile): number {
+    const links = hole(sortierung.spalte, a).text.trim();
+    const rechts = hole(sortierung.spalte, b).text.trim();
     // Leeres und Unlesbares steht immer hinten, in beiden Richtungen: Eine noch
     // nicht gefüllte Zeile soll die Liste nie anführen.
-    const wertA = sortierwert(schritt.art, links);
-    const wertB = sortierwert(schritt.art, rechts);
+    const wertA = sortierwert(sortierung.art, links);
+    const wertB = sortierwert(sortierung.art, rechts);
     if (wertA === null && wertB === null) return 0;
     if (wertA === null) return 1;
     if (wertB === null) return -1;
@@ -352,17 +323,17 @@ export function rechne(blatt: Blatt, anzeige?: number): Berechnung {
       typeof wertA === 'number' && typeof wertB === 'number'
         ? wertA - wertB
         : String(wertA).localeCompare(String(wertB), 'de');
-    return schritt.richtung === 'ab' ? -roh : roh;
+    return sortierung.richtung === 'ab' ? -roh : roh;
   }
 
-  const angezeigt = ordnungVon(ordnung) ?? ordnungVon(0) ?? [];
-  const davor = ordnungVon(Math.max(0, ordnung - 1)) ?? [];
-  const plaetzeDavor = new Map(davor.map((z, i) => [z.id, i + 1]));
+  const sortierung = blatt.sortierung && nachId.has(blatt.sortierung.spalte) ? blatt.sortierung : null;
+  const angezeigt = sortierung ? sortiere(sortierung) : eingabe;
+  const eingabeplaetze = new Map(eingabe.map((z, i) => [z.id, i + 1]));
 
   const zeilen: BerechneteZeile[] = angezeigt.map((zeile, i) => {
     const werte: Record<SpaltenId, Zelle> = {};
     for (const spalte of blatt.spalten) werte[spalte.id] = hole(spalte.id, zeile);
-    return { zeile, zellen: werte, platz: i + 1, vorher: plaetzeDavor.get(zeile.id) ?? i + 1 };
+    return { zeile, zellen: werte, platz: i + 1, eingabeplatz: eingabeplaetze.get(zeile.id) ?? i + 1 };
   });
 
   for (const zeile of zeilen) {
@@ -372,7 +343,7 @@ export function rechne(blatt: Blatt, anzeige?: number): Berechnung {
     }
   }
 
-  return { zeilen, ordnung, fehler };
+  return { zeilen, fehler };
 }
 
 function sortierwert(art: Sortierart, text: string): string | number | null {
@@ -453,7 +424,7 @@ export function ausAlterKette(alt: {
   const erste = neueEingabespalte();
   const zeile = neueZeile(1);
   zeile.werte[erste.id] = alt.eingabe;
-  const blatt: Blatt = { spalten: [erste], zeilen: [zeile], sortierungen: [] };
+  const blatt: Blatt = { spalten: [erste], zeilen: [zeile] };
   let quelle = erste.id;
   for (const schritt of alt.schritte) {
     if (schritt.aktiv === false) continue;
@@ -473,13 +444,45 @@ export function istBlatt(wert: unknown): wert is Blatt {
   return Boolean(blatt && Array.isArray(blatt.spalten) && Array.isArray(blatt.zeilen));
 }
 
+/**
+ * Ein gespeichertes oder geteiltes Blatt in die heutige Form bringen.
+ *
+ * Ältere Stände haben statt einer Sortierung eine Liste von Sortierschritten,
+ * und ihre Positionsspalten zeigen auf „Platz nach Schritt n“. Daraus wird:
+ * Die Anzeige sortiert wie der letzte Schritt (den zeigte die Tabelle auch
+ * vorher), und eine Position zählt nach der Spalte ihres Schritts. Genau
+ * gleich ist das nur bei einem einzelnen Schritt – mehrere bauten aufeinander
+ * auf, und diese Verkettung gibt es nicht mehr.
+ */
+export function inHeutigerForm(gelesen: Blatt): Blatt {
+  const alt = gelesen as Blatt & { sortierungen?: Array<Sortierung & { id?: string }> };
+  const schritte = Array.isArray(alt.sortierungen) ? alt.sortierungen : [];
+  const ohneKennung = (s: Sortierung & { id?: string }): Sortierung => ({
+    spalte: s.spalte,
+    richtung: s.richtung,
+    art: s.art
+  });
+  const spalten = gelesen.spalten.map((spalte) => {
+    if (spalte.art !== 'position') return spalte;
+    const { ordnung, ...rest } = spalte as Positionsspalte & { ordnung?: number };
+    if (rest.nach || !ordnung) return rest;
+    const schritt = schritte[ordnung - 1];
+    return schritt ? { ...rest, nach: ohneKennung(schritt) } : rest;
+  });
+  const letzter = schritte[schritte.length - 1];
+  const sortierung = gelesen.sortierung ?? (letzter ? ohneKennung(letzter) : undefined);
+  return sortierung
+    ? { spalten, zeilen: gelesen.zeilen, sortierung }
+    : { spalten, zeilen: gelesen.zeilen };
+}
+
 export function laden(): Blatt {
   try {
     const roh = localStorage.getItem(SPEICHER);
     if (roh) {
       const gelesen = JSON.parse(roh) as unknown;
       if (istBlatt(gelesen)) {
-        return { spalten: gelesen.spalten, zeilen: gelesen.zeilen, sortierungen: gelesen.sortierungen ?? [] };
+        return inHeutigerForm(gelesen);
       }
     }
     const alt = localStorage.getItem(ALTER_SPEICHER);

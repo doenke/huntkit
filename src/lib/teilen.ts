@@ -1,4 +1,4 @@
-import { ausAlterKette, istBlatt, type Blatt } from './blatt';
+import { ausAlterKette, inHeutigerForm, istBlatt, type Blatt } from './blatt';
 
 /**
  * Werkbank-Zustand als Link.
@@ -57,7 +57,7 @@ export async function ausFragment(fragment: string): Promise<Blatt | null> {
     if (!daten) return null;
     const gelesen = JSON.parse(new TextDecoder().decode(daten)) as unknown;
     if (istBlatt(gelesen)) {
-      return { spalten: gelesen.spalten, zeilen: gelesen.zeilen, sortierungen: gelesen.sortierungen ?? [] };
+      return inHeutigerForm(gelesen);
     }
     // Links aus der Zeit der Schrittkette bleiben lesbar – sie werden zu einem
     // Blatt mit einer Zeile.

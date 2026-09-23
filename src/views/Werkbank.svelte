@@ -15,7 +15,6 @@
     sichern,
     spaltenname,
     spaltenzeichen,
-    kennung,
     zeigtBild,
     type Spalte,
     type SpaltenId
@@ -38,12 +37,11 @@
    *
    * Erste Spalte eintippen – auf Wunsch mit einer Codetafel, dann sieht man
    * auch Morse als Morse. Jede weitere Spalte ist entweder wieder Eingabe oder
-   * ein Werkzeug auf einer früheren Spalte. Sortierschritte stehen als Liste
-   * darunter; jede Zeile behält dabei ihre Eingabenummer.
+   * ein Werkzeug auf einer früheren Spalte. Sortieren betrifft nur die Anzeige;
+   * jede Zeile behält dabei ihre Eingabenummer.
    */
 
   let blatt = $state(laden());
-  let anzeige = $state<number | null>(null);
   let gewaehlt = $state<{ spalte: SpaltenId; zeile: string } | null>(null);
   let einstellung = $state<SpaltenId | null>(null);
   let linkStand = $state('');
@@ -62,10 +60,7 @@
     sichern(blatt);
   });
 
-  const stufe = $derived(
-    anzeige === null ? blatt.sortierungen.length : Math.min(anzeige, blatt.sortierungen.length)
-  );
-  const berechnung = $derived(rechne(blatt, stufe));
+  const berechnung = $derived(rechne(blatt));
   const spalteEinstellung = $derived(blatt.spalten.find((s) => s.id === einstellung));
   const zelle = $derived.by(() => {
     const wahl = gewaehlt;
@@ -79,16 +74,8 @@
   function kopfname(spalte: Spalte): string {
     if (spalte.titel?.trim()) return spalte.titel.trim();
     if (spalte.art === 'eingabe') return spalte.tafel ? (findeCodec(spalte.tafel)?.name ?? 'Eingabe') : 'Eingabe';
-    if (spalte.art === 'position') {
-      return spalte.nach
-        ? `Platz nach ${spaltenname(blatt, spalte.nach.spalte)}`
-        : `Platz ${ordnungskurz(spalte.ordnung)}`;
-    }
+    if (spalte.art === 'position') return 'Platz';
     return findeCodec(spalte.codecId)?.name ?? spalte.codecId;
-  }
-
-  function ordnungskurz(stufeNr: number): string {
-    return stufeNr === 0 ? 'Eingabe' : `S${stufeNr}`;
   }
 
   function untertitel(spalte: Spalte): string {
@@ -97,6 +84,11 @@
       return `${richtung} ${spaltenname(blatt, spalte.quelle)}`;
     }
     if (spalte.art === 'eingabe' && spalte.tafel) return 'Tafel';
+    if (spalte.art === 'position') {
+      return spalte.nach
+        ? `nach ${spaltenname(blatt, spalte.nach.spalte)} ${spalte.nach.richtung === 'auf' ? '↑' : '↓'}`
+        : 'in der Eingabe';
+    }
     return '';
   }
 
@@ -129,7 +121,8 @@
       art === 'eingabe'
         ? neueEingabespalte()
         : art === 'position'
-          ? neuePositionsspalte(blatt.sortierungen.length)
+          ? // Zählt zunächst so, wie die Tabelle gerade sortiert ist – das sieht man ja.
+            neuePositionsspalte(blatt.sortierung)
           : letzte
             ? neueWerkzeugspalte(letzte.id, 'morse')
             : neueEingabespalte();
@@ -159,28 +152,16 @@
         }
       }
     }
-    blatt.sortierungen = blatt.sortierungen.filter((s) => s.spalte !== id);
+    if (blatt.sortierung?.spalte === id) delete blatt.sortierung;
     for (const zeile of blatt.zeilen) delete zeile.werte[id];
     if (einstellung === id) einstellung = null;
     if (gewaehlt?.spalte === id) gewaehlt = null;
   }
 
-  function sortierungHinzufuegen() {
-    const spalte = blatt.spalten[blatt.spalten.length - 1];
-    if (!spalte) return;
-    blatt.sortierungen.push({ id: kennung(), spalte: spalte.id, richtung: 'auf', art: 'text' });
-    anzeige = null;
-  }
-
-  function sortierungLoeschen(stelle: number) {
-    blatt.sortierungen.splice(stelle, 1);
-    // Positionsspalten, die auf einen weggefallenen Schritt zeigten, rücken mit.
-    for (const spalte of blatt.spalten) {
-      if (spalte.art === 'position' && spalte.ordnung > blatt.sortierungen.length) {
-        spalte.ordnung = blatt.sortierungen.length;
-      }
-    }
-    anzeige = null;
+  /** Anzeige sortieren: leer heißt Eingabereihenfolge. Art und Richtung bleiben beim Spaltenwechsel. */
+  function sortiereNach(spalteId: SpaltenId) {
+    if (!spalteId) delete blatt.sortierung;
+    else blatt.sortierung = { art: 'text', richtung: 'auf', ...blatt.sortierung, spalte: spalteId };
   }
 
   /** Einen Treffer der Untersuchung auf das ganze Blatt anwenden. */
@@ -299,7 +280,6 @@
     blatt = leeresBlatt();
     gewaehlt = null;
     einstellung = null;
-    anzeige = null;
     leerenGefragt = false;
   }
 
@@ -333,22 +313,6 @@
   </div>
 </div>
 
-{#if blatt.sortierungen.length > 0}
-  <div class="ordnung">
-    <span class="marke">Anzeige</span>
-    <select
-      value={String(stufe)}
-      onchange={(e) => (anzeige = Number(e.currentTarget.value))}
-    >
-      {#each Array.from({ length: blatt.sortierungen.length + 1 }, (_, i) => i) as nr (nr)}
-        <option value={String(nr)}>
-          {nr === 0 ? 'Eingabereihenfolge' : `nach Schritt ${nr}`}
-        </option>
-      {/each}
-    </select>
-  </div>
-{/if}
-
 <div class="tabelle">
   <table>
     <thead>
@@ -359,7 +323,14 @@
             <div class="kopfzelle">
               <button type="button" class="spaltenkopf" onclick={() => (einstellung = einstellung === spalte.id ? null : spalte.id)}>
                 <span class="buchstabe">{spaltenzeichen(i)}</span>
-                <span class="name">{kopfname(spalte)}</span>
+                <span class="name">
+                  {kopfname(spalte)}
+                  {#if blatt.sortierung?.spalte === spalte.id}
+                    <span class="sortiert" title="Die Tabelle ist nach dieser Spalte sortiert">
+                      {blatt.sortierung.richtung === 'auf' ? '↑' : '↓'}
+                    </span>
+                  {/if}
+                </span>
                 {#if untertitel(spalte)}<span class="quelle">{untertitel(spalte)}</span>{/if}
               </button>
               {#if tafelVon(spalte)}
@@ -385,9 +356,9 @@
         <tr>
           <th class="nr">
             <span class="nummer">{reihe.zeile.nummer}</span>
-            {#if reihe.vorher !== reihe.platz}
-              <span class="bewegung" title="Verschiebung gegenüber der Reihenfolge davor">
-                {reihe.vorher > reihe.platz ? '↑' : '↓'}{Math.abs(reihe.vorher - reihe.platz)}
+            {#if reihe.eingabeplatz !== reihe.platz}
+              <span class="bewegung" title="Verschiebung gegenüber der Eingabereihenfolge">
+                {reihe.eingabeplatz > reihe.platz ? '↑' : '↓'}{Math.abs(reihe.eingabeplatz - reihe.platz)}
               </span>
             {/if}
           </th>
@@ -497,48 +468,45 @@
 <section class="sortierung">
   <div class="zeile">
     <strong>Sortieren</strong>
-    <button type="button" onclick={sortierungHinzufuegen} disabled={blatt.spalten.length === 0}>
-      + Schritt
-    </button>
   </div>
-
-  {#if blatt.sortierungen.length === 0}
-    <p class="hinweis">
-      Noch keine Sortierung. Jeder Schritt erzeugt eine Reihenfolge, die eine Positionsspalte
-      wieder benutzen kann – die Eingabenummer links bleibt davon unberührt.
-    </p>
-  {:else}
-    <ol>
-      {#each blatt.sortierungen as schritt, i (schritt.id)}
-        <li>
-          <span class="stufe">S{i + 1}</span>
-          <select value={schritt.spalte} onchange={(e) => (schritt.spalte = e.currentTarget.value)}>
-            {#each blatt.spalten as spalte (spalte.id)}
-              <option value={spalte.id}>{spaltenname(blatt, spalte.id)}</option>
-            {/each}
-          </select>
-          <select
-            value={schritt.art}
-            onchange={(e) => (schritt.art = e.currentTarget.value as typeof schritt.art)}
-          >
-            <option value="text">alphabetisch</option>
-            <option value="zahl">numerisch</option>
-            <option value="laenge">nach Länge</option>
-          </select>
-          <button
-            type="button"
-            onclick={() => (schritt.richtung = schritt.richtung === 'auf' ? 'ab' : 'auf')}
-            title="Richtung umschalten"
-          >
-            {schritt.richtung === 'auf' ? '↑' : '↓'}
-          </button>
-          <button type="button" class="weg" onclick={() => sortierungLoeschen(i)} aria-label="Schritt löschen">
-            ✕
-          </button>
-        </li>
+  <div class="wahl">
+    <select
+      value={blatt.sortierung?.spalte ?? ''}
+      onchange={(e) => sortiereNach(e.currentTarget.value)}
+      aria-label="Anzeige sortieren nach"
+    >
+      <option value="">Eingabereihenfolge</option>
+      {#each blatt.spalten as spalte (spalte.id)}
+        <option value={spalte.id}>nach {spaltenname(blatt, spalte.id)}</option>
       {/each}
-    </ol>
-  {/if}
+    </select>
+    {#if blatt.sortierung}
+      {@const sortierung = blatt.sortierung}
+      <select
+        value={sortierung.art}
+        onchange={(e) => (sortierung.art = e.currentTarget.value as typeof sortierung.art)}
+        aria-label="Sortierart"
+      >
+        <option value="text">alphabetisch</option>
+        <option value="zahl">numerisch</option>
+        <option value="laenge">nach Länge</option>
+      </select>
+      <button
+        type="button"
+        class="richtung"
+        onclick={() => (sortierung.richtung = sortierung.richtung === 'auf' ? 'ab' : 'auf')}
+        title="Richtung umschalten"
+        aria-label={sortierung.richtung === 'auf' ? 'aufsteigend – umschalten' : 'absteigend – umschalten'}
+      >
+        {sortierung.richtung === 'auf' ? '↑' : '↓'}
+      </button>
+    {/if}
+  </div>
+  <p class="hinweis">
+    Sortiert nur die Anzeige – kein Wert ändert sich. Die Nummer links bleibt die der Eingabe,
+    der Pfeil daneben zeigt, wie weit eine Zeile gewandert ist. Soll ein Platz in die Rechnung
+    eingehen, gibt es die Spalte „Platz in einer Reihenfolge“.
+  </p>
 </section>
 
 {#if zelle}
@@ -657,14 +625,6 @@
     font-size: 0.8rem;
   }
 
-  .ordnung {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-
-  .marke,
   .hinweis {
     color: var(--text-leise);
     font-size: 0.8rem;
@@ -942,18 +902,11 @@
     font-size: 0.78rem;
   }
 
-  .sortierung ol {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 6px;
-  }
-
-  .sortierung li {
+  .sortierung .wahl {
     display: flex;
     align-items: center;
     gap: 6px;
+    margin-bottom: 6px;
   }
 
   .sortierung select {
@@ -962,18 +915,20 @@
     font-size: 0.8rem;
   }
 
-  .stufe {
-    flex: 0 0 auto;
-    font-size: 0.75rem;
-    color: var(--akzent);
-    font-weight: 700;
-  }
-
-  .sortierung li button {
+  .sortierung button.richtung {
     flex: 0 0 auto;
     min-height: 38px;
-    min-width: 38px;
+    min-width: 44px;
     padding: 0;
+  }
+
+  .sortiert {
+    color: var(--akzent);
+    margin-left: 2px;
+  }
+
+  .sortierung .hinweis {
+    margin: 0;
   }
 
   section.zelle {

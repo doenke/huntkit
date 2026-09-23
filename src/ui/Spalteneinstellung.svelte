@@ -73,30 +73,11 @@
   /** Andere Spalten, nach denen eine Positionsspalte direkt zählen kann. */
   const vergleichsspalten = $derived(blatt.spalten.filter((s) => s.id !== spalte.id));
 
-  /** Auswahlwert der Reihenfolge: „o:2“ für Ordnung 2, „s:<id>“ für eine Spalte. */
-  const reihenfolge = $derived(
-    spalte.art !== 'position' ? '' : spalte.nach ? `s:${spalte.nach.spalte}` : `o:${spalte.ordnung}`
-  );
-
-  function setzeReihenfolge(wert: string) {
+  /** Leer heißt Eingabereihenfolge. Art und Richtung bleiben, wenn nur die Spalte wechselt. */
+  function setzeReihenfolge(spalteId: string) {
     if (spalte.art !== 'position') return;
-    if (wert.startsWith('s:')) {
-      const ziel = wert.slice(2);
-      // Art und Richtung bleiben, wenn nur die Spalte wechselt.
-      spalte.nach = { art: 'text', richtung: 'auf', ...spalte.nach, spalte: ziel };
-    } else {
-      delete spalte.nach;
-      spalte.ordnung = Number(wert.slice(2));
-    }
-  }
-
-  /** Beschriftung einer Ordnung: Eingabe, oder der Schritt, der sie erzeugt hat. */
-  function ordnungsname(stufe: number): string {
-    if (stufe === 0) return 'Eingabereihenfolge';
-    const schritt = blatt.sortierungen[stufe - 1];
-    return schritt
-      ? `nach Schritt ${stufe} (${spaltenname(blatt, schritt.spalte)})`
-      : `nach Schritt ${stufe}`;
+    if (!spalteId) delete spalte.nach;
+    else spalte.nach = { art: 'text', richtung: 'auf', ...spalte.nach, spalte: spalteId };
   }
 </script>
 
@@ -134,19 +115,14 @@
   {#if spalte.art === 'position'}
     <label>
       <span>Platz in welcher Reihenfolge?</span>
-      <select value={reihenfolge} onchange={(e) => setzeReihenfolge(e.currentTarget.value)}>
-        <optgroup label="Reihenfolge des Blatts">
-          {#each Array.from({ length: blatt.sortierungen.length + 1 }, (_, i) => i) as stufe (stufe)}
-            <option value={`o:${stufe}`}>{ordnungsname(stufe)}</option>
-          {/each}
-        </optgroup>
-        {#if vergleichsspalten.length > 0}
-          <optgroup label="Sortiert nach Spalte">
-            {#each vergleichsspalten as andere (andere.id)}
-              <option value={`s:${andere.id}`}>nach {spaltenname(blatt, andere.id)}</option>
-            {/each}
-          </optgroup>
-        {/if}
+      <select
+        value={spalte.nach?.spalte ?? ''}
+        onchange={(e) => setzeReihenfolge(e.currentTarget.value)}
+      >
+        <option value="">Eingabereihenfolge</option>
+        {#each vergleichsspalten as andere (andere.id)}
+          <option value={andere.id}>nach {spaltenname(blatt, andere.id)}</option>
+        {/each}
       </select>
     </label>
     {#if spalte.nach}
@@ -172,8 +148,8 @@
     {/if}
     <p class="hinweis">
       Liefert je Zeile eine Zahl. Als Option einer Werkzeugspalte wird daraus „nimm den
-      Buchstaben an der Stelle, auf der diese Zeile steht“. Nach einer Spalte gezählt, bleibt
-      die Tabelle, wie sie ist – ein Sortierschritt dagegen sortiert auch die Anzeige.
+      Buchstaben an der Stelle, auf der diese Zeile steht“. Wie die Tabelle gerade sortiert
+      ist, spielt dafür keine Rolle.
     </p>
   {/if}
 
