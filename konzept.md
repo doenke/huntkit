@@ -593,7 +593,8 @@ davon.
 - Laufender Zustand in `localStorage`, überlebt Neuladen und Akku-Sparmodus.
 - **Mehrere Werkbänke** je Gerät, jede mit Namen und Änderungszeit. Der Name der offenen
   Werkbank ist zugleich der Knopf zur Verwaltung: wechseln, neu anlegen, kopieren,
-  umbenennen, löschen (mit Rückfrage), verschicken. Die zuletzt bearbeitete steht oben.
+  umbenennen, löschen (mit Rückfrage), verschicken. Oben im Menü stehen „Link verschicken“
+  und „Blatt leeren“ für die offene Werkbank – unter der Tabelle ist nur noch die Arbeit. Die zuletzt bearbeitete steht oben.
   Gelöscht wird nie die letzte – dann entsteht eine leere.
 - **Automatisch speichern ist ab Werk an**: Jede Änderung landet sofort in ihrer Werkbank.
   Ausgeschaltet arbeitet man an einem **Entwurf**, der an der Werkbank hängt und Neuladen

@@ -16,7 +16,8 @@
     entfernen,
     umbenennen,
     verschicken,
-    automatikUmschalten
+    automatikUmschalten,
+    leeren
   }: {
     sammlung: Sammlung;
     wechseln: (id: string) => void;
@@ -26,7 +27,12 @@
     umbenennen: (id: string, name: string) => void;
     verschicken: (id: string) => void;
     automatikUmschalten: () => void;
+    /** Die offene Werkbank leeren. */
+    leeren: () => void;
   } = $props();
+
+  let leerenGefragt = $state(false);
+  const offene = $derived(sammlung.werkbaenke.find((w) => w.id === sammlung.aktiv));
 
   let umbenennend = $state<string | null>(null);
   let neuerName = $state('');
@@ -66,6 +72,23 @@
     <strong>Werkbänke</strong>
     <button type="button" onclick={neu}>+ Neue Werkbank</button>
   </div>
+
+  {#if offene}
+    <div class="offene">
+      <span class="marke">Offen: {offene.name}</span>
+      <div class="knoepfe">
+        {#if leerenGefragt}
+          <button type="button" class="ernst" onclick={() => { leeren(); leerenGefragt = false; }}>
+            wirklich alles löschen
+          </button>
+          <button type="button" onclick={() => (leerenGefragt = false)}>abbrechen</button>
+        {:else}
+          <button type="button" onclick={() => verschicken(offene.id)}>Link verschicken</button>
+          <button type="button" onclick={() => (leerenGefragt = true)}>Blatt leeren</button>
+        {/if}
+      </div>
+    </div>
+  {/if}
 
   <button
     type="button"
@@ -142,6 +165,20 @@
   .kopf button {
     min-height: 36px;
     font-size: 0.8rem;
+  }
+
+  .offene {
+    display: grid;
+    gap: 4px;
+    padding: 6px 0 8px;
+    border-bottom: 1px solid var(--rand);
+    margin-bottom: 4px;
+  }
+
+  .offene .marke {
+    color: var(--text-leise);
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
   }
 
   ul {

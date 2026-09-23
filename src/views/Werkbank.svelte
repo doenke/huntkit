@@ -65,7 +65,6 @@
   let gewaehlt = $state<{ spalte: SpaltenId; zeile: string } | null>(null);
   let einstellung = $state<SpaltenId | null>(null);
   let linkStand = $state('');
-  let leerenGefragt = $state(false);
   let umlauteAufloesen = $state(umlauteAufloesenGespeichert());
 
   const werkbank = $derived(aktiveWerkbank(sammlung));
@@ -330,7 +329,6 @@
     blatt = kopie(arbeitsstand(aktiveWerkbank(sammlung)));
     gewaehlt = null;
     einstellung = null;
-    leerenGefragt = false;
   }
 
   function neueAnlegen() {
@@ -394,7 +392,7 @@
     blatt = leeresBlatt();
     gewaehlt = null;
     einstellung = null;
-    leerenGefragt = false;
+    verwaltungOffen = false;
   }
 
   async function kopieren(text: string) {
@@ -449,6 +447,10 @@
 {#if meldung}
   <p class="meldung">{meldung}</p>
 {/if}
+{#if linkStand}
+  <!-- Ließ sich der Link weder teilen noch kopieren, steht er hier zum Markieren. -->
+  <p class="linkstand mono">{linkStand}</p>
+{/if}
 
 {#if verwaltungOffen}
   <Werkbaenke
@@ -460,6 +462,7 @@
     {umbenennen}
     verschicken={(id) => void verschicken(id)}
     {automatikUmschalten}
+    {leeren}
   />
 {/if}
 
@@ -708,19 +711,6 @@
   </section>
 {/if}
 
-<div class="fuss">
-  <button type="button" onclick={() => void verschicken(werkbank.id)}>Link verschicken</button>
-  {#if leerenGefragt}
-    <button type="button" class="ernst" onclick={leeren}>wirklich alles löschen</button>
-    <button type="button" onclick={() => (leerenGefragt = false)}>abbrechen</button>
-  {:else}
-    <button type="button" onclick={() => (leerenGefragt = true)}>Blatt leeren</button>
-  {/if}
-</div>
-
-{#if linkStand}
-  <p class="linkstand mono">{linkStand}</p>
-{/if}
 
 <style>
   .kopf {
@@ -1164,23 +1154,6 @@
   }
 
   .warn {
-    color: var(--warn);
-  }
-
-  .fuss {
-    display: flex;
-    gap: 6px;
-    margin-top: 20px;
-    flex-wrap: wrap;
-  }
-
-  .fuss button {
-    min-height: 40px;
-    font-size: 0.85rem;
-  }
-
-  .ernst {
-    border-color: var(--warn);
     color: var(--warn);
   }
 
