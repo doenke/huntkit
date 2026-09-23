@@ -1,5 +1,6 @@
 <script lang="ts">
   import { codec as findeCodec } from '../codecs/registry';
+  import { einzelzeichen } from '../lib/codeanzeige';
 
   /**
    * Eingabe über eine Codetafel: Tasten und antippbares Raster schreiben in
@@ -19,8 +20,8 @@
   const aktiv = $derived(gruppe && gruppen.includes(gruppe) ? gruppe : gruppen[0]);
   const sichtbar = $derived(eintraege.filter((e) => (e.gruppe ?? 'Zeichen') === aktiv));
 
-  /** Wo eine Darstellung länger als ein Zeichen ist, braucht es einen Trenner. */
-  const trenner = $derived(eintraege.every((e) => [...e.darstellung].length === 1) ? '' : ' ');
+  /** Wo der Code nicht Zeichen für Zeichen dasteht, braucht es einen Trenner. */
+  const trenner = $derived(tafel && einzelzeichen(tafel) ? '' : ' ');
 
   function anhaengen(stueck: string) {
     const vorher = wert.length > 0 && trenner && !wert.endsWith(trenner) ? trenner : '';

@@ -3,7 +3,7 @@
   import type { Codec } from '../codecs/types';
   import { standardOptionen } from '../codecs/types';
   import { anWerkbank } from '../lib/sammlung';
-  import { zeichenbar } from '../lib/codeanzeige';
+  import { einzelzeichen, zeichenbar } from '../lib/codeanzeige';
   import Codeanzeige from './Codeanzeige.svelte';
   import Quellen from './Quellen.svelte';
   import Optionen from './Optionen.svelte';
@@ -34,7 +34,7 @@
    * Trennzeichen zwischen zwei Zeichen: Wo eine Darstellung mehr als ein
    * Zeichen lang ist, braucht es eins – sonst liefe alles ineinander.
    */
-  const trenner = $derived(eintraege.every((e) => [...e.darstellung].length === 1) ? '' : ' ');
+  const trenner = $derived(einzelzeichen(codec) ? '' : ' ');
   /** Codes mit Bild bekommen unter dem Feld eine gezeichnete Fassung. */
   const malbar = $derived(zeichenbar(codec));
 

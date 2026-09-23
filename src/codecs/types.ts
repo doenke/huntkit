@@ -109,6 +109,13 @@ export interface Codec {
    */
   quellen?: ReadonlyArray<Quelle>;
 
+  /**
+   * Der Code steht Zeichen für Zeichen ohne Trenner da, wie Braille. Ohne
+   * Angabe gilt das, wenn jede Darstellung genau ein Zeichen lang ist – eine
+   * Ziffer aus Zahlzeichen und Buchstabe macht diese Vermutung aber zunichte.
+   */
+  zeichenweise?: boolean;
+
   encode(eingabe: string, optionen?: OptionWerte): CodecErgebnis;
   decode(eingabe: string, optionen?: OptionWerte): CodecErgebnis;
 

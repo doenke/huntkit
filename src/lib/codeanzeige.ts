@@ -27,7 +27,8 @@ export interface Codeteil {
  * sich? Dieselbe Frage wie auf der Codekarte: Wo eine Darstellung länger als
  * ein Zeichen ist, braucht es einen Trenner.
  */
-function einzelzeichen(codec: Codec): boolean {
+export function einzelzeichen(codec: Codec): boolean {
+  if (codec.zeichenweise !== undefined) return codec.zeichenweise;
   const eintraege = codec.tabelle?.() ?? [];
   return eintraege.length > 0 && eintraege.every((e) => [...e.darstellung].length === 1);
 }
