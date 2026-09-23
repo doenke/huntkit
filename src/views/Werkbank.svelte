@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { codec as findeCodec } from '../codecs/registry';
   import type { OptionWerte } from '../codecs/types';
   import {
@@ -204,6 +205,73 @@
     setzeWert(zeileId, spalte.id, schreibtUm(spalte) ? feldUmschreiben(feld, fertig) : feld.value);
   }
 
+  /**
+   * Enter springt in derselben Spalte eine Zeile tiefer – in der Reihenfolge,
+   * die gerade zu sehen ist – und legt die Zeile an, wenn es keine mehr gibt.
+   * Mit Umschalt geht es eine Zeile hoch. Einen Zeilenumbruch in einer Zelle
+   * gibt es nicht; eine Liste tippt man so Zeile für Zeile herunter.
+   */
+  async function naechsteZeile(
+    feld: HTMLInputElement | HTMLTextAreaElement,
+    zeileId: string,
+    spalte: Spalte,
+    hoch = false
+  ) {
+    // Wie beim Verlassen des Felds: Ein offenes Ü am Ende wird jetzt aufgelöst.
+    getippt(feld, zeileId, spalte, true);
+    const reihen = berechnung.zeilen;
+    const stelle = reihen.findIndex((r) => r.zeile.id === zeileId);
+    let ziel = reihen[hoch ? stelle - 1 : stelle + 1]?.zeile.id;
+    if (!ziel) {
+      if (hoch) return;
+      const neu = neueZeile(hoechsteNummer(blatt) + 1);
+      blatt.zeilen.push(neu);
+      ziel = neu.id;
+    }
+    gewaehlt = { spalte: spalte.id, zeile: ziel };
+    // Aus der Tabelle heraus geht der Fokus in die Zelle darunter; im Feld
+    // unter der Tabelle bleibt er, das zeigt jetzt einfach die neue Zeile.
+    if (feld instanceof HTMLTextAreaElement) return;
+    await tick();
+    const naechstes = document.querySelector<HTMLInputElement>(
+      `input[data-zelle="${CSS.escape(`${ziel}:${spalte.id}`)}"]`
+    );
+    naechstes?.focus();
+    naechstes?.scrollIntoView({ block: 'nearest' });
+  }
+
+  function beiTaste(
+    e: KeyboardEvent & { currentTarget: HTMLInputElement | HTMLTextAreaElement },
+    zeileId: string,
+    spalte: Spalte
+  ) {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault();
+    void naechsteZeile(e.currentTarget, zeileId, spalte, e.shiftKey);
+  }
+
+  /**
+   * Das Feld unter der Tabelle ist mehrzeilig, damit langer Text umbricht –
+   * einen Zeilenumbruch nimmt es trotzdem nicht an. Kommt einer an der Taste
+   * vorbei (manche Handytastaturen melden Enter nur als Eingabe), zählt er
+   * als Enter; ein eingefügter wird zum Leerzeichen.
+   */
+  function imFeldGetippt(
+    e: Event & { currentTarget: HTMLTextAreaElement },
+    zeileId: string,
+    spalte: Spalte
+  ) {
+    const feld = e.currentTarget;
+    const art = e instanceof InputEvent ? e.inputType : '';
+    if (art === 'insertLineBreak' || art === 'insertParagraph') {
+      feld.value = feld.value.replace(/\r?\n/g, '');
+      void naechsteZeile(feld, zeileId, spalte);
+      return;
+    }
+    if (/[\r\n]/.test(feld.value)) feld.value = feld.value.replace(/\r?\n/g, ' ');
+    getippt(feld, zeileId, spalte);
+  }
+
   function umlauteUmschalten() {
     umlauteAufloesen = !umlauteAufloesen;
     speichereUmlauteAufloesen(umlauteAufloesen);
@@ -341,7 +409,10 @@
                     autocomplete="off"
                     autocapitalize="off"
                     aria-label={`${spaltenname(blatt, spalte.id)}, Zeile ${reihe.zeile.nummer}`}
+                    data-zelle={`${reihe.zeile.id}:${spalte.id}`}
+                    enterkeyhint="next"
                     oninput={(e) => setzeWert(reihe.zeile.id, spalte.id, e.currentTarget.value)}
+                    onkeydown={(e) => beiTaste(e, reihe.zeile.id, spalte)}
                     onfocus={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
                     onclick={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
                   />
@@ -362,8 +433,11 @@
                   spellcheck="false"
                   autocomplete="off"
                   autocapitalize="off"
+                  data-zelle={`${reihe.zeile.id}:${spalte.id}`}
+                  enterkeyhint="next"
                   oninput={(e) => getippt(e.currentTarget, reihe.zeile.id, spalte)}
                   onblur={(e) => getippt(e.currentTarget, reihe.zeile.id, spalte, true)}
+                  onkeydown={(e) => beiTaste(e, reihe.zeile.id, spalte)}
                   onfocus={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
                   onclick={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
                 />
@@ -479,8 +553,10 @@
         value={zelle.reihe.zeile.werte[zelle.spalte.id] ?? ''}
         spellcheck="false"
         autocapitalize="off"
-        oninput={(e) => getippt(e.currentTarget, zelle.reihe.zeile.id, zelle.spalte)}
+        enterkeyhint="next"
+        oninput={(e) => imFeldGetippt(e, zelle.reihe.zeile.id, zelle.spalte)}
         onblur={(e) => getippt(e.currentTarget, zelle.reihe.zeile.id, zelle.spalte, true)}
+        onkeydown={(e) => beiTaste(e, zelle.reihe.zeile.id, zelle.spalte)}
       ></textarea>
       {#if !zelle.spalte.tafel}
         <!-- Beim Tippen zu sehen und mit einem Tipp umzustellen; gilt für alle Klartextspalten. -->

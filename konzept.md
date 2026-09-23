@@ -112,6 +112,13 @@ Zeichnung da – ohne dass man die Spalte umschalten müsste. Das Feld füllt di
 aus, auch wenn die Zeichnung schmaler ist: Ein toter Streifen rechts daneben, in dem ein
 Tipp ins Leere geht, wäre von außen nicht zu unterscheiden von „öffnet im Bildmodus nicht“.
 
+**Enter** springt in derselben Spalte eine Zeile tiefer und legt sie an, wenn es keine mehr
+gibt; Umschalt+Enter geht eine hoch. So tippt man eine Liste herunter, ohne abzusetzen.
+„Tiefer“ heißt dabei: in der Reihenfolge, die gerade zu sehen ist, nicht nach Eingabenummer
+– sonst spränge der Fokus in einer sortierten Ansicht scheinbar wahllos. Einen
+Zeilenumbruch innerhalb einer Zelle gibt es nicht; auch im Feld unter der Tabelle nicht,
+und ein eingefügter wird zum Leerzeichen.
+
 **Sortieren.** Weil jede Zelle aus ihrer eigenen Zeile rechnet, ändert Sortieren keinen
 Wert, sondern nur die Reihenfolge. Inhaltlich wirksam wird sie erst über eine
 Positionsspalte – und genau deshalb sind Sortierschritte **Daten, keine einmalige Aktion**:
