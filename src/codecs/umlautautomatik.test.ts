@@ -34,7 +34,7 @@ describe('Codes lösen Umlaute von selbst auf', () => {
   });
 
   it('NATO buchstabiert das aufgelöste Wort', () => {
-    expect(codec('nato')!.encode('ÖL').text).toBe('Oscar Echo Lima');
+    expect(codec('nato')!.encode('ÖL').text).toBe('OSCAR ECHO LIMA');
   });
 
   it('meldet dabei keine Lücke – es ist kein Fehler, sondern die Regel', () => {
