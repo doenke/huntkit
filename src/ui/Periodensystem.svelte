@@ -8,7 +8,6 @@
     type Ausgabe, type Element, type Layout, type Reihenfolge
   } from '../lib/periodensystem';
   import { EBENENFARBEN, serienfarbe } from '../lib/serienfarben';
-  import { anWerkbank } from '../lib/sammlung';
   import { satzZerlegen } from '../lib/elementspeller';
 
   interface Ebene {
@@ -232,11 +231,6 @@
   </label>
 </div>
 <output class="mono ergebnis">{ausgelesen || ' '}</output>
-<div class="gruppe">
-  <button type="button" disabled={!ausgelesen} onclick={() => anWerkbank(ausgelesen)}>
-    an die Werkbank
-  </button>
-</div>
 
 <h3>In Elementsymbolen schreiben</h3>
 <div class="speller">
@@ -258,10 +252,8 @@
           <ol>
             {#each eintrag.zerlegungen as zerlegung, i (i)}
               <li>
-                <button type="button" onclick={() => anWerkbank(zerlegung.ordnungszahlen.join(' '))}>
-                  <span class="mono">{zerlegung.symbole.join('-')}</span>
-                  <span class="leise">{zerlegung.ordnungszahlen.join(' ')}</span>
-                </button>
+                <span class="mono">{zerlegung.symbole.join('-')}</span>
+                <span class="leise">{zerlegung.ordnungszahlen.join(' ')}</span>
               </li>
             {/each}
           </ol>
@@ -270,8 +262,7 @@
     {/each}
   </ul>
   <p class="hinweis">
-    Alle Lesarten, nicht nur eine – „CON“ ist C-O-N oder Co-N. Tippen schickt die
-    Ordnungszahlen an die Werkbank.
+    Alle Lesarten, nicht nur eine – „CON“ ist C-O-N oder Co-N.
   </p>
 {/if}
 
@@ -463,13 +454,13 @@
     gap: 4px;
   }
 
-  .zerlegungen button {
+  .zerlegungen ol li {
     display: flex;
     justify-content: space-between;
     gap: 10px;
-    width: 100%;
-    text-align: left;
-    min-height: 40px;
+    padding: 6px 10px;
+    border: 1px solid var(--rand);
+    border-radius: 8px;
     font-size: 0.9rem;
   }
 

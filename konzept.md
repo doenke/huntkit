@@ -210,7 +210,8 @@ hat zwei verbundene Textfelder (Klartext und Code, beide Richtungen sofort), je 
 *kopieren*, codeeigene Eingabetasten (bei Morse Punkt, Strich, nächstes Zeichen, nächstes
 Wort) und darunter das antippbare Raster. Wer das Zeichen vor sich hat, soll es nicht erst
 nachschlagen und dann abtippen müssen. (*An die Werkbank* gab es anfangs auch; in der
-Praxis wird eine Tabelle direkt in der Werkbank angelegt, der Knopf ist deshalb wieder weg.)
+Praxis wird eine Tabelle direkt in der Werkbank angelegt, der Knopf ist deshalb wieder weg –
+ebenso im Periodensystem.)
 
 Lange Tabellen bekommen **Abschnitte** (`gruppe` am Tabelleneintrag): Morse trennt
 Buchstaben / Zahlen / Umlaute / Sonderzeichen, ASCII A–Z / a–z / 0–9 / Sonderzeichen, das

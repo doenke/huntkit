@@ -1,14 +1,10 @@
 import {
   ausAlterKette,
-  hoechsteNummer,
   inHeutigerForm,
   istBlatt,
   kennung,
   leeresBlatt,
-  neueEingabespalte,
-  neueZeile,
-  type Blatt,
-  type Eingabespalte
+  type Blatt
 } from './blatt';
 
 /**
@@ -181,27 +177,4 @@ export function entferne(sammlung: Sammlung, id: string): void {
     const naechste = sammlung.werkbaenke[Math.min(stelle, sammlung.werkbaenke.length - 1)] as Werkbank;
     sammlung.aktiv = naechste.id;
   }
-}
-
-/**
- * Text aus einem anderen Bereich übernehmen: Er wird eine neue Zeile in der
- * ersten Eingabespalte der offenen Werkbank – oder füllt eine leere Zeile.
- * Die Werkbank liest ihren Stand beim Öffnen, deshalb genügt es, ihn abzulegen
- * und dorthin zu wechseln. Ohne automatisches Speichern landet er im Entwurf.
- */
-export function anWerkbank(text: string): void {
-  const sammlung = ladeSammlung();
-  const blatt = JSON.parse(JSON.stringify(arbeitsstand(aktiveWerkbank(sammlung)))) as Blatt;
-  const erste = blatt.spalten.find((s): s is Eingabespalte => s.art === 'eingabe');
-  const spalte = erste ?? neueEingabespalte();
-  if (!erste) blatt.spalten.unshift(spalte);
-
-  const leereZeile = blatt.zeilen.find((z) => Object.values(z.werte).every((w) => !w?.trim()));
-  const ziel = leereZeile ?? neueZeile(hoechsteNummer(blatt) + 1);
-  ziel.werte[spalte.id] = text;
-  if (!leereZeile) blatt.zeilen.push(ziel);
-
-  uebernimm(sammlung, blatt);
-  sichereSammlung(sammlung);
-  location.hash = '#/werkbank';
 }
