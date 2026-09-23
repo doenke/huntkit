@@ -219,6 +219,27 @@ describe('Alte Werkbank übernehmen', () => {
     expect(rechne(blatt).zeilen[0]?.zellen.x?.text).toBe('ein');
   });
 
+  it('macht Einstellungen aus einer Spalte wieder fest', () => {
+    const a = neueEingabespalte();
+    const b = neueEingabespalte();
+    const alt: Werkzeugspalte = {
+      art: 'werkzeug', id: 'x', quelle: a.id, codecId: 'zaehlen', richtung: 'encode',
+      optionen: {
+        suche: { art: 'spalte', spalte: b.id },
+        schreibung: { art: 'spalte', spalte: b.id }
+      }
+    };
+    const zeile = neueZeile(1);
+    zeile.werte[a.id] = 'Anna';
+    zeile.werte[b.id] = 'a';
+    const blatt = inHeutigerForm({ spalten: [a, b, alt], zeilen: [zeile] });
+    const neu = blatt.spalten[2] as Werkzeugspalte;
+    // Das Suchzeichen sind Daten und bleiben an der Spalte, die Schreibung ist Einstellung.
+    expect(neu.optionen.suche).toEqual({ art: 'spalte', spalte: b.id });
+    expect(neu.optionen.schreibung).toEqual({ art: 'fest', wert: 'egal' });
+    expect(rechne(blatt).zeilen[0]?.zellen.x?.text).toBe('2');
+  });
+
   it('übergeht abgeschaltete Schritte', () => {
     const blatt = ausAlterKette({
       eingabe: 'SOS',

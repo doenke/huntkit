@@ -165,6 +165,16 @@ export interface Codec {
   erkennungsoptionen?: ReadonlyArray<OptionWerte>;
 }
 
+/**
+ * Darf diese Option je Zeile aus einer Spalte kommen? Zahlen und Texte
+ * können Daten sein – die Verschiebung, der Schlüssel, die Stelle, die in
+ * jeder Zeile anders ist. Eine Auswahl dagegen ist reine Einstellung („aus
+ * jedem Wort“, „Groß/klein egal“) und wird einmal für die Spalte getroffen.
+ */
+export function ausSpalteMoeglich(option: OptionSpec): boolean {
+  return option.art !== 'auswahl';
+}
+
 export function standardOptionen(codec: Codec): OptionWerte {
   const werte: Record<string, string | number> = {};
   for (const option of codec.optionen ?? []) werte[option.id] = option.standard;

@@ -1,5 +1,5 @@
 import { codec } from '../codecs/registry';
-import { standardOptionen, type Codec, type Luecke, type OptionWerte, type Richtung } from '../codecs/types';
+import { ausSpalteMoeglich, standardOptionen, type Codec, type Luecke, type OptionWerte, type Richtung } from '../codecs/types';
 
 /**
  * Die Werkbank als Blatt: Zeilen und Spalten.
@@ -288,6 +288,11 @@ export function rechne(blatt: Blatt): Berechnung {
         werte[spec.id] = bindung.wert;
         continue;
       }
+      // Eine Einstellung aus einer Spalte gibt es nicht (mehr) – dann gilt ihr Standard.
+      if (!ausSpalteMoeglich(spec)) {
+        werte[spec.id] = spec.standard;
+        continue;
+      }
       const zelle = hole(bindung.spalte, zeile);
       if (zelle.fehler) return { werte, fehler: `${spec.titel}: ${zelle.fehler}` };
       const roh = zelle.text.trim();
@@ -297,11 +302,6 @@ export function rechne(blatt: Blatt): Berechnung {
         const zahl = Number(roh);
         if (!Number.isFinite(zahl)) return { werte, fehler: `${spec.titel}: „${roh}“ ist keine Zahl` };
         werte[spec.id] = zahl;
-      } else if (spec.art === 'auswahl') {
-        if (!spec.werte.some((w) => w.wert === roh)) {
-          return { werte, fehler: `${spec.titel}: „${roh}“ ist keine gültige Einstellung` };
-        }
-        werte[spec.id] = roh;
       } else {
         werte[spec.id] = roh;
       }
@@ -496,7 +496,7 @@ export function inHeutigerForm(gelesen: Blatt): Blatt {
     art: s.art
   });
   const spalten = gelesen.spalten.map((spalte) => {
-    if (spalte.art === 'werkzeug') return ausWoerternUmgezogen(spalte);
+    if (spalte.art === 'werkzeug') return nurDatenAusSpalten(ausWoerternUmgezogen(spalte));
     if (spalte.art !== 'position') return spalte;
     const { ordnung, ...rest } = spalte as Positionsspalte & { ordnung?: number };
     if (rest.nach || !ordnung) return rest;
@@ -508,6 +508,22 @@ export function inHeutigerForm(gelesen: Blatt): Blatt {
   return sortierung
     ? { spalten, zeilen: gelesen.zeilen, sortierung }
     : { spalten, zeilen: gelesen.zeilen };
+}
+
+/**
+ * Früher ließ sich jede Option aus einer Spalte speisen, auch reine
+ * Einstellungen wie „Groß/klein egal“. Die werden wieder fest, mit ihrem
+ * Standardwert.
+ */
+function nurDatenAusSpalten(spalte: Werkzeugspalte): Werkzeugspalte {
+  const gewaehlt = codec(spalte.codecId);
+  const optionen = { ...spalte.optionen };
+  for (const spec of gewaehlt?.optionen ?? []) {
+    if (optionen[spec.id]?.art === 'spalte' && !ausSpalteMoeglich(spec)) {
+      optionen[spec.id] = { art: 'fest', wert: spec.standard };
+    }
+  }
+  return { ...spalte, optionen };
 }
 
 /**

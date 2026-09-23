@@ -1,7 +1,7 @@
 <script lang="ts">
   import Textzeile from './Textzeile.svelte';
   import { CODECS, codec as findeCodec } from '../codecs/registry';
-  import { standardOptionen } from '../codecs/types';
+  import { ausSpalteMoeglich, standardOptionen } from '../codecs/types';
   import Sortierwahl from './Sortierwahl.svelte';
   import {
     begleiteTafel,
@@ -169,16 +169,19 @@
       <div class="option">
         <span class="marke">{option.titel}</span>
         <div class="wahl">
-          <select
-            value={gebunden.art === 'spalte' ? gebunden.spalte : ''}
-            onchange={(e) => setzeSpalte(option.id, e.currentTarget.value)}
-            aria-label={`${option.titel}: fest oder aus einer Spalte`}
-          >
-            <option value="">fester Wert</option>
-            {#each quellen as quelle (quelle.id)}
-              <option value={quelle.id}>aus {spaltenname(blatt, quelle.id)}</option>
-            {/each}
-          </select>
+          <!-- Nur Daten können je Zeile aus einer Spalte kommen; eine Auswahl ist Einstellung. -->
+          {#if ausSpalteMoeglich(option)}
+            <select
+              value={gebunden.art === 'spalte' ? gebunden.spalte : ''}
+              onchange={(e) => setzeSpalte(option.id, e.currentTarget.value)}
+              aria-label={`${option.titel}: fest oder aus einer Spalte`}
+            >
+              <option value="">fester Wert</option>
+              {#each quellen as quelle (quelle.id)}
+                <option value={quelle.id}>aus {spaltenname(blatt, quelle.id)}</option>
+              {/each}
+            </select>
+          {/if}
 
           {#if gebunden.art === 'fest'}
             {#if option.art === 'zahl'}
