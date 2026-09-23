@@ -1,16 +1,18 @@
 <script lang="ts">
   import Koordinaten from '../ui/Koordinaten.svelte';
   import Periodensystem from '../ui/Periodensystem.svelte';
+  import Tastaturen from '../ui/Tastaturen.svelte';
   import Widerstand from '../ui/Widerstand.svelte';
   import Woerter from '../ui/Woerter.svelte';
 
-  type Bereich = 'pse' | 'widerstand' | 'woerter' | 'koordinaten';
+  type Bereich = 'pse' | 'widerstand' | 'woerter' | 'koordinaten' | 'tastaturen';
 
   const BEREICHE: ReadonlyArray<{ id: Bereich; titel: string }> = [
     { id: 'pse', titel: 'Periodensystem' },
     { id: 'woerter', titel: 'Wörter' },
     { id: 'widerstand', titel: 'Widerstände' },
-    { id: 'koordinaten', titel: 'Koordinaten' }
+    { id: 'koordinaten', titel: 'Koordinaten' },
+    { id: 'tastaturen', titel: 'Tastaturen' }
   ];
 
   let bereich = $state<Bereich>('pse');
@@ -36,8 +38,10 @@
   <Woerter />
 {:else if bereich === 'widerstand'}
   <Widerstand />
-{:else}
+{:else if bereich === 'koordinaten'}
   <Koordinaten />
+{:else}
+  <Tastaturen />
 {/if}
 
 <style>

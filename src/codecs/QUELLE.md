@@ -12,6 +12,7 @@ Templercode ist das der entscheidende Punkt.
 | Morse | E | bestätigt gegen die vorhandene Tabelle |
 | Templercode | F | Formen und Buchstabenpaare abgelesen, Beschriftungen bei 700 dpi geprüft |
 | Winkeralphabet | G | Armstellungen abgelesen, teilweise zusätzlich aus den Pixeln bestimmt; Ziffern (A–I, K nach „Zahl“), Zahlzeichen und Leerzeichen von der Tafel |
+| Tastaturlayouts | H | PC-Tastatur deutsch (Grund- und Umschaltebene, gemeinsame AltGr-Zeichen) und Handy-Tastatur (Gboard, deutsch, mit langem Druck) abgelesen, selbst gezeichnet |
 | IPA-Lautschrift | J | 38 Laute mit Lautwert und Beispiel abgeschrieben; die Schreibung je Laut (ʃ → SCH, ŋ → NG …) ist ergänzt |
 | Hexahue | M | Farbfelder maschinell ausgelesen, Ziffern, Punkt, Komma und Leerzeichen ebenso |
 | Widerstandsfarbcode | O | bestätigt, samt beider Beispiele der Tafel |
