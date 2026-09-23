@@ -1,5 +1,5 @@
 import { ALPHABET, anteil, ergebnis, ohneUmlaute, text, zahl } from './hilfen';
-import type { Codec, Luecke, OptionWerte } from './types';
+import type { Codec, Glyph, Luecke, OptionWerte } from './types';
 
 /**
  * Klassische Chiffren, die in Rätseln immer wieder auftauchen.
@@ -240,10 +240,49 @@ const TASTEN: ReadonlyArray<readonly [string, string]> = [
   ['6', 'MNO'], ['7', 'PQRS'], ['8', 'TUV'], ['9', 'WXYZ']
 ];
 
+/**
+ * Das ganze Tastenfeld nach ITU-T E.161, wie es auf jedem Tastentelefon steht:
+ * drei Spalten, vier Reihen, die Buchstaben unter der Ziffer. Selbst
+ * gezeichnet wie alle anderen Bilder – in der Textfarbe, damit es auch im
+ * Rotlicht lesbar bleibt.
+ */
+function tastenfeld(): Glyph {
+  const felder: ReadonlyArray<readonly [string, string]> = [
+    ['1', ''], ['2', 'ABC'], ['3', 'DEF'],
+    ['4', 'GHI'], ['5', 'JKL'], ['6', 'MNO'],
+    ['7', 'PQRS'], ['8', 'TUV'], ['9', 'WXYZ'],
+    ['*', ''], ['0', ''], ['#', '']
+  ];
+  const breite = 68;
+  const hoehe = 56;
+  const abstand = 8;
+  const inhalt = felder
+    .map(([ziffer, buchstaben], i) => {
+      const x = 2 + (i % 3) * (breite + abstand);
+      const y = 2 + Math.floor(i / 3) * (hoehe + abstand);
+      const mitte = x + breite / 2;
+      // Ohne Buchstaben rückt die Ziffer in die Mitte der Taste.
+      const zifferY = y + (buchstaben ? 27 : 36);
+      return (
+        `<rect x="${x}" y="${y}" width="${breite}" height="${hoehe}" rx="10" fill="none" stroke="currentColor" stroke-width="2"/>` +
+        `<text x="${mitte}" y="${zifferY}" text-anchor="middle" font-size="22" font-weight="600" fill="currentColor">${ziffer}</text>` +
+        (buchstaben
+          ? `<text x="${mitte}" y="${y + 46}" text-anchor="middle" font-size="13" letter-spacing="1" fill="currentColor" opacity="0.75">${buchstaben}</text>`
+          : '')
+      );
+    })
+    .join('');
+  return {
+    viewBox: `0 0 ${3 * breite + 2 * abstand + 4} ${4 * hoehe + 3 * abstand + 4}`,
+    inhalt
+  };
+}
+
 export const handytasten: Codec = {
   id: 'handytasten',
   name: 'Handytastatur',
   beschreibung: 'Alte Handytasten: A ist 2, B ist 22, C ist 222.',
+  uebersicht: { titel: 'Tastenfeld nach ITU-T E.161', bild: tastenfeld() },
   encode(eingabe) {
     const luecken: Luecke[] = [];
     const teile: string[] = [];

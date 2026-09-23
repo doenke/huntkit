@@ -121,6 +121,13 @@ export interface Codec {
   zeichneCode?(gruppe: string): Glyph | null;
 
   /**
+   * Ein Gesamtbild des Codes, das die Codekarte über der Tabelle zeigt – etwa
+   * die ganze Handytastatur. Nur zum Ansehen: Die Tabelle darunter bleibt
+   * das, was man antippt.
+   */
+  uebersicht?: { titel: string; bild: Glyph };
+
+  /**
    * Zusätzliche Tasten zum Eintippen des Codes. Morse braucht Punkt, Strich und
    * Trenner – die stehen auf keiner Handytastatur nebeneinander.
    */

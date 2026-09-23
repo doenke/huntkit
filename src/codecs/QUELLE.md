@@ -16,6 +16,11 @@ Templercode ist das der entscheidende Punkt.
 | Widerstandsfarbcode | O | bestätigt, samt beider Beispiele der Tafel |
 | Umlautregel | Regelteil | „Ä → AE, ß → SS, sofern nicht anders auf dem Rätsel vermerkt“ |
 
+Das **Tastenfeld der Handytastatur** folgt der Norm ITU-T E.161 (Ziffern 1–9, *, 0, #;
+Buchstaben unter 2 bis 9). Gewünscht war die Grafik aus der Wikipedia; sie ist hier
+nach der Norm selbst gezeichnet, weil die Wikimedia-Server aus der Bauumgebung nicht
+erreichbar waren – der Inhalt ist derselbe.
+
 Übernommen wurden die **Zuordnungen**, nicht die Grafiken. Alle Zeichen der App
 sind eigene SVG-Zeichnungen.
 

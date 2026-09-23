@@ -158,6 +158,17 @@
 {/if}
 
 <div class="raster" class:mitBild={Boolean(codec.zeichne)}>
+  {#if codec.uebersicht}
+    <!-- Das Gesamtbild rollt mit der Tabelle, statt den festen Teil der Karte
+         zu verlängern – sonst bliebe am Handy kaum Platz für das Raster. -->
+    <figure class="uebersicht">
+      <svg viewBox={codec.uebersicht.bild.viewBox} role="img" aria-label={codec.uebersicht.titel}>
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html codec.uebersicht.bild.inhalt}
+      </svg>
+      <figcaption>{codec.uebersicht.titel}</figcaption>
+    </figure>
+  {/if}
   {#each sichtbar as eintrag, stelle (stelle)}
     {@const glyph = codec.zeichne?.(eintrag.zeichen) ?? null}
     {@const codebild = glyph ? null : (codec.zeichneCode?.(eintrag.darstellung) ?? null)}
@@ -355,6 +366,28 @@
 
   .raster.mitBild {
     grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
+  }
+
+  .uebersicht {
+    grid-column: 1 / -1;
+    margin: 0 0 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text);
+  }
+
+  /* Gegen das allgemeine .raster svg, das jedes Bild auf Tastenhöhe setzt. */
+  .raster .uebersicht svg {
+    height: auto;
+    width: 100%;
+    max-width: 15rem;
+  }
+
+  .uebersicht figcaption {
+    color: var(--text-leise);
+    font-size: 0.72rem;
   }
 
   .raster button {
