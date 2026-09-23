@@ -801,8 +801,12 @@
     white-space: nowrap;
   }
 
+  /* Ergebnisse dürfen mehrzeilig sein – ASCII binär steht Zeichen für Zeichen untereinander. */
   td .wert {
     color: var(--text-leise);
+    white-space: pre;
+    padding-top: 6px;
+    padding-bottom: 6px;
   }
 
   /* Gezeichnete Zellen brauchen ihre Breite – die Tabelle rollt ohnehin. */

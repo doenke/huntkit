@@ -62,7 +62,10 @@ export const ascii: Codec = {
     // Umlaute werden aufgelöst: Ü hat den Codepunkt 220 und ist damit gerade
     // kein ASCII; gemeint ist in einem Rätsel immer UE.
     const teile = [...ohneUmlaute(eingabe)].map((z) => darstelle(z.codePointAt(0) ?? 0, basis, breite));
-    return ergebnis(teile.join(' '));
+    // Binär steht jedes Zeichen in einer eigenen Zeile: Acht Stellen am Stück
+    // liest man untereinander, nebeneinander verrutscht das Auge. Zurück liest
+    // jeder Leerraum als Trenner, also auch der Umbruch.
+    return ergebnis(teile.join(basis === 2 ? '\n' : ' '));
   },
 
   decode(eingabe, optionen) {

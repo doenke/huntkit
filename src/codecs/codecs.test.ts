@@ -76,6 +76,17 @@ describe('Hin und zurück', () => {
     }
   });
 
+  it('ASCII binär: jedes Zeichen in einer eigenen Zeile', () => {
+    const c = codec('ascii')!;
+    expect(c.encode('Hi', { basis: '2' }).text).toBe('01001000\n01101001');
+    // Dezimal und hexadezimal bleiben in einer Zeile.
+    expect(c.encode('Hi', { basis: '10' }).text).toBe('72 105');
+    expect(c.encode('Hi', { basis: '16' }).text).toBe('48 69');
+    // Zurück geht beides – untereinander wie nebeneinander.
+    expect(c.decode('01001000\n01101001', { basis: '2' }).text).toBe('Hi');
+    expect(c.decode('01001000 01101001', { basis: '2' }).text).toBe('Hi');
+  });
+
   it('Caesar für jede Verschiebung', () => {
     const c = codec('caesar')!;
     for (let verschiebung = 0; verschiebung < 26; verschiebung++) {
