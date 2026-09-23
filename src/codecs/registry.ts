@@ -6,7 +6,7 @@ import { basen } from './basen';
 import { braille } from './braille';
 import { caesar } from './caesar';
 import { atbash, bacon, handytasten, polybios, vigenereCodec, zaun } from './chiffren';
-import { ausWoertern, gitter, jedesN, laenge, stellen, zaehlen } from './extrahieren';
+import { gitter, jedesN, laenge, stellen, zaehlen } from './extrahieren';
 import { elemente } from './elemente';
 import { ersetzen } from './ersetzen';
 import { farben } from './farben';
@@ -57,7 +57,6 @@ export const CODECS: ReadonlyArray<Codec> = [
   roemisch,
   jedesN,
   stellen,
-  ausWoertern,
   gitter,
   zaehlen,
   laenge,

@@ -223,6 +223,9 @@
     padding: 10px 12px;
     margin-bottom: 12px;
     display: grid;
+    /* Eine Spalte, so breit wie der Platz – sonst drückt eine Auswahl mit
+       langem Eintrag ("nur Buchstaben und Ziffern") die Tafel über den Rand. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
   }
 
@@ -241,6 +244,7 @@
   label,
   .gruppe {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 2px;
   }
 
@@ -285,6 +289,7 @@
 
   .option {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 2px;
   }
 

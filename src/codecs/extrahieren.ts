@@ -33,23 +33,69 @@ function zeichenliste(eingabe: string, optionen: OptionWerte | undefined): strin
     : buchstaben(eingabe);
 }
 
+/**
+ * Jeden n-ten – oder nur den n-ten. Das Ganze aus dem ganzen Text oder aus
+ * jedem Wort einzeln; aus jedem Wort einmal den ersten ist das Akrostichon.
+ *
+ * Negative n zählen von hinten: einmal −1 ist der letzte Buchstabe, wiederholt
+ * −2 jeder zweite vom Ende her. Gelesen wird trotzdem von vorn nach hinten.
+ */
 export const jedesN: Codec = {
   id: 'jedes-n',
   name: 'Jeden n-ten',
-  beschreibung: 'Aus dem Text jeden n-ten Buchstaben herausziehen.',
+  beschreibung:
+    'Jeden n-ten Buchstaben herausziehen – oder einmal den n-ten, etwa aus jedem Wort den ersten. Negative n zählen von hinten.',
   einseitig: true,
   optionen: [
-    { id: 'n', titel: 'jeden', art: 'zahl', min: 1, max: 40, standard: 3 },
-    { id: 'versatz', titel: 'ab Stelle', art: 'zahl', min: 1, max: 40, standard: 1 },
+    { id: 'n', titel: 'n', art: 'zahl', min: -40, max: 40, standard: 3 },
+    {
+      id: 'modus',
+      titel: 'wie oft',
+      art: 'auswahl',
+      standard: 'wiederholen',
+      werte: [
+        { wert: 'wiederholen', titel: 'wiederholen' },
+        { wert: 'einmal', titel: 'einmal' }
+      ]
+    },
+    {
+      id: 'bereich',
+      titel: 'aus',
+      art: 'auswahl',
+      standard: 'text',
+      werte: [
+        { wert: 'text', titel: 'ganzer Text' },
+        { wert: 'wort', titel: 'jedes Wort' }
+      ]
+    },
+    { id: 'versatz', titel: 'ab Stelle (beim Wiederholen)', art: 'zahl', min: 1, max: 40, standard: 1 },
     GRUNDLAGE
   ],
   encode: (eingabe, optionen) => {
-    const liste = zeichenliste(eingabe, optionen);
-    const n = Math.max(1, zahl(optionen, 'n', 3));
+    const n = zahl(optionen, 'n', 3) || 1;
+    const einmal = text(optionen, 'modus', 'wiederholen') === 'einmal';
     const start = Math.max(1, zahl(optionen, 'versatz', 1)) - 1;
-    const heraus: string[] = [];
-    for (let i = start; i < liste.length; i += n) heraus.push(liste[i] as string);
-    return ergebnis(heraus.join(''));
+    const luecken: { position: number; zeichen: string }[] = [];
+
+    const ausTeil = (teil: string, stelle: number): string => {
+      const vorn = zeichenliste(teil, optionen);
+      if (einmal) {
+        const treffer = vorn[n < 0 ? vorn.length + n : n - 1];
+        if (treffer === undefined) luecken.push({ position: stelle, zeichen: teil });
+        return treffer ?? '';
+      }
+      // Von hinten: umdrehen, wie von vorn nehmen, zurückdrehen.
+      const liste = n < 0 ? [...vorn].reverse() : vorn;
+      const heraus: string[] = [];
+      for (let i = start; i < liste.length; i += Math.abs(n)) heraus.push(liste[i] as string);
+      return (n < 0 ? heraus.reverse() : heraus).join('');
+    };
+
+    if (text(optionen, 'bereich', 'text') === 'wort') {
+      const woerter = eingabe.trim().split(/\s+/).filter((w) => w.length > 0);
+      return ergebnis(woerter.map(ausTeil).join(''), luecken);
+    }
+    return ergebnis(ausTeil(eingabe, 0), luecken);
   },
   decode: (eingabe, optionen) => jedesN.encode(eingabe, optionen)
 };
@@ -84,36 +130,6 @@ export const stellen: Codec = {
     return ergebnis(heraus.join(''), luecken);
   },
   decode: (eingabe, optionen) => stellen.encode(eingabe, optionen)
-};
-
-export const ausWoertern: Codec = {
-  id: 'aus-woertern',
-  name: 'Aus jedem Wort',
-  beschreibung: 'Den n-ten Buchstaben jedes Wortes nehmen – Anfangsbuchstaben sind n = 1.',
-  einseitig: true,
-  optionen: [
-    { id: 'stelle', titel: 'Buchstabe Nr.', art: 'zahl', min: -10, max: 10, standard: 1 }
-  ],
-  encode: (eingabe, optionen) => {
-    const stelle = zahl(optionen, 'stelle', 1);
-    const luecken: { position: number; zeichen: string }[] = [];
-    const heraus = eingabe
-      .trim()
-      .split(/\s+/)
-      .filter((w) => w.length > 0)
-      .map((wort, i) => {
-        const zeichen = [...wort].filter((z) => /\p{L}|\p{N}/u.test(z));
-        const index = stelle < 0 ? zeichen.length + stelle : Math.max(1, stelle) - 1;
-        const treffer = zeichen[index];
-        if (treffer === undefined) {
-          luecken.push({ position: i, zeichen: wort });
-          return '';
-        }
-        return treffer;
-      });
-    return ergebnis(heraus.join(''), luecken);
-  },
-  decode: (eingabe, optionen) => ausWoertern.encode(eingabe, optionen)
 };
 
 export const zaehlen: Codec = {

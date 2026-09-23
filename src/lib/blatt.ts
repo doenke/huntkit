@@ -466,7 +466,7 @@ export function ausAlterKette(alt: {
     for (const [id, wert] of Object.entries(schritt.optionen ?? {})) {
       spalte.optionen[id] = { art: 'fest', wert };
     }
-    blatt.spalten.push(spalte);
+    blatt.spalten.push(ausWoerternUmgezogen(spalte));
     quelle = spalte.id;
   }
   return blatt;
@@ -496,6 +496,7 @@ export function inHeutigerForm(gelesen: Blatt): Blatt {
     art: s.art
   });
   const spalten = gelesen.spalten.map((spalte) => {
+    if (spalte.art === 'werkzeug') return ausWoerternUmgezogen(spalte);
     if (spalte.art !== 'position') return spalte;
     const { ordnung, ...rest } = spalte as Positionsspalte & { ordnung?: number };
     if (rest.nach || !ordnung) return rest;
@@ -507,6 +508,25 @@ export function inHeutigerForm(gelesen: Blatt): Blatt {
   return sortierung
     ? { spalten, zeilen: gelesen.zeilen, sortierung }
     : { spalten, zeilen: gelesen.zeilen };
+}
+
+/**
+ * „Aus jedem Wort“ ist in „Jeden n-ten“ aufgegangen: einmal, aus jedem Wort.
+ * Die Stelle wird zu n – auch, wenn sie aus einer Spalte kommt.
+ */
+function ausWoerternUmgezogen(spalte: Werkzeugspalte): Werkzeugspalte {
+  if (spalte.codecId !== 'aus-woertern') return spalte;
+  const { stelle, ...optionen } = spalte.optionen;
+  return {
+    ...spalte,
+    codecId: 'jedes-n',
+    optionen: {
+      ...optionen,
+      n: stelle ?? { art: 'fest', wert: 1 },
+      modus: { art: 'fest', wert: 'einmal' },
+      bereich: { art: 'fest', wert: 'wort' }
+    }
+  };
 }
 
 export function hoechsteNummer(blatt: Blatt): number {

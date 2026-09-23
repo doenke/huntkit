@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ausWoertern, gitter, gitterLesen, jedesN, laenge, stellen, zaehlen } from './extrahieren';
+import { gitter, gitterLesen, jedesN, laenge, stellen, zaehlen } from './extrahieren';
 
 describe('Jeden n-ten', () => {
   it('nimmt jeden dritten Buchstaben ab der ersten Stelle', () => {
@@ -37,19 +37,36 @@ describe('Buchstaben an Stellen', () => {
   });
 });
 
-describe('Aus jedem Wort', () => {
+describe('Jeden n-ten: einmal und aus jedem Wort', () => {
+  const ausJedemWort = (n: number) => ({ n, modus: 'einmal', bereich: 'wort' });
+
   it('bildet das Akrostichon', () => {
-    expect(ausWoertern.encode('Gold liegt unter der Eiche', { stelle: 1 }).text).toBe('GludE');
+    expect(jedesN.encode('Gold liegt unter der Eiche', ausJedemWort(1)).text).toBe('GludE');
   });
 
   it('nimmt den letzten Buchstaben jedes Wortes', () => {
-    expect(ausWoertern.encode('alle drei nun', { stelle: -1 }).text).toBe('ein');
+    expect(jedesN.encode('alle drei nun', ausJedemWort(-1)).text).toBe('ein');
   });
 
   it('meldet Wörter, die zu kurz sind', () => {
-    const treffer = ausWoertern.encode('ab c def', { stelle: 3 });
+    const treffer = jedesN.encode('ab c def', ausJedemWort(3));
     expect(treffer.luecken).toHaveLength(2);
     expect(treffer.text).toBe('f');
+  });
+
+  it('nimmt einmal den n-ten aus dem ganzen Text', () => {
+    expect(jedesN.encode('AB CD EF', { n: 4, modus: 'einmal' }).text).toBe('D');
+    expect(jedesN.encode('AB CD EF', { n: -2, modus: 'einmal' }).text).toBe('E');
+  });
+
+  it('wiederholt in jedem Wort für sich', () => {
+    expect(jedesN.encode('ABCD EFGH', { n: 2, bereich: 'wort' }).text).toBe('ACEG');
+    expect(jedesN.encode('ABCD EFGH', { n: 2, versatz: 2, bereich: 'wort' }).text).toBe('BDFH');
+  });
+
+  it('zählt beim Wiederholen mit negativem n von hinten', () => {
+    expect(jedesN.encode('ABCDEFG', { n: -3 }).text).toBe('ADG');
+    expect(jedesN.encode('ABCDEFGH', { n: -3 }).text).toBe('BEH');
   });
 });
 
@@ -93,7 +110,7 @@ describe('Einseitigkeit', () => {
   it('ist bei allen Extraktionshelfern vermerkt', () => {
     // Die Oberfläche blendet den Richtungsschalter aus, statt eine Umkehr
     // vorzutäuschen, die es nicht gibt.
-    for (const helfer of [jedesN, stellen, ausWoertern, gitter]) {
+    for (const helfer of [jedesN, stellen, gitter]) {
       expect(helfer.einseitig, helfer.id).toBe(true);
       expect(helfer.decode('ABCDEF', { n: 2, versatz: 1, breite: 3, liste: '1', stelle: 1 }).text)
         .toBe(helfer.encode('ABCDEF', { n: 2, versatz: 1, breite: 3, liste: '1', stelle: 1 }).text);

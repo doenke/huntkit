@@ -14,7 +14,8 @@ import {
   spaltenzeichen,
   zeigtBild,
   type Blatt,
-  type SpaltenId
+  type SpaltenId,
+  type Werkzeugspalte
 } from './blatt';
 
 /** Ein Blatt mit einer gefüllten Eingabespalte – der Anfang jeder Arbeit. */
@@ -202,6 +203,20 @@ describe('Alte Werkbank übernehmen', () => {
     expect(blatt.spalten).toHaveLength(2);
     const letzte = blatt.spalten[1]!;
     expect(rechne(blatt).zeilen[0]?.zellen[letzte.id]?.text).toBe('SOS');
+  });
+
+  it('zieht „Aus jedem Wort“ nach „Jeden n-ten“ um', () => {
+    const a = neueEingabespalte();
+    const alt: Werkzeugspalte = {
+      art: 'werkzeug', id: 'x', quelle: a.id, codecId: 'aus-woertern', richtung: 'encode',
+      optionen: { stelle: { art: 'fest', wert: -1 } }
+    };
+    const zeile = neueZeile(1);
+    zeile.werte[a.id] = 'alle drei nun';
+    const blatt = inHeutigerForm({ spalten: [a, alt], zeilen: [zeile] });
+    const neu = blatt.spalten[1] as Werkzeugspalte;
+    expect(neu.codecId).toBe('jedes-n');
+    expect(rechne(blatt).zeilen[0]?.zellen.x?.text).toBe('ein');
   });
 
   it('übergeht abgeschaltete Schritte', () => {
