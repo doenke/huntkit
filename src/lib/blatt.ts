@@ -72,6 +72,12 @@ export interface Positionsspalte extends Grundspalte {
   art: 'position';
   /** 0 = Eingabereihenfolge, n = Reihenfolge nach dem n-ten Sortierschritt. */
   ordnung: number;
+  /**
+   * Stattdessen direkt nach einer Spalte zählen – ohne dafür einen
+   * Sortierschritt anzulegen, der auch die Anzeige umsortiert. Gesetzt hat
+   * das Vorrang vor `ordnung`. Bei Gleichstand gilt die Eingabereihenfolge.
+   */
+  nach?: Sortierung;
 }
 
 export type Spalte = Eingabespalte | Werkzeugspalte | Positionsspalte;
@@ -86,11 +92,15 @@ export interface Zeile {
 
 export type Sortierart = 'text' | 'zahl' | 'laenge';
 
-export interface Sortierschritt {
-  id: string;
+/** Wonach sortiert wird – für einen Sortierschritt wie für eine Positionsspalte. */
+export interface Sortierung {
   spalte: SpaltenId;
   richtung: 'auf' | 'ab';
   art: Sortierart;
+}
+
+export interface Sortierschritt extends Sortierung {
+  id: string;
 }
 
 export interface Blatt {
@@ -201,6 +211,9 @@ export function rechne(blatt: Blatt, anzeige?: number): Berechnung {
   const inArbeit = new Set<string>();
   const ordnungen = new Map<number, Zeile[]>();
   const ordnungInArbeit = new Set<number>();
+  /** Rangfolgen der Positionsspalten, die direkt nach einer Spalte zählen. */
+  const rangfolgen = new Map<SpaltenId, Zeile[] | null>();
+  const rangfolgeInArbeit = new Set<SpaltenId>();
 
   function melde(text: string): void {
     if (!fehler.includes(text)) fehler.push(text);
@@ -229,8 +242,10 @@ export function rechne(blatt: Blatt, anzeige?: number): Berechnung {
     }
 
     if (spalte.art === 'position') {
-      const reihe = ordnungVon(spalte.ordnung);
-      if (!reihe) return { text: '', luecken: [], fehler: 'Ordnung fehlt' };
+      const reihe = spalte.nach ? rangfolgeVon(spalte) : ordnungVon(spalte.ordnung);
+      if (!reihe) {
+        return { text: '', luecken: [], fehler: spalte.nach ? 'Ringbezug' : 'Ordnung fehlt' };
+      }
       const platz = reihe.findIndex((z) => z.id === zeile.id) + 1;
       return { text: platz > 0 ? String(platz) : '', luecken: [] };
     }
@@ -305,7 +320,25 @@ export function rechne(blatt: Blatt, anzeige?: number): Berechnung {
     return reihe;
   }
 
-  function vergleiche(schritt: Sortierschritt, a: Zeile, b: Zeile): number {
+  /**
+   * Die Zeilen, sortiert nach der Spalte einer Positionsspalte. Hängt die
+   * Sortierspalte selbst von dieser Position ab, ist das ein Ring.
+   */
+  function rangfolgeVon(spalte: Positionsspalte): Zeile[] | null {
+    const sortierung = spalte.nach;
+    if (!sortierung) return null;
+    if (rangfolgen.has(spalte.id)) return rangfolgen.get(spalte.id) ?? null;
+    if (rangfolgeInArbeit.has(spalte.id)) return null;
+    rangfolgeInArbeit.add(spalte.id);
+    const basis = ordnungVon(0) ?? [];
+    const reihe = [...basis].sort((a, b) => vergleiche(sortierung, a, b));
+    const ring = basis.some((z) => hole(sortierung.spalte, z).fehler?.includes('Ringbezug'));
+    rangfolgeInArbeit.delete(spalte.id);
+    rangfolgen.set(spalte.id, ring ? null : reihe);
+    return ring ? null : reihe;
+  }
+
+  function vergleiche(schritt: Sortierung, a: Zeile, b: Zeile): number {
     const links = hole(schritt.spalte, a).text.trim();
     const rechts = hole(schritt.spalte, b).text.trim();
     // Leeres und Unlesbares steht immer hinten, in beiden Richtungen: Eine noch

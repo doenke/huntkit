@@ -3,6 +3,7 @@ import {
   anzeigetafel,
   ausAlterKette,
   begleiteTafel,
+  leeresBlatt,
   neueEingabespalte,
   neuePositionsspalte,
   neueWerkzeugspalte,
@@ -314,5 +315,54 @@ describe('Begleitspalte zur Codetafel', () => {
     a.tafel = 'morse';
     const begleiter = begleiteTafel(blatt, a)!;
     expect(rechne(blatt).zeilen[0]?.zellen[begleiter.id]?.text).toBe('SOS');
+  });
+});
+
+describe('Positionsspalte nach einer Spalte', () => {
+  function blattMit(werte: string[]) {
+    const blatt = leeresBlatt();
+    const eingabe = blatt.spalten[0]!;
+    blatt.zeilen = werte.map((wert, i) => ({ ...neueZeile(i + 1), werte: { [eingabe.id]: wert } }));
+    const platz = neuePositionsspalte(0);
+    blatt.spalten.push(platz);
+    return { blatt, eingabe, platz };
+  }
+  const plaetze = (blatt: Blatt, spalteId: string) =>
+    rechne(blatt).zeilen.map((z) => z.zellen[spalteId]?.text);
+
+  it('zählt den Platz nach einer Spalte, ohne die Anzeige umzusortieren', () => {
+    const { blatt, eingabe, platz } = blattMit(['CHARLIE', 'ALPHA', 'BRAVO']);
+    platz.nach = { spalte: eingabe.id, art: 'text', richtung: 'auf' };
+    const berechnung = rechne(blatt);
+    // Die Tabelle bleibt in Eingabereihenfolge …
+    expect(berechnung.zeilen.map((z) => z.zeile.nummer)).toEqual([1, 2, 3]);
+    // … die Spalte sagt, wo jede Zeile alphabetisch stünde.
+    expect(plaetze(blatt, platz.id)).toEqual(['3', '1', '2']);
+  });
+
+  it('kennt Sortierart und Richtung', () => {
+    const { blatt, eingabe, platz } = blattMit(['10', '9', '100']);
+    platz.nach = { spalte: eingabe.id, art: 'zahl', richtung: 'auf' };
+    expect(plaetze(blatt, platz.id)).toEqual(['2', '1', '3']);
+    platz.nach = { spalte: eingabe.id, art: 'zahl', richtung: 'ab' };
+    expect(plaetze(blatt, platz.id)).toEqual(['2', '3', '1']);
+    platz.nach = { spalte: eingabe.id, art: 'laenge', richtung: 'auf' };
+    expect(plaetze(blatt, platz.id)).toEqual(['2', '1', '3']);
+  });
+
+  it('lässt bei Gleichstand die Eingabereihenfolge entscheiden', () => {
+    const { blatt, eingabe, platz } = blattMit(['B', 'A', 'B', 'A']);
+    platz.nach = { spalte: eingabe.id, art: 'text', richtung: 'auf' };
+    expect(plaetze(blatt, platz.id)).toEqual(['3', '1', '4', '2']);
+  });
+
+  it('meldet einen Ring, statt sich aufzuhängen', () => {
+    const { blatt, platz } = blattMit(['X', 'Y']);
+    // Eine Werkzeugspalte auf der Position – und die Position zählt nach ihr.
+    const werkzeug = neueWerkzeugspalte(platz.id, 'laenge');
+    blatt.spalten.push(werkzeug);
+    platz.nach = { spalte: werkzeug.id, art: 'zahl', richtung: 'auf' };
+    const berechnung = rechne(blatt);
+    expect(berechnung.zeilen[0]?.zellen[platz.id]?.fehler).toContain('Ringbezug');
   });
 });

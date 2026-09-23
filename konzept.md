@@ -89,7 +89,10 @@ sondern eine Handvoll – eine Zeile je Station, je Foto, je Fund.
 - **Werkzeugspalte**: ein Codec auf einer früheren Spalte. Jede Option ist entweder fest
   eingestellt **oder kommt je Zeile aus einer Spalte** – „nimm den n-ten Buchstaben“ mit
   einem n, das pro Zeile woanders steht, ist der halbe Rätselalltag.
-- **Positionsspalte**: der Platz der Zeile in einer bestimmten Reihenfolge.
+- **Positionsspalte**: der Platz der Zeile in einer bestimmten Reihenfolge – einer
+  Ordnung des Blatts (Eingabe, nach Schritt n) oder direkt sortiert nach einer anderen
+  Spalte, mit Sortierart und Richtung. Letzteres braucht keinen Sortierschritt und lässt
+  die Anzeige, wie sie ist; bei Gleichstand gilt die Eingabereihenfolge.
 
 **Das Bild ist die Standardansicht.** Wo der Inhalt in einem Code steht, den wir zeichnen
 können, zeigt die Spalte ihn gezeichnet – auf dem Zettel steht der Code schließlich auch

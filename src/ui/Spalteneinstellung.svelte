@@ -70,6 +70,26 @@
     }
   }
 
+  /** Andere Spalten, nach denen eine Positionsspalte direkt zählen kann. */
+  const vergleichsspalten = $derived(blatt.spalten.filter((s) => s.id !== spalte.id));
+
+  /** Auswahlwert der Reihenfolge: „o:2“ für Ordnung 2, „s:<id>“ für eine Spalte. */
+  const reihenfolge = $derived(
+    spalte.art !== 'position' ? '' : spalte.nach ? `s:${spalte.nach.spalte}` : `o:${spalte.ordnung}`
+  );
+
+  function setzeReihenfolge(wert: string) {
+    if (spalte.art !== 'position') return;
+    if (wert.startsWith('s:')) {
+      const ziel = wert.slice(2);
+      // Art und Richtung bleiben, wenn nur die Spalte wechselt.
+      spalte.nach = { art: 'text', richtung: 'auf', ...spalte.nach, spalte: ziel };
+    } else {
+      delete spalte.nach;
+      spalte.ordnung = Number(wert.slice(2));
+    }
+  }
+
   /** Beschriftung einer Ordnung: Eingabe, oder der Schritt, der sie erzeugt hat. */
   function ordnungsname(stufe: number): string {
     if (stufe === 0) return 'Eingabereihenfolge';
@@ -114,18 +134,46 @@
   {#if spalte.art === 'position'}
     <label>
       <span>Platz in welcher Reihenfolge?</span>
-      <select
-        value={String(spalte.ordnung)}
-        onchange={(e) => (spalte.ordnung = Number(e.currentTarget.value))}
-      >
-        {#each Array.from({ length: blatt.sortierungen.length + 1 }, (_, i) => i) as stufe (stufe)}
-          <option value={String(stufe)}>{ordnungsname(stufe)}</option>
-        {/each}
+      <select value={reihenfolge} onchange={(e) => setzeReihenfolge(e.currentTarget.value)}>
+        <optgroup label="Reihenfolge des Blatts">
+          {#each Array.from({ length: blatt.sortierungen.length + 1 }, (_, i) => i) as stufe (stufe)}
+            <option value={`o:${stufe}`}>{ordnungsname(stufe)}</option>
+          {/each}
+        </optgroup>
+        {#if vergleichsspalten.length > 0}
+          <optgroup label="Sortiert nach Spalte">
+            {#each vergleichsspalten as andere (andere.id)}
+              <option value={`s:${andere.id}`}>nach {spaltenname(blatt, andere.id)}</option>
+            {/each}
+          </optgroup>
+        {/if}
       </select>
     </label>
+    {#if spalte.nach}
+      {@const nach = spalte.nach}
+      <div class="richtung">
+        <select
+          value={nach.art}
+          onchange={(e) => (nach.art = e.currentTarget.value as typeof nach.art)}
+          aria-label="Sortierart"
+        >
+          <option value="text">alphabetisch</option>
+          <option value="zahl">numerisch</option>
+          <option value="laenge">nach Länge</option>
+        </select>
+        <button
+          type="button"
+          onclick={() => (nach.richtung = nach.richtung === 'auf' ? 'ab' : 'auf')}
+          title="Richtung umschalten"
+        >
+          {nach.richtung === 'auf' ? '↑ aufsteigend' : '↓ absteigend'}
+        </button>
+      </div>
+    {/if}
     <p class="hinweis">
       Liefert je Zeile eine Zahl. Als Option einer Werkzeugspalte wird daraus „nimm den
-      Buchstaben an der Stelle, auf der diese Zeile steht“.
+      Buchstaben an der Stelle, auf der diese Zeile steht“. Nach einer Spalte gezählt, bleibt
+      die Tabelle, wie sie ist – ein Sortierschritt dagegen sortiert auch die Anzeige.
     </p>
   {/if}
 
@@ -274,6 +322,7 @@
     gap: 6px;
   }
 
+  .richtung select,
   .richtung button {
     flex: 1 1 0;
     min-height: 38px;

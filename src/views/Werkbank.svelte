@@ -79,7 +79,11 @@
   function kopfname(spalte: Spalte): string {
     if (spalte.titel?.trim()) return spalte.titel.trim();
     if (spalte.art === 'eingabe') return spalte.tafel ? (findeCodec(spalte.tafel)?.name ?? 'Eingabe') : 'Eingabe';
-    if (spalte.art === 'position') return `Platz ${ordnungskurz(spalte.ordnung)}`;
+    if (spalte.art === 'position') {
+      return spalte.nach
+        ? `Platz nach ${spaltenname(blatt, spalte.nach.spalte)}`
+        : `Platz ${ordnungskurz(spalte.ordnung)}`;
+    }
     return findeCodec(spalte.codecId)?.name ?? spalte.codecId;
   }
 
@@ -144,6 +148,8 @@
     const ersatz = blatt.spalten[stelle - 1]?.id;
     blatt.spalten = blatt.spalten.filter((s) => s.id !== id);
     for (const spalte of blatt.spalten) {
+      // Zählte eine Position nach der gelöschten Spalte, fällt sie auf ihre Ordnung zurück.
+      if (spalte.art === 'position' && spalte.nach?.spalte === id) delete spalte.nach;
       if (spalte.art !== 'werkzeug') continue;
       if (spalte.quelle === id) spalte.quelle = ersatz ?? blatt.spalten[0]?.id ?? '';
       for (const [optionId, bindung] of Object.entries(spalte.optionen)) {
