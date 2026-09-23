@@ -149,6 +149,19 @@ export const zaehlen: Codec = {
   decode: (eingabe, optionen) => zaehlen.encode(eingabe, optionen)
 };
 
+/** Was bei „Länge“ als ein Zeichen zählt – je Einstellung ein Prüfer. */
+const istBuchstabe = (z: string) => /\p{L}/u.test(z);
+const ZAEHLT_MIT: Record<string, (zeichen: string) => boolean> = {
+  buchstaben: istBuchstabe,
+  ziffern: (z) => /\p{N}/u.test(z),
+  'buchstaben-ziffern': (z) => /\p{L}|\p{N}/u.test(z),
+  zeichen: () => true,
+  'ohne-leer': (z) => !/\s/u.test(z),
+  // Alles, was weder Buchstabe noch Ziffer noch Abstand ist: Punkt, Komma,
+  // Klammer, Schrägstrich – oft der eigentliche Hinweis.
+  sonderzeichen: (z) => !/\p{L}|\p{N}|\s/u.test(z)
+};
+
 /**
  * Wie lang ist der Text? Klingt banal, ist es beim Rätseln aber nicht: Die
  * Länge eines Textes ist oft selbst die gesuchte Zahl, und je nach Aufgabe
@@ -158,7 +171,7 @@ export const zaehlen: Codec = {
 export const laenge: Codec = {
   id: 'laenge',
   name: 'Länge',
-  beschreibung: 'Wie lang der Text ist – wahlweise nach Zeichen, Buchstaben oder Wörtern.',
+  beschreibung: 'Wie lang der Text ist – wahlweise nach Zeichen, Buchstaben, Ziffern oder Wörtern.',
   einseitig: true,
   optionen: [
     {
@@ -168,6 +181,8 @@ export const laenge: Codec = {
       standard: 'buchstaben',
       werte: [
         { wert: 'buchstaben', titel: 'nur Buchstaben' },
+        { wert: 'ziffern', titel: 'nur Ziffern' },
+        { wert: 'buchstaben-ziffern', titel: 'Buchstaben und Ziffern' },
         { wert: 'zeichen', titel: 'alle Zeichen' },
         { wert: 'ohne-leer', titel: 'alle Zeichen außer Leerzeichen' },
         { wert: 'sonderzeichen', titel: 'Sonderzeichen' },
@@ -183,18 +198,8 @@ export const laenge: Codec = {
     if (was === 'woerter') {
       return ergebnis(String(eingabe.trim().split(/\s+/).filter((w) => w.length > 0).length));
     }
-    const zeichen = [...eingabe];
-    const gezaehlt =
-      was === 'zeichen'
-        ? zeichen
-        : was === 'ohne-leer'
-          ? zeichen.filter((z) => !/\s/u.test(z))
-          : was === 'sonderzeichen'
-            ? // Alles, was weder Buchstabe noch Ziffer noch Abstand ist: Punkt,
-              // Komma, Klammer, Schrägstrich – oft der eigentliche Hinweis.
-              zeichen.filter((z) => !/\p{L}|\p{N}|\s/u.test(z))
-            : zeichen.filter((z) => /\p{L}/u.test(z));
-    return ergebnis(String(gezaehlt.length));
+    const zaehltMit = ZAEHLT_MIT[was] ?? istBuchstabe;
+    return ergebnis(String([...eingabe].filter(zaehltMit).length));
   },
   decode: (eingabe, optionen) => laenge.encode(eingabe, optionen)
 };

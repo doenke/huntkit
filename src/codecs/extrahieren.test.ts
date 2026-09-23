@@ -149,6 +149,14 @@ describe('Länge', () => {
     expect(laenge.encode('A\tB\nC', { was: 'ohne-leer' }).text).toBe('3');
   });
 
+  it('zählt nur Ziffern, oder Buchstaben und Ziffern zusammen', () => {
+    expect(laenge.encode(satz, { was: 'ziffern' }).text).toBe('1');
+    expect(laenge.encode('A1B22C333', { was: 'ziffern' }).text).toBe('6');
+    // DerWeggut plus die 3.
+    expect(laenge.encode(satz, { was: 'buchstaben-ziffern' }).text).toBe('10');
+    expect(laenge.encode('ABC', { was: 'ziffern' }).text).toBe('0');
+  });
+
   it('zählt Sonderzeichen: weder Buchstabe noch Ziffer noch Abstand', () => {
     // Punkt, Komma, Ausrufezeichen – die 3 zählt als Ziffer nicht mit.
     expect(laenge.encode(satz, { was: 'sonderzeichen' }).text).toBe('3');
@@ -166,7 +174,7 @@ describe('Länge', () => {
   });
 
   it('behauptet bei leerer Eingabe keine Null', () => {
-    for (const was of ['buchstaben', 'zeichen', 'ohne-leer', 'sonderzeichen', 'woerter']) {
+    for (const was of ['buchstaben', 'ziffern', 'buchstaben-ziffern', 'zeichen', 'ohne-leer', 'sonderzeichen', 'woerter']) {
       expect(laenge.encode('', { was }).text, was).toBe('');
     }
   });

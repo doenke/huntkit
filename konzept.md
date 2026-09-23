@@ -248,7 +248,7 @@ Nach Nutzen-pro-Aufwand sortiert – die oberen zahlen sich im Hunt am schnellst
 
 | Funktion | Warum | Aufwand |
 |---|---|---|
-| **Extraktionshelfer** | jeden n-ten Buchstaben, Indexliste („3,1,4"), aus jedem Wort, Gitter zeilen-/spalten-/diagonal lesen, ein Zeichen zählen, Länge nach Buchstaben, Zeichen, Sonderzeichen oder Wörtern – der Schlussschritt fast jedes Rätsels | S |
+| **Extraktionshelfer** | jeden n-ten Buchstaben, Indexliste („3,1,4"), aus jedem Wort, Gitter zeilen-/spalten-/diagonal lesen, ein Zeichen zählen, Länge nach Buchstaben, Ziffern, Zeichen, Sonderzeichen oder Wörtern – der Schlussschritt fast jedes Rätsels | S |
 | **Weitere klassische Chiffren** | Atbash, Vigenère, Polybius, Bacon, Rail Fence, Tastatur-Shift, Handy-T9 – tauchen ständig auf | M |
 | **Frequenzanalyse** | Buchstabenhäufigkeit + Koinzidenzindex sagen einem, *welche* Chiffre vorliegt | S |
 | **Wortmuster-Suche** | Offline-Wörterbuch mit Platzhaltern (`?A??LE`) und Regex – ersetzt Nutrimatic im Funkloch | M |
