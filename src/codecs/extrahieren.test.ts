@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ausWoertern, gitter, gitterLesen, jedesN, stellen, zaehlen } from './extrahieren';
+import { ausWoertern, gitter, gitterLesen, jedesN, laenge, stellen, zaehlen } from './extrahieren';
 
 describe('Jeden n-ten', () => {
   it('nimmt jeden dritten Buchstaben ab der ersten Stelle', () => {
@@ -125,5 +125,56 @@ describe('Zeichen zählen', () => {
   it('behauptet bei leerer Eingabe oder leerer Suche keine Null', () => {
     expect(zaehlen.encode('', { suche: 'E', schreibung: 'egal' }).text).toBe('');
     expect(zaehlen.encode('EEE', { suche: '', schreibung: 'egal' }).text).toBe('');
+  });
+});
+
+describe('Länge', () => {
+  const satz = 'Der 3. Weg, gut!';
+
+  it('zählt ohne Angabe nur die Buchstaben', () => {
+    // Standard ist „nur Buchstaben“: Ziffer, Punkt, Komma, Ausrufezeichen und
+    // Leerzeichen bleiben draußen – DerWeggut sind neun.
+    expect(laenge.encode(satz, {}).text).toBe('9');
+    expect(laenge.encode(satz, { was: 'buchstaben' }).text).toBe('9');
+  });
+
+  it('zählt alle Zeichen, wenn man es so einstellt', () => {
+    expect(laenge.encode(satz, { was: 'zeichen' }).text).toBe(String([...satz].length));
+    expect(laenge.encode('A B', { was: 'zeichen' }).text).toBe('3');
+  });
+
+  it('lässt auf Wunsch die Leerzeichen weg', () => {
+    expect(laenge.encode('A B C', { was: 'ohne-leer' }).text).toBe('3');
+    // Auch Zeilenumbrüche und Tabulatoren sind Abstand, kein Zeichen.
+    expect(laenge.encode('A\tB\nC', { was: 'ohne-leer' }).text).toBe('3');
+  });
+
+  it('zählt Sonderzeichen: weder Buchstabe noch Ziffer noch Abstand', () => {
+    // Punkt, Komma, Ausrufezeichen – die 3 zählt als Ziffer nicht mit.
+    expect(laenge.encode(satz, { was: 'sonderzeichen' }).text).toBe('3');
+    expect(laenge.encode('ABC123', { was: 'sonderzeichen' }).text).toBe('0');
+  });
+
+  it('zählt Wörter über den Abstand, nicht über die Satzzeichen', () => {
+    expect(laenge.encode(satz, { was: 'woerter' }).text).toBe('4');
+    // Vorne und hinten Abstand ergibt keine leeren Wörter.
+    expect(laenge.encode('  eins   zwei  ', { was: 'woerter' }).text).toBe('2');
+  });
+
+  it('zählt Umlaute und ß als je einen Buchstaben', () => {
+    expect(laenge.encode('Größe', { was: 'buchstaben' }).text).toBe('5');
+  });
+
+  it('behauptet bei leerer Eingabe keine Null', () => {
+    for (const was of ['buchstaben', 'zeichen', 'ohne-leer', 'sonderzeichen', 'woerter']) {
+      expect(laenge.encode('', { was }).text, was).toBe('');
+    }
+  });
+
+  it('ist einseitig und rechnet in beide Richtungen dasselbe', () => {
+    expect(laenge.einseitig).toBe(true);
+    expect(laenge.decode(satz, { was: 'zeichen' }).text).toBe(
+      laenge.encode(satz, { was: 'zeichen' }).text
+    );
   });
 });

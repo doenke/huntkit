@@ -149,6 +149,56 @@ export const zaehlen: Codec = {
   decode: (eingabe, optionen) => zaehlen.encode(eingabe, optionen)
 };
 
+/**
+ * Wie lang ist der Text? Klingt banal, ist es beim Rätseln aber nicht: Die
+ * Länge eines Textes ist oft selbst die gesuchte Zahl, und je nach Aufgabe
+ * zählt etwas anderes mit. Deshalb steht hier nicht eine Länge, sondern die
+ * Wahl, was überhaupt als Zeichen gilt.
+ */
+export const laenge: Codec = {
+  id: 'laenge',
+  name: 'Länge',
+  beschreibung: 'Wie lang der Text ist – wahlweise nach Zeichen, Buchstaben oder Wörtern.',
+  einseitig: true,
+  optionen: [
+    {
+      id: 'was',
+      titel: 'zählt',
+      art: 'auswahl',
+      standard: 'buchstaben',
+      werte: [
+        { wert: 'buchstaben', titel: 'nur Buchstaben' },
+        { wert: 'zeichen', titel: 'alle Zeichen' },
+        { wert: 'ohne-leer', titel: 'alle Zeichen außer Leerzeichen' },
+        { wert: 'sonderzeichen', titel: 'Sonderzeichen' },
+        { wert: 'woerter', titel: 'Wörter' }
+      ]
+    }
+  ],
+  encode: (eingabe, optionen) => {
+    // Wie beim Zählen: Zu einem leeren Text sagen wir nichts. Eine 0 sähe aus
+    // wie ein Ergebnis, ist aber nur die fehlende Eingabe.
+    if (eingabe.length === 0) return ergebnis('');
+    const was = text(optionen, 'was', 'buchstaben');
+    if (was === 'woerter') {
+      return ergebnis(String(eingabe.trim().split(/\s+/).filter((w) => w.length > 0).length));
+    }
+    const zeichen = [...eingabe];
+    const gezaehlt =
+      was === 'zeichen'
+        ? zeichen
+        : was === 'ohne-leer'
+          ? zeichen.filter((z) => !/\s/u.test(z))
+          : was === 'sonderzeichen'
+            ? // Alles, was weder Buchstabe noch Ziffer noch Abstand ist: Punkt,
+              // Komma, Klammer, Schrägstrich – oft der eigentliche Hinweis.
+              zeichen.filter((z) => !/\p{L}|\p{N}|\s/u.test(z))
+            : zeichen.filter((z) => /\p{L}/u.test(z));
+    return ergebnis(String(gezaehlt.length));
+  },
+  decode: (eingabe, optionen) => laenge.encode(eingabe, optionen)
+};
+
 /** Liest ein zeilenweise gefülltes Gitter in verschiedenen Richtungen aus. */
 export function gitterLesen(zeichen: string[], breite: number, richtung: string): string {
   const b = Math.max(1, breite);
