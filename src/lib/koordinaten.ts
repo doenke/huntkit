@@ -40,6 +40,17 @@ export function alsDezimalgrad(wert: number): string {
 }
 
 /**
+ * Der Punkt auf OpenStreetMap: mit Markierung genau dort und so nah
+ * herangezoomt, dass man Straße und Hausnummer erkennt. Die Nachtschicht gibt
+ * Standorte auf etwa zwei Meter genau an – Zoom 18 zeigt das.
+ */
+export function osmLink({ breite, laenge }: Punkt): string {
+  const b = alsDezimalgrad(breite);
+  const l = alsDezimalgrad(laenge);
+  return `https://www.openstreetmap.org/?mlat=${b}&mlon=${l}#map=18/${b}/${l}`;
+}
+
+/**
  * Liest eine Koordinate in allen drei gängigen Schreibweisen. Erkannt wird an
  * der Anzahl der Zahlen: eine ist Dezimalgrad, zwei sind Grad und Minuten,
  * drei sind Grad, Minuten und Sekunden.

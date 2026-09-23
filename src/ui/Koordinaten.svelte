@@ -1,7 +1,7 @@
 <script lang="ts">
   import Textzeile from './Textzeile.svelte';
   import {
-    alsDezimalgrad, alsGradMinuten, alsGradMinutenSekunden, lese
+    alsDezimalgrad, alsGradMinuten, alsGradMinutenSekunden, lese, osmLink
   } from '../lib/koordinaten';
 
   let eingabe = $state('');
@@ -70,11 +70,28 @@
       </li>
     {/each}
   </ul>
+  <a class="karte" href={osmLink(lesung.punkt)} target="_blank" rel="noreferrer">
+    Auf OpenStreetMap zeigen ↗
+  </a>
 {/if}
 
 <style>
   .feld {
     margin-bottom: 10px;
+  }
+
+  /* Ein großes Tippziel: Wer eine Koordinate eingibt, will meistens gleich los. */
+  .karte {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--tap);
+    margin-top: 10px;
+    border: 1px solid var(--akzent);
+    border-radius: var(--radius);
+    color: var(--akzent);
+    text-decoration: none;
+    font-weight: 600;
   }
 
   .feld :global(textarea) {

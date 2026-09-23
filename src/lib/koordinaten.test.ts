@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  alsDezimalgrad, alsGradMinuten, alsGradMinutenSekunden, lese, leseZahl
+  alsDezimalgrad, alsGradMinuten, alsGradMinutenSekunden, lese, leseZahl, osmLink
 } from './koordinaten';
 
 describe('Koordinaten lesen', () => {
@@ -64,5 +64,27 @@ describe('Koordinaten schreiben', () => {
       const geschrieben = alsGradMinuten(wert, true);
       expect(leseZahl(geschrieben), geschrieben).toBeCloseTo(wert, 4);
     }
+  });
+});
+
+describe('Link zu OpenStreetMap', () => {
+  it('setzt die Markierung auf den Punkt und zoomt nah heran', () => {
+    expect(osmLink({ breite: 51.51315, laenge: 7.4576 })).toBe(
+      'https://www.openstreetmap.org/?mlat=51.51315&mlon=7.4576#map=18/51.51315/7.4576'
+    );
+  });
+
+  it('behält Süd und West als Minus', () => {
+    expect(osmLink({ breite: -33.8568, laenge: -151.2153 })).toBe(
+      'https://www.openstreetmap.org/?mlat=-33.8568&mlon=-151.2153#map=18/-33.8568/-151.2153'
+    );
+  });
+
+  it('nimmt eine Eingabe in der Schreibweise der Nachtschicht', () => {
+    const lesung = lese('N 51°30.789  E 7°27.456');
+    expect(lesung).not.toBeNull();
+    expect(osmLink(lesung!.punkt)).toBe(
+      'https://www.openstreetmap.org/?mlat=51.51315&mlon=7.4576#map=18/51.51315/7.4576'
+    );
   });
 });
