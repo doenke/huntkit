@@ -1,5 +1,6 @@
 import { zeichenCodec } from './hilfen';
 import type { Codec, Glyph } from './types';
+import { nachtschicht, raetselnacht } from './quellen';
 
 /**
  * Hexahue: jedes Zeichen ist ein Feld aus 2×3 Farbflächen.
@@ -58,6 +59,7 @@ export const hexahueZiffern = ZIFFERN;
 export const hexahue: Codec = {
   id: 'hexahue',
   name: 'Hexahue',
+  quellen: [nachtschicht('M', 'Hexahue'), raetselnacht('U', 'Hexahue')],
   beschreibung:
     'Sechs Farbfelder, 2 breit und 3 hoch. Ziffern und Satzzeichen in Schwarz (K), Weiß (W) und Grau (A).',
   encode: (eingabe) => zeichen.encode(eingabe),

@@ -1,5 +1,6 @@
 import { zeichenCodec } from './hilfen';
 import type { Codec, Glyph } from './types';
+import { nachtschicht, raetselnacht, wikipedia } from './quellen';
 
 /**
  * Braille, 6 Punkte.
@@ -41,6 +42,7 @@ const zeichen = zeichenCodec({
 export const braille: Codec = {
   id: 'braille',
   name: 'Braille',
+  quellen: [nachtschicht('D', 'Brailleschrift'), raetselnacht('F', 'Blindenschrift (Braille), deutsch'), wikipedia('Brailleschrift', 'https://de.wikipedia.org/wiki/Brailleschrift')],
   beschreibung:
     'Sechs Punkte, links 1–2–3, rechts 4–5–6.',
   encode: (eingabe) => zeichen.encode(eingabe),

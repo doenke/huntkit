@@ -252,3 +252,22 @@ describe('Abschnitte langer Tabellen', () => {
     expect(eintraege.some((e) => e.zeichen === 'He')).toBe(false);
   });
 });
+
+describe('Quellenangaben', () => {
+  it('sind vollständig und verweisen nur auf https-Adressen', () => {
+    for (const eintrag of CODECS) {
+      for (const quelle of eintrag.quellen ?? []) {
+        expect(quelle.titel.trim().length, eintrag.id).toBeGreaterThan(0);
+        if (quelle.url) expect(quelle.url, eintrag.id).toMatch(/^https:\/\//);
+      }
+    }
+  });
+
+  it('fehlen bei keinem Code, der aus einem der Hefte stammt', () => {
+    const ausHeften = ['morse', 'abc123', 'ascii', 'nato', 'braille', 'winker', 'hexahue', 'templer',
+      'fingeralphabet', 'ipa', 'caesar', 'vigenere', 'handytasten', 'basen', 'roemisch', 'elemente'];
+    for (const id of ausHeften) {
+      expect(codec(id)?.quellen?.length ?? 0, id).toBeGreaterThan(0);
+    }
+  });
+});

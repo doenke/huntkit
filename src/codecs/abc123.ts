@@ -1,5 +1,6 @@
 import { ALPHABET, anteil, zeichenCodec } from './hilfen';
 import type { Codec } from './types';
+import { nachtschicht } from './quellen';
 
 const zeichen = zeichenCodec({
   tabelle: [...ALPHABET].map((buchstabe, i) => [buchstabe, String(i + 1)] as const),
@@ -10,6 +11,7 @@ const zeichen = zeichenCodec({
 export const abc123: Codec = {
   id: 'abc123',
   name: 'ABC123',
+  quellen: [nachtschicht('A', 'Buchstabier-Alphabete')],
   beschreibung: 'Buchstabe zu Zahl, A=1 bis Z=26.',
   encode: (eingabe) => zeichen.encode(eingabe),
   decode: (eingabe) => zeichen.decode(eingabe),

@@ -1,5 +1,6 @@
 import { ALPHABET, anteil, ergebnis, ohneUmlaute, zahl } from './hilfen';
 import type { Codec, OptionWerte, TabellenEintrag } from './types';
+import { raetselnacht, wikipedia } from './quellen';
 
 export function verschiebe(eingabe: string, schritte: number): string {
   const versatz = ((schritte % 26) + 26) % 26;
@@ -32,6 +33,7 @@ function schritteAus(optionen: OptionWerte | undefined): number {
 export const caesar: Codec = {
   id: 'caesar',
   name: 'Caesar',
+  quellen: [raetselnacht('K', 'Mono- und Polyalphabetische Verschlüsselungen'), wikipedia('Monoalphabetische Substitution', 'https://de.wikipedia.org/wiki/Monoalphabetische_Substitution')],
   beschreibung: 'Alphabet um feste Schritte verschoben. ROT-13 ist Verschiebung 13.',
   optionen: [
     { id: 'verschiebung', titel: 'Verschiebung', art: 'zahl', min: 0, max: 25, standard: 3 }

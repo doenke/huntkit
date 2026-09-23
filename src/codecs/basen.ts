@@ -1,5 +1,6 @@
 import { anteil, ergebnis, zahl } from './hilfen';
 import type { Codec, Luecke } from './types';
+import { nachtschicht, raetselnacht } from './quellen';
 
 const ZIFFERNVORRAT = '0123456789abcdefghijklmnopqrstuvwxyz';
 
@@ -45,6 +46,7 @@ const BASIS_OPTION = { art: 'zahl', min: 2, max: 36 } as const;
 export const basen: Codec = {
   id: 'basen',
   name: 'Zahlensysteme',
+  quellen: [nachtschicht('I', 'Binäre Zahlen'), raetselnacht('J', 'Binär')],
   beschreibung: 'Zahlen zwischen beliebigen Basen umrechnen, 2 bis 36.',
   optionen: [
     { id: 'von', titel: 'von Basis', standard: 16, ...BASIS_OPTION },

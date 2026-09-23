@@ -74,6 +74,12 @@ export interface Glyph {
   inhalt: string;
 }
 
+/** Eine Quellenangabe: Titel und, wo es eine gibt, die Adresse. */
+export interface Quelle {
+  titel: string;
+  url?: string;
+}
+
 export interface Codec {
   id: string;
   name: string;
@@ -96,6 +102,12 @@ export interface Codec {
 
   /** Herkunftsangabe, wenn die Zeichen aus einer fremden Vorlage stammen. */
   quelle?: { text: string; url: string };
+
+  /**
+   * Woher die Tafel stammt: Heft und Anhang, Wikipedia-Seiten und Normen, wie
+   * die Hefte sie nennen. Die Codekarte zeigt sie unter der Tabelle.
+   */
+  quellen?: ReadonlyArray<Quelle>;
 
   encode(eingabe: string, optionen?: OptionWerte): CodecErgebnis;
   decode(eingabe: string, optionen?: OptionWerte): CodecErgebnis;

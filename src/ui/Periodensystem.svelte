@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { nachtschicht, raetselnacht, wikipedia } from '../codecs/quellen';
+  import Quellen from './Quellen.svelte';
   import Textzeile from './Textzeile.svelte';
   import {
     auslesen, AUSGABEN, ELEMENTE, finde, LAYOUTS, raster, reihenZahl,
@@ -302,6 +304,8 @@
     {ELEMENTE.length} Elemente.
   </p>
 {/if}
+
+<Quellen quellen={[nachtschicht('Q', 'Periodensystem der Elemente'), raetselnacht('I', 'Periodensystem der Elemente'), wikipedia('Periodensystem (Datei:Periodic_table_(German)_EN.svg)', 'https://de.wikipedia.org/wiki/Datei:Periodic_table_(German)_EN.svg')]} />
 
 <style>
   .steuerung {

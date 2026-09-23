@@ -5,6 +5,7 @@
   import { anWerkbank } from '../lib/sammlung';
   import { zeichenbar } from '../lib/codeanzeige';
   import Codeanzeige from './Codeanzeige.svelte';
+  import Quellen from './Quellen.svelte';
   import Optionen from './Optionen.svelte';
 
   /**
@@ -215,6 +216,9 @@
     Bild: {codec.quelle.text}.
     <a href={codec.quelle.url} target="_blank" rel="noreferrer">Quelle</a>
   </p>
+{/if}
+{#if codec.quellen?.length}
+  <Quellen quellen={codec.quellen} />
 {/if}
 </div>
 

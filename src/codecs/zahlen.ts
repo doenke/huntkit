@@ -1,5 +1,6 @@
 import { ergebnis } from './hilfen';
 import type { Codec, Luecke } from './types';
+import { nachtschicht } from './quellen';
 
 /** Römische Zahlen, Base64 und Base32 – Kleinkram, der oft gebraucht wird. */
 
@@ -38,6 +39,7 @@ export function ausRoemisch(text: string): number | null {
 export const roemisch: Codec = {
   id: 'roemisch',
   name: 'Römische Zahlen',
+  quellen: [nachtschicht('R', 'Römische Zahlen')],
   beschreibung: 'Zwischen römischer und arabischer Schreibweise, 1 bis 3999.',
   encode(eingabe) {
     const luecken: Luecke[] = [];

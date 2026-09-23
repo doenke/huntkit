@@ -1,5 +1,6 @@
 import { ergebnis, ohneUmlaute } from './hilfen';
 import type { Codec, Glyph, Luecke, TabellenEintrag } from './types';
+import { nachtschicht, raetselnacht, wikipedia } from './quellen';
 
 /**
  * Winkeralphabet (Semaphor).
@@ -177,6 +178,7 @@ function flagge(x: number, y: number): string {
 export const winker: Codec = {
   id: 'winker',
   name: 'Winkeralphabet',
+  quellen: [nachtschicht('G', 'Winkeralphabet'), { titel: 'Wikimedia Commons: Winkeralphabet-Tafel (Denelson83, CC BY-SA 3.0)', url: 'https://commons.wikimedia.org/w/index.php?curid=501826' }, raetselnacht('O', 'Winkeralphabet (Semaphore)'), wikipedia('Winkeralphabet', 'https://de.wikipedia.org/wiki/Winkeralphabet')],
   beschreibung:
     'Zwei Flaggen in je acht Richtungen. Ziffern stehen nach dem Zahlzeichen (#) als A–I und K, J schaltet zurück.',
   encode: kodieren,

@@ -1,5 +1,6 @@
 import { ergebnis } from './hilfen';
 import type { Codec, Luecke, TabellenEintrag } from './types';
+import { nachtschicht } from './quellen';
 
 /**
  * IPA-Lautschrift, wie die Tafel der Nachtschicht sie zeigt (Anhang J).
@@ -173,6 +174,7 @@ const NUR_IPA = /[ɐəɛɪŋɔœʁʃʊʏχʔçøːˈˌ͡]/u;
 export const ipa: Codec = {
   id: 'ipa',
   name: 'IPA-Lautschrift',
+  quellen: [nachtschicht('J', 'IPA-Tabelle')],
   beschreibung:
     'Lautschrift lesen: [ˈʃuːlə] wird SCHULE. Umgekehrt nur grob – die Schreibung verrät nicht, wie ein Laut klingt.',
   encode: (eingabe) => schreiben(eingabe),

@@ -1,5 +1,6 @@
 import { anteil, ergebnis, ohneUmlaute, text } from './hilfen';
 import type { Codec, Luecke, OptionWerte, TabellenEintrag } from './types';
+import { nachtschicht } from './quellen';
 
 const BASEN = {
   '10': { titel: 'Dezimal', basis: 10, breite: 0 },
@@ -38,6 +39,7 @@ function gruppe(zeichen: string): (typeof GRUPPEN)[number] {
 export const ascii: Codec = {
   id: 'ascii',
   name: 'ASCII',
+  quellen: [nachtschicht('P', 'ASCII')],
   beschreibung: 'Zeichen als Zahlenwert – dezimal, binär oder hexadezimal.',
   optionen: [
     {

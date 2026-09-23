@@ -1,5 +1,6 @@
 import { ergebnis } from './hilfen';
 import type { Codec, Glyph } from './types';
+import { nachtschicht } from './quellen';
 
 /**
  * Fingeralphabet der Deutschen Gebärdensprache (DGS).
@@ -31,6 +32,7 @@ const NACH_ZEICHEN = new Map(ZEICHEN.map(([z, datei]) => [z, datei]));
 export const fingeralphabet: Codec = {
   id: 'fingeralphabet',
   name: 'Fingeralphabet',
+  quellen: [nachtschicht('B', 'Fingeralphabet')],
   beschreibung: 'Handformen der Deutschen Gebärdensprache, mit Ä, Ö, Ü und Sch.',
   nurNachschlagen: true,
   quelle: {

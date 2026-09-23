@@ -1,5 +1,6 @@
 import { anteil, zeichenCodec } from './hilfen';
 import type { Codec, Glyph } from './types';
+import { nachtschicht, raetselnacht } from './quellen';
 
 const TABELLE = [
   ['A', '.-'], ['B', '-...'], ['C', '-.-.'], ['D', '-..'], ['E', '.'],
@@ -31,6 +32,7 @@ function gruppe(z: string): string {
 export const morse: Codec = {
   id: 'morse',
   name: 'Morse',
+  quellen: [nachtschicht('E', 'Morsezeichen'), raetselnacht('H', 'Morsezeichen')],
   beschreibung: 'Punkt und Strich.',
   encode: (eingabe) => zeichen.encode(eingabe),
   decode: (eingabe) => zeichen.decode(eingabe),

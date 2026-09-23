@@ -1,5 +1,6 @@
 import { anteil, zeichenCodec } from './hilfen';
 import type { Codec } from './types';
+import { nachtschicht, raetselnacht } from './quellen';
 
 const TABELLE = [
   ['A', 'Alfa'], ['B', 'Bravo'], ['C', 'Charlie'], ['D', 'Delta'], ['E', 'Echo'],
@@ -17,6 +18,7 @@ const zeichen = zeichenCodec({ tabelle: TABELLE, trenner: ' ', worttrenner: '/' 
 export const nato: Codec = {
   id: 'nato',
   name: 'NATO-Alphabet',
+  quellen: [nachtschicht('A', 'Buchstabier-Alphabete'), raetselnacht('B', 'NATO-Alphabet')],
   beschreibung: 'Buchstabiertafel der NATO, Ziffern in deutscher Schreibweise.',
   encode: (eingabe) => zeichen.encode(eingabe),
   decode: (eingabe) => zeichen.decode(eingabe),

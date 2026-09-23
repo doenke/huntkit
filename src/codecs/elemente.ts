@@ -2,6 +2,7 @@ import elementeDaten from '../../data/elements.json';
 import { periode } from '../lib/periodensystem';
 import { ergebnis, text } from './hilfen';
 import type { Codec, Luecke, OptionWerte } from './types';
+import { nachtschicht, raetselnacht, wikipedia } from './quellen';
 
 /**
  * Das Periodensystem als Schlüssel: Jedes Attributpaar ist eine mögliche
@@ -65,6 +66,7 @@ function uebersetze(eingabe: string, von: Feld, nach: Feld) {
 export const elemente: Codec = {
   id: 'elemente',
   name: 'Periodensystem',
+  quellen: [nachtschicht('Q', 'Periodensystem der Elemente'), raetselnacht('I', 'Periodensystem der Elemente'), wikipedia('Periodensystem (Datei:Periodic_table_(German)_EN.svg)', 'https://de.wikipedia.org/wiki/Datei:Periodic_table_(German)_EN.svg')],
   beschreibung: 'Elementangaben ineinander übersetzen.',
   optionen: [
     { id: 'von', titel: 'von', art: 'auswahl', standard: 'symbol', werte: FELDER },

@@ -1,5 +1,6 @@
 import { ALPHABET, anteil, ergebnis, ohneUmlaute, text, zahl } from './hilfen';
 import type { Codec, Glyph, Luecke, OptionWerte } from './types';
+import { raetselnacht, wikipedia } from './quellen';
 
 /**
  * Klassische Chiffren, die in Rätseln immer wieder auftauchen.
@@ -61,6 +62,7 @@ function vigenere(eingabe: string, schluessel: string, richtung: 1 | -1) {
 export const vigenereCodec: Codec = {
   id: 'vigenere',
   name: 'Vigenère',
+  quellen: [raetselnacht('K', 'Mono- und Polyalphabetische Verschlüsselungen'), wikipedia('Vigenère-Chiffre', 'https://de.wikipedia.org/wiki/Vigen%C3%A8re-Chiffre')],
   beschreibung: 'Caesar mit wechselnder Verschiebung – der Schlüssel gibt sie vor.',
   optionen: [
     { id: 'schluessel', titel: 'Schlüssel', art: 'text', standard: '', platzhalter: 'NACHT' }
@@ -281,6 +283,7 @@ function tastenfeld(): Glyph {
 export const handytasten: Codec = {
   id: 'handytasten',
   name: 'Handytastatur',
+  quellen: [{ titel: 'ITU-T E.161: Anordnung von Ziffern und Buchstaben auf Telefontastaturen', url: 'https://www.itu.int/rec/T-REC-E.161' }, wikipedia('Text on 9 keys', 'https://de.wikipedia.org/wiki/Text_on_9_keys')],
   beschreibung: 'Alte Handytasten: A ist 2, B ist 22, C ist 222.',
   uebersicht: { titel: 'Tastenfeld nach ITU-T E.161', bild: tastenfeld() },
   encode(eingabe) {

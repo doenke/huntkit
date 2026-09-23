@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { nachtschicht } from '../codecs/quellen';
+  import Quellen from './Quellen.svelte';
   import { TASTATUREN, reihenbreite, type Tastatur } from '../lib/tastaturen';
 
   /**
@@ -60,6 +62,8 @@
     </p>
   {/if}
 {/if}
+
+<Quellen quellen={[nachtschicht('H', 'Tastaturlayouts'), { titel: 'Wikimedia Commons: Tastaturbelegung E1 (Karl432, CC BY-SA 4.0)', url: 'https://commons.wikimedia.org/w/index.php?curid=135146062' }]} />
 
 <style>
   .wahl {

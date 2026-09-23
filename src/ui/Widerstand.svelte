@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { nachtschicht, raetselnacht } from '../codecs/quellen';
+  import Quellen from './Quellen.svelte';
   import Textzeile from './Textzeile.svelte';
   import { alsText, FARBEN, farbe, ringeFuer, wert } from '../lib/widerstand';
 
@@ -99,6 +101,8 @@
   />
   <button type="button" onclick={ausWert}>Ringe zeigen</button>
 </div>
+
+<Quellen quellen={[nachtschicht('O', 'Farbcode von Widerständen'), { titel: 'Wikimedia Commons: Farbcode von Widerständen (Knarfili, CC0)', url: 'https://commons.wikimedia.org/wiki/File:Farbcode_von_Widerst%C3%A4nden.svg' }, raetselnacht('E', 'Widerstands-Farbkodierung')]} />
 
 <style>
   .gruppe {

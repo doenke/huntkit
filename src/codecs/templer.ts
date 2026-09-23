@@ -1,5 +1,6 @@
 import { zeichenCodec } from './hilfen';
 import type { Codec, Glyph } from './types';
+import { nachtschicht } from './quellen';
 
 /**
  * Templercode: Formen des Malteserkreuzes.
@@ -69,6 +70,7 @@ const PUNKTORT: Record<Form, [number, number]> = {
 export const templer: Codec = {
   id: 'templer',
   name: 'Templercode',
+  quellen: [nachtschicht('F', 'Templercode')],
   beschreibung:
     'Formen des Malteserkreuzes; die zweite Alphabethälfte mit Punkt.',
   encode: (eingabe) => zeichen.encode(eingabe),
