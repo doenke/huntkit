@@ -11,8 +11,8 @@ Templercode ist das der entscheidende Punkt.
 | Braille | D | bestätigt — Aufbau A–J nur Punkte 1/2/4/5, K–T plus Punkt 3, Ziffern als A–J |
 | Morse | E | bestätigt gegen die vorhandene Tabelle |
 | Templercode | F | Formen und Buchstabenpaare abgelesen, Beschriftungen bei 700 dpi geprüft |
-| Winkeralphabet | G | Armstellungen abgelesen, teilweise zusätzlich aus den Pixeln bestimmt |
-| Hexahue | M | Farbfelder maschinell ausgelesen |
+| Winkeralphabet | G | Armstellungen abgelesen, teilweise zusätzlich aus den Pixeln bestimmt; Ziffern (A–I, K nach „Zahl“), Zahlzeichen und Leerzeichen von der Tafel |
+| Hexahue | M | Farbfelder maschinell ausgelesen, Ziffern, Punkt, Komma und Leerzeichen ebenso |
 | Widerstandsfarbcode | O | bestätigt, samt beider Beispiele der Tafel |
 | Umlautregel | Regelteil | „Ä → AE, ß → SS, sofern nicht anders auf dem Rätsel vermerkt“ |
 
@@ -31,7 +31,11 @@ Jede Tabelle hat mindestens eine Probe, die unabhängig von der Abschrift ist:
 - **Braille** — die Punktmuster ergeben die bekannten Unicode-Codepunkte ab U+2800.
 - **Hexahue** — jeder Buchstabe benutzt alle sechs Farben genau einmal, und von
   einem Buchstaben zum nächsten tauschen genau zwei *benachbarte* Felder die
-  Plätze. Beim Auslesen verrutschte Felder würden beides verletzen.
+  Plätze. Beim Auslesen verrutschte Felder würden beides verletzen. Für die
+  Ziffern gilt dasselbe mit Schwarz, Weiß und Grau (je zweimal). Weil weiße
+  Felder vom Papier nicht zu unterscheiden sind, liegt das Leseraster der
+  Ziffernreihe auf den Spalten der Buchstabenreihen; die gemessene Lage der
+  Reihe stimmt mit dem Abstand der Buchstabenreihen überein.
 - **Winkeralphabet** — 26 Buchstaben ergeben 26 verschiedene Paare aus acht
   Richtungen; keine Stellung kommt doppelt vor.
 - **Widerstandsfarbcode** — die beiden Widerstände, die die Tafel abbildet,
@@ -48,7 +52,13 @@ Jede Tabelle hat mindestens eine Probe, die unabhängig von der Abschrift ist:
   sich eine Form** — beim Entschlüsseln bleibt die Stelle mehrdeutig, die App
   liefert I.
 - **Winkeralphabet:** Die Richtungen sind aus Sicht der Betrachterin notiert, so
-  wie die Tafel zeichnet.
+  wie die Tafel zeichnet. Ziffern haben keine eigenen Stellungen: Nach „Zahl“
+  (N+NO) gelten A–I als 1–9 und K als 0, bis J zurückschaltet. „Error“ ist auf
+  der Tafel eine Bewegung und „Cancel“ (NW+SO) ein Steuerzeichen; beide sind
+  nicht übernommen.
+- **Hexahue:** Ziffern und Satzzeichen sind schwarz-weiß-grau; im Text steht
+  K für Schwarz (wie im Druck), W für Weiß und A für Grau. Das Leerzeichen der
+  Tafel ist ganz schwarz.
 - **Fingeralphabet:** Einziger Code, dessen Zeichen keine eigene Zeichnung sind.
   Die Tafel stammt vom Landesverband Bayern der Gehörlosen e. V. und steht unter
   CC BY-SA 4.0; sie ist in die 30 Einzelzeichen zerschnitten und auf Schwarzweiß
