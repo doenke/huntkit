@@ -8,6 +8,7 @@ import { ausWoertern, gitter, jedesN, laenge, stellen, zaehlen } from './extrahi
 import { elemente } from './elemente';
 import { ersetzen } from './ersetzen';
 import { fingeralphabet } from './fingeralphabet';
+import { flaggen } from './flaggen';
 import { hexahue } from './hexahue';
 import { ipa } from './ipa';
 import { klopfcode } from './klopfcode';
@@ -33,6 +34,7 @@ export const CODECS: ReadonlyArray<Codec> = [
   hexahue,
   templer,
   fingeralphabet,
+  flaggen,
   ipa,
   caesar,
   atbash,
