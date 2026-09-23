@@ -6,6 +6,7 @@ import { caesar } from './caesar';
 import { atbash, bacon, handytasten, polybios, vigenereCodec, zaun } from './chiffren';
 import { ausWoertern, gitter, jedesN, laenge, stellen, zaehlen } from './extrahieren';
 import { elemente } from './elemente';
+import { ersetzen } from './ersetzen';
 import { fingeralphabet } from './fingeralphabet';
 import { hexahue } from './hexahue';
 import { morse } from './morse';
@@ -47,6 +48,7 @@ export const CODECS: ReadonlyArray<Codec> = [
   gitter,
   zaehlen,
   laenge,
+  ersetzen,
   elemente
 ];
 
