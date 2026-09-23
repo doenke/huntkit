@@ -10,6 +10,7 @@ import { ersetzen } from './ersetzen';
 import { fingeralphabet } from './fingeralphabet';
 import { hexahue } from './hexahue';
 import { ipa } from './ipa';
+import { klopfcode } from './klopfcode';
 import { morse } from './morse';
 import { base32, base64, roemisch } from './zahlen';
 import { nato } from './nato';
@@ -38,6 +39,7 @@ export const CODECS: ReadonlyArray<Codec> = [
   vigenereCodec,
   bacon,
   polybios,
+  klopfcode,
   zaun,
   handytasten,
   basen,
