@@ -217,11 +217,12 @@ describe('Periodensystem als Schlüssel', () => {
  * einen haben, und die Abschnitte zusammen müssen die Tabelle ergeben.
  */
 describe('Abschnitte langer Tabellen', () => {
-  it('teilt ASCII in vier Abschnitte, Buchstaben zuerst', () => {
+  it('teilt ASCII in fünf Abschnitte, Buchstaben zuerst, Steuerzeichen zuletzt', () => {
     const eintraege = codec('ascii')!.tabelle!({ basis: '10' });
     const abschnitte = [...new Set(eintraege.map((e) => e.gruppe))];
-    expect(abschnitte).toEqual(['A–Z', 'a–z', '0–9', 'Sonderzeichen']);
-    expect(eintraege).toHaveLength(95);
+    expect(abschnitte).toEqual(['A–Z', 'a–z', '0–9', 'Sonderzeichen', 'Steuerzeichen']);
+    // Alle 128 Zeichen von ASCII: 95 druckbare und 33 Steuerzeichen.
+    expect(eintraege).toHaveLength(128);
     expect(eintraege.filter((e) => e.gruppe === 'A–Z')).toHaveLength(26);
     // Das Leerzeichen hat den kleinsten Code, steht aber nicht vorn.
     expect(eintraege[0]?.zeichen).toBe('A');
@@ -269,5 +270,33 @@ describe('Quellenangaben', () => {
     for (const id of ausHeften) {
       expect(codec(id)?.quellen?.length ?? 0, id).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('ASCII: Steuerzeichen und Oktal', () => {
+  const c = () => codec('ascii')!;
+
+  it('nennt Steuerzeichen beim Namen, statt sie unsichtbar zu lassen', () => {
+    expect(c().decode('0 1 27 127', { basis: '10' }).text).toBe('⟨NUL⟩⟨SOH⟩⟨ESC⟩⟨DEL⟩');
+    // Tabulator und Zeilenumbruch bleiben echte Zeichen.
+    expect(c().decode('72 10 105', { basis: '10' }).text).toBe('H\ni');
+  });
+
+  it('rechnet oktal wie das Heft der RätselNacht: A ist 101', () => {
+    expect(c().encode('Az', { basis: '8' }).text).toBe('101 172');
+    expect(c().decode('101 172', { basis: '8' }).text).toBe('Az');
+  });
+
+  it('nimmt nur Ziffern des gewählten Systems', () => {
+    // 19 ist keine Oktalzahl – früher wurde daraus stillschweigend 1.
+    expect(c().decode('19', { basis: '8' }).luecken.map((l) => l.zeichen)).toEqual(['19']);
+    expect(c().decode('102', { basis: '2' }).luecken).toHaveLength(1);
+  });
+
+  it('führt die 33 Steuerzeichen als eigenen Abschnitt', () => {
+    const steuer = c().tabelle!({ basis: '16' }).filter((e) => e.gruppe === 'Steuerzeichen');
+    expect(steuer).toHaveLength(33);
+    expect(steuer.find((e) => e.zeichen === 'LF')?.darstellung).toBe('0A');
+    expect(steuer.find((e) => e.zeichen === 'DEL')?.darstellung).toBe('7F');
   });
 });
