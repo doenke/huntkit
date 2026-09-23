@@ -707,6 +707,18 @@ und nur der. Morse, Braille und das Fingeralphabet haben eigene Zeichen für Ä,
 und behalten sie. Die Rückrichtung bleibt außen vor: Aus AE wieder Ä zu machen ist geraten,
 „QUELLE" wäre sonst nicht sicher.
 
+Dazu kommt die Umschreibung **schon beim Tippen**: In Klartextspalten der Werkbank wird aus
+„Größe" noch im Feld „Groesse". Dann steht in der Zelle, was als Lösung gilt, und jedes
+Werkzeug danach zählt und verschiebt die Buchstaben, die man sieht. Ein kleiner Schalter
+beim Zellenfeld stellt das ab; er ist ab Werk an und merkt sich die Wahl auf dem Gerät,
+nicht im Blatt – ein geteilter Link soll niemandem die Tippgewohnheit umstellen.
+Codetafel-Spalten bleiben unberührt, dort ist ein Ä ein Zeichen des Codes.
+
+Groß oder klein entscheidet dabei der Nachbar, nicht der ganze Text: „Größe STRAßE" wird zu
+„Groesse STRASSE". Ein großer Umlaut am Wortanfang bleibt stehen, bis der nächste
+Buchstabe zeigt, ob „Übel" (Ue) oder „ÜBEL" (UE) gemeint ist; allein stehend wird er beim
+Verlassen des Felds zu UE. Die Schreibmarke bleibt dabei, wo getippt wurde.
+
 Das **Fingeralphabet** ist der einzige Code, dessen Zeichen keine eigene Zeichnung sind:
 Die Tafel des Landesverbands Bayern der Gehörlosen e. V. steht unter CC BY-SA 4.0 und ist
 mit Namensnennung übernommen. 30 Handformen nachzuzeichnen, ohne sie unkenntlich zu

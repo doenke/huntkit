@@ -21,6 +21,11 @@
   } from '../lib/blatt';
   import { zeichenbar } from '../lib/codeanzeige';
   import { alsLink, ausAdresse } from '../lib/teilen';
+  import {
+    feldUmschreiben,
+    speichereUmlauteAufloesen,
+    umlauteAufloesenGespeichert
+  } from '../lib/umlautschalter';
   import Codeanzeige from '../ui/Codeanzeige.svelte';
   import Spalteneinstellung from '../ui/Spalteneinstellung.svelte';
   import Tafeleingabe from '../ui/Tafeleingabe.svelte';
@@ -41,6 +46,7 @@
   let einstellung = $state<SpaltenId | null>(null);
   let linkStand = $state('');
   let leerenGefragt = $state(false);
+  let umlauteAufloesen = $state(umlauteAufloesenGespeichert());
 
   // Ein geteilter Link bringt einen fertigen Stand mit; er hat Vorrang vor dem,
   // was zuletzt auf diesem Gerät offen war.
@@ -181,6 +187,26 @@
   function setzeWert(zeileId: string, spalteId: SpaltenId, wert: string) {
     const zeile = blatt.zeilen.find((z) => z.id === zeileId);
     if (zeile) zeile.werte[spalteId] = wert;
+  }
+
+  /** Nur Klartext wird umgeschrieben – in einer Codetafel ist ein Ä ein Zeichen des Codes. */
+  function schreibtUm(spalte: Spalte): boolean {
+    return umlauteAufloesen && spalte.art === 'eingabe' && !spalte.tafel;
+  }
+
+  /** `fertig` beim Verlassen des Felds: Dann wird auch ein noch offenes großes Ü aufgelöst. */
+  function getippt(
+    feld: HTMLInputElement | HTMLTextAreaElement,
+    zeileId: string,
+    spalte: Spalte,
+    fertig = false
+  ) {
+    setzeWert(zeileId, spalte.id, schreibtUm(spalte) ? feldUmschreiben(feld, fertig) : feld.value);
+  }
+
+  function umlauteUmschalten() {
+    umlauteAufloesen = !umlauteAufloesen;
+    speichereUmlauteAufloesen(umlauteAufloesen);
   }
 
   async function linkTeilen() {
@@ -336,7 +362,8 @@
                   spellcheck="false"
                   autocomplete="off"
                   autocapitalize="off"
-                  oninput={(e) => setzeWert(reihe.zeile.id, spalte.id, e.currentTarget.value)}
+                  oninput={(e) => getippt(e.currentTarget, reihe.zeile.id, spalte)}
+                  onblur={(e) => getippt(e.currentTarget, reihe.zeile.id, spalte, true)}
                   onfocus={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
                   onclick={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
                 />
@@ -452,8 +479,22 @@
         value={zelle.reihe.zeile.werte[zelle.spalte.id] ?? ''}
         spellcheck="false"
         autocapitalize="off"
-        oninput={(e) => setzeWert(zelle.reihe.zeile.id, zelle.spalte.id, e.currentTarget.value)}
+        oninput={(e) => getippt(e.currentTarget, zelle.reihe.zeile.id, zelle.spalte)}
+        onblur={(e) => getippt(e.currentTarget, zelle.reihe.zeile.id, zelle.spalte, true)}
       ></textarea>
+      {#if !zelle.spalte.tafel}
+        <!-- Beim Tippen zu sehen und mit einem Tipp umzustellen; gilt für alle Klartextspalten. -->
+        <button
+          type="button"
+          class="umlaute"
+          aria-pressed={umlauteAufloesen}
+          title="Umlaute und ß schon beim Tippen umschreiben, wie es die Nachtschicht verlangt"
+          onclick={umlauteUmschalten}
+        >
+          <span class="schalter" aria-hidden="true"></span>
+          ä → ae, ß → ss
+        </button>
+      {/if}
       {#if tafelVon(zelle.spalte)}
         <div class="vorschau">
           <Codeanzeige
@@ -840,6 +881,56 @@
     border: 1px solid var(--akzent);
     border-radius: var(--radius);
     padding: 10px 12px;
+  }
+
+  /* Klein und leise: ein Schiebeschalter mit Beschriftung, kein großer Knopf. */
+  .umlaute {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    margin: 4px 0 8px;
+    padding: 0 8px 0 4px;
+    border: none;
+    background: none;
+    color: var(--text-leise);
+    font-size: 0.78rem;
+  }
+
+  .umlaute[aria-pressed='true'] {
+    color: var(--text);
+  }
+
+  .schalter {
+    position: relative;
+    width: 30px;
+    height: 18px;
+    border-radius: 9px;
+    border: 1px solid var(--rand);
+    background: var(--flaeche);
+    transition: background 0.15s;
+  }
+
+  .schalter::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--text-leise);
+    transition: transform 0.15s;
+  }
+
+  .umlaute[aria-pressed='true'] .schalter {
+    background: var(--akzent);
+    border-color: var(--akzent);
+  }
+
+  .umlaute[aria-pressed='true'] .schalter::after {
+    transform: translateX(12px);
+    background: var(--grund);
   }
 
   .ergebnis {
