@@ -591,9 +591,22 @@ davon.
 ### 7.5 Zustand und Teilen
 
 - Laufender Zustand in `localStorage`, überlebt Neuladen und Akku-Sparmodus.
-- Teilen: Werkbank-Zustand als JSON → komprimieren → **URL-Fragment** (`#w=…`). Das
-  Fragment wird nie an einen Server geschickt; die App funktioniert dadurch ohne Backend
-  und trotzdem kollaborativ genug fürs Team.
+- **Mehrere Werkbänke** je Gerät, jede mit Namen und Änderungszeit. Der Name der offenen
+  Werkbank ist zugleich der Knopf zur Verwaltung: wechseln, neu anlegen, kopieren,
+  umbenennen, löschen (mit Rückfrage), verschicken. Die zuletzt bearbeitete steht oben.
+  Gelöscht wird nie die letzte – dann entsteht eine leere.
+- **Automatisch speichern ist ab Werk an**: Jede Änderung landet sofort in ihrer Werkbank.
+  Ausgeschaltet arbeitet man an einem **Entwurf**, der an der Werkbank hängt und Neuladen
+  wie Wechseln übersteht; „Speichern“ macht ihn zum gespeicherten Stand, „Verwerfen“ kehrt
+  zu diesem zurück. So lässt sich herumprobieren, ohne den bewährten Stand zu verlieren.
+  Die Tabelle arbeitet deshalb immer an einer Kopie, nie am gespeicherten Objekt selbst.
+- Das eine Blatt aus der Zeit vor der Verwaltung wird beim ersten Öffnen „Werkbank 1“.
+- Teilen: Werkbank-Zustand samt Namen als JSON → komprimieren → **URL-Fragment**
+  (`#w=…`). Das Fragment wird nie an einen Server geschickt; die App funktioniert dadurch
+  ohne Backend und trotzdem kollaborativ genug fürs Team. „Link“ öffnet am Handy die
+  Teilen-Auswahl (Messenger, Mail), sonst landet er in der Zwischenablage. Ein geöffneter
+  Link wird eine **neue Werkbank** – er überschreibt nie, woran man gerade sitzt, auch nicht,
+  wenn die App schon offen ist.
 
 ### 7.6 Offline / PWA
 

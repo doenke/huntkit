@@ -17,7 +17,7 @@ const BLATT: Blatt = {
 describe('Teilen per Link', () => {
   it('geht hin und zurück', async () => {
     const fragment = await alsFragment(BLATT);
-    expect(await ausFragment(fragment)).toEqual(BLATT);
+    expect(await ausFragment(fragment)).toEqual({ blatt: BLATT });
   });
 
   it('benutzt nur Zeichen, die in einer Adresse erlaubt sind', async () => {
@@ -32,10 +32,15 @@ describe('Teilen per Link', () => {
       eingabe: '... --- ...',
       schritte: [{ id: 'a', codecId: 'morse', richtung: 'decode', optionen: {}, aktiv: true }]
     })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    const blatt = await ausFragment(alt);
-    expect(blatt).not.toBeNull();
-    const letzte = blatt!.spalten[1]!;
-    expect(rechne(blatt!).zeilen[0]?.zellen[letzte.id]?.text).toBe('SOS');
+    const geteilt = await ausFragment(alt);
+    expect(geteilt).not.toBeNull();
+    const letzte = geteilt!.blatt.spalten[1]!;
+    expect(rechne(geteilt!.blatt).zeilen[0]?.zellen[letzte.id]?.text).toBe('SOS');
+  });
+
+  it('bringt den Namen der Werkbank mit', async () => {
+    const fragment = await alsFragment(BLATT, 'Station am Hafen');
+    expect(await ausFragment(fragment)).toEqual({ blatt: BLATT, name: 'Station am Hafen' });
   });
 
   it('staucht längere Stände', async () => {
@@ -47,7 +52,7 @@ describe('Teilen per Link', () => {
     // Gestauchte Fragmente tragen das Kennzeichen z und sind viel kürzer.
     expect(fragment[0]).toBe('z');
     expect(fragment.length).toBeLessThan(400);
-    expect(await ausFragment(fragment)).toEqual(lang);
+    expect(await ausFragment(fragment)).toEqual({ blatt: lang });
   });
 
   it('gibt bei beschädigtem Fragment nichts zurück, statt abzustürzen', async () => {

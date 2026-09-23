@@ -1,28 +1,38 @@
 <script lang="ts">
-  import { tick } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import { codec as findeCodec } from '../codecs/registry';
   import type { OptionWerte } from '../codecs/types';
   import {
     anzeigetafel,
     hoechsteNummer,
-    laden,
     leeresBlatt,
     neueEingabespalte,
     neuePositionsspalte,
     neueWerkzeugspalte,
     neueZeile,
     rechne,
-    sichern,
     sortierungOhne,
     spaltenname,
     spaltenzeichen,
     zeigtBild,
+    type Blatt,
     type Sortierung,
     type Spalte,
     type SpaltenId
   } from '../lib/blatt';
   import { zeichenbar } from '../lib/codeanzeige';
-  import { alsLink, ausAdresse } from '../lib/teilen';
+  import {
+    aktiveWerkbank,
+    arbeitsstand,
+    entferne,
+    freierName,
+    ladeSammlung,
+    neueWerkbank,
+    sichereSammlung,
+    speichere,
+    uebernimm
+  } from '../lib/sammlung';
+  import { alsLink, ausAdresse, verschicke } from '../lib/teilen';
   import { breitNachText, wachsen } from '../lib/wachsen';
   import {
     feldUmschreiben,
@@ -33,6 +43,7 @@
   import Sortierwahl from '../ui/Sortierwahl.svelte';
   import Spalteneinstellung from '../ui/Spalteneinstellung.svelte';
   import Tafeleingabe from '../ui/Tafeleingabe.svelte';
+  import Werkbaenke from '../ui/Werkbaenke.svelte';
   import Zellenanalyse from '../ui/Zellenanalyse.svelte';
 
   /**
@@ -44,23 +55,51 @@
    * jede Zeile behält dabei ihre Eingabenummer.
    */
 
-  let blatt = $state(laden());
+  /** Eine eigene Kopie – nie das gespeicherte Objekt selbst, sonst wäre ein Entwurf nicht möglich. */
+  const kopie = (b: Blatt): Blatt => JSON.parse(JSON.stringify(b)) as Blatt;
+
+  let sammlung = $state(ladeSammlung());
+  /** Die Arbeitskopie der aktiven Werkbank. Alles in der Tabelle ändert nur sie. */
+  let blatt = $state(kopie(arbeitsstand(aktiveWerkbank(sammlung))));
+  let verwaltungOffen = $state(false);
   let gewaehlt = $state<{ spalte: SpaltenId; zeile: string } | null>(null);
   let einstellung = $state<SpaltenId | null>(null);
   let linkStand = $state('');
   let leerenGefragt = $state(false);
   let umlauteAufloesen = $state(umlauteAufloesenGespeichert());
 
-  // Ein geteilter Link bringt einen fertigen Stand mit; er hat Vorrang vor dem,
-  // was zuletzt auf diesem Gerät offen war.
+  const werkbank = $derived(aktiveWerkbank(sammlung));
+
+  // Ein geteilter Link wird eine eigene, neue Werkbank – er überschreibt nie,
+  // woran man gerade sitzt.
+  // Auch wenn die App schon offen ist und nur die Adresse wechselt – etwa weil
+  // ein Link im selben Tab angetippt wird.
   $effect(() => {
-    void ausAdresse().then((geteilt) => {
-      if (geteilt) blatt = geteilt;
-    });
+    const oeffnen = () =>
+      void ausAdresse().then((geteilt) => {
+        if (!geteilt) return;
+        const neu = neueWerkbank(freierName(sammlung, geteilt.name ?? 'Geteilte Werkbank'), geteilt.blatt);
+        sammlung.werkbaenke.push(neu);
+        wechseln(neu.id);
+        meldung = `„${neu.name}“ aus dem Link geöffnet`;
+      });
+    oeffnen();
+    addEventListener('hashchange', oeffnen);
+    return () => removeEventListener('hashchange', oeffnen);
   });
 
+  // Jede Änderung an der Arbeitskopie geht in die aktive Werkbank – gespeichert
+  // oder als Entwurf, je nach Einstellung.
   $effect(() => {
-    sichern(blatt);
+    const stand = JSON.stringify(blatt);
+    untrack(() => uebernimm(sammlung, JSON.parse(stand) as Blatt));
+  });
+
+  // Und die ganze Sammlung aufs Gerät, sobald sich darin etwas ändert.
+  $effect(() => {
+    // Über JSON gelesen, damit jede verschachtelte Änderung hier ankommt.
+    const stand = JSON.stringify(sammlung);
+    untrack(() => sichereSammlung(JSON.parse(stand) as typeof sammlung));
   });
 
   const berechnung = $derived(rechne(blatt));
@@ -277,15 +316,78 @@
     speichereUmlauteAufloesen(umlauteAufloesen);
   }
 
-  async function linkTeilen() {
-    const link = await alsLink(blatt);
-    try {
-      await navigator.clipboard.writeText(link);
-      linkStand = 'Link kopiert';
-    } catch {
-      linkStand = link;
-    }
-    setTimeout(() => (linkStand = ''), 4000);
+  let meldung = $state('');
+  let meldungsUhr: ReturnType<typeof setTimeout> | undefined;
+  $effect(() => {
+    if (!meldung) return;
+    clearTimeout(meldungsUhr);
+    meldungsUhr = setTimeout(() => (meldung = ''), 5000);
+  });
+
+  /** Zu einer anderen Werkbank: Ihre Arbeitskopie wird geladen, die Auswahl zurückgesetzt. */
+  function wechseln(id: string) {
+    sammlung.aktiv = id;
+    blatt = kopie(arbeitsstand(aktiveWerkbank(sammlung)));
+    gewaehlt = null;
+    einstellung = null;
+    leerenGefragt = false;
+  }
+
+  function neueAnlegen() {
+    const neu = neueWerkbank(freierName(sammlung));
+    sammlung.werkbaenke.push(neu);
+    wechseln(neu.id);
+    verwaltungOffen = false;
+  }
+
+  function kopieAnlegen(id: string) {
+    const vorlage = sammlung.werkbaenke.find((w) => w.id === id);
+    if (!vorlage) return;
+    const stand = id === sammlung.aktiv ? blatt : arbeitsstand(vorlage);
+    const neu = neueWerkbank(freierName(sammlung, `${vorlage.name} (Kopie)`), kopie(stand));
+    sammlung.werkbaenke.push(neu);
+    wechseln(neu.id);
+  }
+
+  function loeschen(id: string) {
+    const warAktiv = id === sammlung.aktiv;
+    entferne(sammlung, id);
+    if (warAktiv) wechseln(sammlung.aktiv);
+  }
+
+  function umbenennen(id: string, name: string) {
+    const ziel = sammlung.werkbaenke.find((w) => w.id === id);
+    if (ziel) ziel.name = name;
+  }
+
+  function automatikUmschalten() {
+    sammlung.automatisch = !sammlung.automatisch;
+    // Wieder eingeschaltet: Was offen ist, wird jetzt gespeichert.
+    if (sammlung.automatisch) uebernimm(sammlung, kopie(blatt));
+  }
+
+  function speichern() {
+    speichere(werkbank);
+  }
+
+  /** Zurück zum gespeicherten Stand. */
+  function verwerfen() {
+    delete werkbank.entwurf;
+    blatt = kopie(werkbank.blatt);
+    gewaehlt = null;
+    einstellung = null;
+  }
+
+  async function verschicken(id: string) {
+    const ziel = sammlung.werkbaenke.find((w) => w.id === id);
+    if (!ziel) return;
+    // Verschickt wird, was man vor sich sieht – bei der offenen die Arbeitskopie.
+    const stand = id === sammlung.aktiv ? blatt : arbeitsstand(ziel);
+    const link = await alsLink(stand, ziel.name);
+    const ergebnis = await verschicke(link, `Werkbank „${ziel.name}“`);
+    if (ergebnis === 'kopiert') meldung = `Link zu „${ziel.name}“ kopiert`;
+    else if (ergebnis === 'geteilt') meldung = '';
+    else if (ergebnis === 'nichts') linkStand = link;
   }
 
   function leeren() {
@@ -305,7 +407,16 @@
 </script>
 
 <div class="kopf">
-  <h2>Werkbank</h2>
+  <button
+    type="button"
+    class="titel"
+    aria-expanded={verwaltungOffen}
+    onclick={() => (verwaltungOffen = !verwaltungOffen)}
+    title="Werkbänke verwalten und wechseln"
+  >
+    <h2>{werkbank.name}</h2>
+    <span class="pfeil" aria-hidden="true">{verwaltungOffen ? '▴' : '▾'}</span>
+  </button>
   <div class="leiste">
     <button type="button" onclick={zeileHinzufuegen}>+ Zeile</button>
     <select
@@ -324,6 +435,33 @@
     </select>
   </div>
 </div>
+
+{#if werkbank.entwurf}
+  <div class="entwurf">
+    <span>Ungespeicherte Änderungen</span>
+    <button type="button" class="speichern" onclick={speichern}>Speichern</button>
+    <button type="button" onclick={verwerfen}>Verwerfen</button>
+  </div>
+{:else if !sammlung.automatisch}
+  <p class="stand">gespeichert</p>
+{/if}
+
+{#if meldung}
+  <p class="meldung">{meldung}</p>
+{/if}
+
+{#if verwaltungOffen}
+  <Werkbaenke
+    {sammlung}
+    wechseln={(id) => { wechseln(id); verwaltungOffen = false; }}
+    neu={neueAnlegen}
+    kopieren={kopieAnlegen}
+    entfernen={loeschen}
+    {umbenennen}
+    verschicken={(id) => void verschicken(id)}
+    {automatikUmschalten}
+  />
+{/if}
 
 <div class="tabelle">
   <table>
@@ -571,7 +709,7 @@
 {/if}
 
 <div class="fuss">
-  <button type="button" onclick={linkTeilen}>Link teilen</button>
+  <button type="button" onclick={() => void verschicken(werkbank.id)}>Link verschicken</button>
   {#if leerenGefragt}
     <button type="button" class="ernst" onclick={leeren}>wirklich alles löschen</button>
     <button type="button" onclick={() => (leerenGefragt = false)}>abbrechen</button>
@@ -596,6 +734,64 @@
 
   h2 {
     margin: 0;
+    font-size: inherit;
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+
+  /* Der Name der Werkbank ist zugleich der Knopf zur Verwaltung. */
+  .titel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    min-height: 44px;
+    min-width: 0;
+  }
+
+  .pfeil {
+    font-size: 0.9rem;
+    color: var(--text-leise);
+  }
+
+  .entwurf {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+    color: var(--warn);
+    font-size: 0.85rem;
+  }
+
+  .entwurf span {
+    flex: 1 1 auto;
+  }
+
+  .entwurf button {
+    min-height: 36px;
+    font-size: 0.8rem;
+  }
+
+  .entwurf .speichern {
+    border-color: var(--akzent);
+    color: var(--akzent);
+  }
+
+  .stand,
+  .meldung {
+    margin: 0 0 8px;
+    font-size: 0.8rem;
+    color: var(--text-leise);
+  }
+
+  .meldung {
+    color: var(--akzent);
   }
 
   .leiste {

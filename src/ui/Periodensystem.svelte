@@ -6,7 +6,7 @@
     type Ausgabe, type Element, type Layout, type Reihenfolge
   } from '../lib/periodensystem';
   import { EBENENFARBEN, serienfarbe } from '../lib/serienfarben';
-  import { anWerkbank } from '../lib/blatt';
+  import { anWerkbank } from '../lib/sammlung';
   import { satzZerlegen } from '../lib/elementspeller';
 
   interface Ebene {

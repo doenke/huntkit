@@ -2,7 +2,7 @@
   import { wachsen } from '../lib/wachsen';
   import type { Codec } from '../codecs/types';
   import { standardOptionen } from '../codecs/types';
-  import { anWerkbank } from '../lib/blatt';
+  import { anWerkbank } from '../lib/sammlung';
   import { zeichenbar } from '../lib/codeanzeige';
   import Codeanzeige from './Codeanzeige.svelte';
   import Optionen from './Optionen.svelte';

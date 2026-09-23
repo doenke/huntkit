@@ -445,9 +445,6 @@ export function sortierbareSpalten(blatt: Blatt): Spalte[] {
   return blatt.spalten;
 }
 
-const SPEICHER = 'huntkit:blatt';
-const ALTER_SPEICHER = 'huntkit:werkbank';
-
 /**
  * Der frühere Stand war ein einzelner Text mit einer Schrittkette. Das ist
  * genau ein Blatt mit einer Zeile, also wird es eines – niemand soll seinen
@@ -510,56 +507,6 @@ export function inHeutigerForm(gelesen: Blatt): Blatt {
   return sortierung
     ? { spalten, zeilen: gelesen.zeilen, sortierung }
     : { spalten, zeilen: gelesen.zeilen };
-}
-
-export function laden(): Blatt {
-  try {
-    const roh = localStorage.getItem(SPEICHER);
-    if (roh) {
-      const gelesen = JSON.parse(roh) as unknown;
-      if (istBlatt(gelesen)) {
-        return inHeutigerForm(gelesen);
-      }
-    }
-    const alt = localStorage.getItem(ALTER_SPEICHER);
-    if (alt) {
-      const gelesen = JSON.parse(alt) as { eingabe?: string; schritte?: [] };
-      if (typeof gelesen.eingabe === 'string') {
-        return ausAlterKette({ eingabe: gelesen.eingabe, schritte: gelesen.schritte ?? [] });
-      }
-    }
-  } catch {
-    // Gesperrter Speicher oder kaputter Eintrag – dann eben leer anfangen.
-  }
-  return leeresBlatt();
-}
-
-export function sichern(blatt: Blatt): void {
-  try {
-    localStorage.setItem(SPEICHER, JSON.stringify(blatt));
-  } catch {
-    // Nicht speichern zu können ist kein Grund, die Arbeit abzubrechen.
-  }
-}
-
-/**
- * Text aus einem anderen Bereich übernehmen: Er wird eine neue Zeile in der
- * ersten Eingabespalte. Die Werkbank liest ihren Stand beim Öffnen, deshalb
- * genügt es, ihn abzulegen und dorthin zu wechseln.
- */
-export function anWerkbank(text: string): void {
-  const blatt = laden();
-  const erste = blatt.spalten.find((s): s is Eingabespalte => s.art === 'eingabe');
-  const spalte = erste ?? neueEingabespalte();
-  if (!erste) blatt.spalten.unshift(spalte);
-
-  const leereZeile = blatt.zeilen.find((z) => Object.values(z.werte).every((w) => !w?.trim()));
-  const ziel = leereZeile ?? neueZeile(hoechsteNummer(blatt) + 1);
-  ziel.werte[spalte.id] = text;
-  if (!leereZeile) blatt.zeilen.push(ziel);
-
-  sichern(blatt);
-  location.hash = '#/werkbank';
 }
 
 export function hoechsteNummer(blatt: Blatt): number {
