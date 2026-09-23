@@ -67,6 +67,56 @@
   let linkStand = $state('');
   let umlauteAufloesen = $state(umlauteAufloesenGespeichert());
 
+  /*
+   * Drei Boxen gibt es: die Verwaltung der Werkbänke, die Einstellung einer
+   * Spalte und die Box zur gewählten Zelle. Offen ist immer höchstens eine –
+   * wer eine öffnet, schließt die andere. Ein Klick außerhalb schließt sie
+   * ganz; was als Teil einer Box oder als ihr Öffner zählt, trägt `data-box`.
+   */
+  function zeigeZelle(ziel: { spalte: SpaltenId; zeile: string }) {
+    gewaehlt = ziel;
+    einstellung = null;
+    verwaltungOffen = false;
+  }
+
+  function zeigeEinstellung(id: SpaltenId | null) {
+    einstellung = id;
+    if (id === null) return;
+    gewaehlt = null;
+    verwaltungOffen = false;
+  }
+
+  function verwaltungUmschalten() {
+    verwaltungOffen = !verwaltungOffen;
+    if (!verwaltungOffen) return;
+    gewaehlt = null;
+    einstellung = null;
+  }
+
+  function alleSchliessen() {
+    gewaehlt = null;
+    einstellung = null;
+    verwaltungOffen = false;
+  }
+
+  $effect(() => {
+    // Nach den Klicks der Elemente selbst: Die haben ihre Box schon geöffnet
+    // oder gewechselt, hier geht es nur noch um Klicks ins Leere.
+    const klick = (e: MouseEvent) => {
+      if (e.target instanceof Element && e.target.closest('[data-box]')) return;
+      alleSchliessen();
+    };
+    const taste = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') alleSchliessen();
+    };
+    document.addEventListener('click', klick);
+    document.addEventListener('keydown', taste);
+    return () => {
+      document.removeEventListener('click', klick);
+      document.removeEventListener('keydown', taste);
+    };
+  });
+
   const werkbank = $derived(aktiveWerkbank(sammlung));
 
   // Ein geteilter Link wird eine eigene, neue Werkbank – er überschreibt nie,
@@ -171,7 +221,7 @@
             ? neueWerkzeugspalte(letzte.id, 'morse')
             : neueEingabespalte();
     blatt.spalten.push(neu);
-    einstellung = neu.id;
+    zeigeEinstellung(neu.id);
   }
 
   /**
@@ -266,7 +316,7 @@
       blatt.zeilen.push(neu);
       ziel = neu.id;
     }
-    gewaehlt = { spalte: spalte.id, zeile: ziel };
+    zeigeZelle({ spalte: spalte.id, zeile: ziel });
     // Aus der Tabelle heraus geht der Fokus in die Zelle darunter; im Feld
     // unter der Tabelle bleibt er, das zeigt jetzt einfach die neue Zeile.
     if (feld instanceof HTMLTextAreaElement) return;
@@ -409,7 +459,8 @@
     type="button"
     class="titel"
     aria-expanded={verwaltungOffen}
-    onclick={() => (verwaltungOffen = !verwaltungOffen)}
+    data-box
+    onclick={verwaltungUmschalten}
     title="Werkbänke verwalten und wechseln"
   >
     <h2>{werkbank.name}</h2>
@@ -453,6 +504,7 @@
 {/if}
 
 {#if verwaltungOffen}
+  <div data-box>
   <Werkbaenke
     {sammlung}
     wechseln={(id) => { wechseln(id); verwaltungOffen = false; }}
@@ -464,6 +516,7 @@
     {automatikUmschalten}
     {leeren}
   />
+  </div>
 {/if}
 
 <div class="tabelle">
@@ -473,8 +526,8 @@
         <th class="ecke" title="Nummer der Eingabe">#</th>
         {#each blatt.spalten as spalte, i (spalte.id)}
           <th>
-            <div class="kopfzelle">
-              <button type="button" class="spaltenkopf" onclick={() => (einstellung = einstellung === spalte.id ? null : spalte.id)}>
+            <div class="kopfzelle" data-box>
+              <button type="button" class="spaltenkopf" onclick={() => zeigeEinstellung(einstellung === spalte.id ? null : spalte.id)}>
                 <span class="buchstabe">{spaltenzeichen(i)}</span>
                 <span class="name">
                   {kopfname(spalte)}
@@ -522,6 +575,7 @@
           {#each blatt.spalten as spalte (spalte.id)}
             {@const inhalt = reihe.zellen[spalte.id]}
             <td
+              data-box
               class:aktiv={gewaehlt?.spalte === spalte.id && gewaehlt?.zeile === reihe.zeile.id}
               class:fehler={Boolean(inhalt?.fehler)}
             >
@@ -549,8 +603,8 @@
                     use:breitNachText={reihe.zeile.werte[spalte.id] ?? ''}
                     oninput={(e) => setzeWert(reihe.zeile.id, spalte.id, e.currentTarget.value)}
                     onkeydown={(e) => beiTaste(e, reihe.zeile.id, spalte)}
-                    onfocus={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
-                    onclick={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
+                    onfocus={() => zeigeZelle({ spalte: spalte.id, zeile: reihe.zeile.id })}
+                    onclick={() => zeigeZelle({ spalte: spalte.id, zeile: reihe.zeile.id })}
                   />
                 </div>
               {:else if zeigtBild(spalte) && tafelVon(spalte)}
@@ -558,7 +612,7 @@
                 <button
                   type="button"
                   class="wert bild"
-                  onclick={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
+                  onclick={() => zeigeZelle({ spalte: spalte.id, zeile: reihe.zeile.id })}
                 >
                   <Codeanzeige codecId={tafelVon(spalte) ?? ''} text={inhalt?.text ?? ''} einzeilig />
                 </button>
@@ -575,14 +629,14 @@
                   oninput={(e) => getippt(e.currentTarget, reihe.zeile.id, spalte)}
                   onblur={(e) => getippt(e.currentTarget, reihe.zeile.id, spalte, true)}
                   onkeydown={(e) => beiTaste(e, reihe.zeile.id, spalte)}
-                  onfocus={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
-                  onclick={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
+                  onfocus={() => zeigeZelle({ spalte: spalte.id, zeile: reihe.zeile.id })}
+                  onclick={() => zeigeZelle({ spalte: spalte.id, zeile: reihe.zeile.id })}
                 />
               {:else}
                 <button
                   type="button"
                   class="wert mono"
-                  onclick={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
+                  onclick={() => zeigeZelle({ spalte: spalte.id, zeile: reihe.zeile.id })}
                 >
                   {inhalt?.fehler ? '⚠' : inhalt?.text}
                 </button>
@@ -614,12 +668,14 @@
 {/if}
 
 {#if spalteEinstellung}
+  <div data-box>
   <Spalteneinstellung
     {blatt}
     spalte={spalteEinstellung}
     schliessen={() => (einstellung = null)}
     entfernen={() => spalteLoeschen(spalteEinstellung.id)}
   />
+  </div>
 {/if}
 
 <section class="sortierung">
@@ -635,7 +691,7 @@
 </section>
 
 {#if zelle}
-  <section class="zelle">
+  <section class="zelle" data-box>
     <div class="zeile">
       <strong>
         {spaltenname(blatt, zelle.spalte.id)} · Zeile {zelle.reihe.zeile.nummer}
