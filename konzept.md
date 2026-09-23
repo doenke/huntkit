@@ -793,7 +793,8 @@ der Ausgangstext nicht zurückgewinnen. Die Oberfläche blendet den Richtungssch
 aus, statt eine Umkehr vorzutäuschen.
 
 Dazu kamen die übrigen Hunt-Extras: die klassischen Chiffren (Atbash, Vigenère, Bacon,
-Polybios, Zaunmuster, Handytastatur), römische Zahlen und Base64/32, die Häufigkeitsanalyse
+Polybios, Zaunmuster, Handytastatur), römische Zahlen (Base64/32 kamen anfangs mit und sind
+wieder raus – im Rätselumfeld nie gesehen), die Häufigkeitsanalyse
 mit Koinzidenzindex, der Element-Speller mit allen Zerlegungen, Wortmuster- und
 Anagrammsuche über ein Wörterbuch im Gerät, der Koordinaten-Umrechner in der Schreibweise
 der Nachtschicht und das Teilen des Werkbank-Stands als Link.

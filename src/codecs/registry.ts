@@ -17,7 +17,7 @@ import { ipa } from './ipa';
 import { klopfcode } from './klopfcode';
 import { laendercodes } from './laendercodes';
 import { morse } from './morse';
-import { base32, base64, roemisch } from './zahlen';
+import { roemisch } from './zahlen';
 import { nato } from './nato';
 import { templer } from './templer';
 import { winker } from './winker';
@@ -55,8 +55,6 @@ export const CODECS: ReadonlyArray<Codec> = [
   handytasten,
   basen,
   roemisch,
-  base64,
-  base32,
   jedesN,
   stellen,
   ausWoertern,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { atbash, bacon, handytasten, polybios, vigenereCodec, zaun, zaunFolge } from './chiffren';
-import { alsRoemisch, ausRoemisch, base32, base64, roemisch } from './zahlen';
+import { alsRoemisch, ausRoemisch, roemisch } from './zahlen';
 
 describe('Atbash', () => {
   it('dreht das Alphabet um und ist seine eigene Umkehrung', () => {
@@ -127,19 +127,5 @@ describe('Römische Zahlen', () => {
   it('arbeitet als Codec auf mehreren Zahlen', () => {
     expect(roemisch.encode('4 9 14').text).toBe('IV IX XIV');
     expect(roemisch.decode('IV IX XIV').text).toBe('4 9 14');
-  });
-});
-
-describe('Base64 und Base32', () => {
-  it('gehen hin und zurück, auch mit Umlauten', () => {
-    for (const text of ['Nachtschicht', 'Größe 42 – über!', 'a']) {
-      expect(base64.decode(base64.encode(text).text).text, text).toBe(text);
-      expect(base32.decode(base32.encode(text).text).text, text).toBe(text);
-    }
-  });
-
-  it('treffen die bekannten Werte', () => {
-    expect(base64.encode('Man').text).toBe('TWFu');
-    expect(base32.encode('foobar').text).toBe('MZXW6YTBOI======');
   });
 });
