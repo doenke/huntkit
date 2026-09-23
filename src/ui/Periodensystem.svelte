@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Textzeile from './Textzeile.svelte';
   import {
     auslesen, AUSGABEN, ELEMENTE, finde, LAYOUTS, raster, reihenZahl,
     REIHENFOLGEN, spaltenZahl,
@@ -169,8 +170,7 @@
 </div>
 
 <div class="werkzeuge">
-  <input
-    type="search"
+  <Textzeile
     bind:value={anfrage}
     placeholder="Suche: gold, serie:edelgase, z&gt;50, primzahl, radioaktiv"
     aria-label="Elemente suchen"
@@ -237,14 +237,14 @@
 </div>
 
 <h3>In Elementsymbolen schreiben</h3>
-<input
-  class="speller"
-  type="text"
-  bind:value={spellerText}
-  placeholder="z.B. BACON"
-  spellcheck="false"
-  aria-label="Wort in Elementsymbolen schreiben"
-/>
+<div class="speller">
+  <Textzeile
+    bind:value={spellerText}
+    placeholder="z.B. BACON"
+    spellcheck="false"
+    aria-label="Wort in Elementsymbolen schreiben"
+  />
+</div>
 {#if spellerText.trim()}
   <ul class="zerlegungen">
     {#each zerlegt as eintrag (eintrag.wort)}
@@ -376,15 +376,7 @@
     fill: var(--text);
   }
 
-  .werkzeuge input {
-    width: 100%;
-    font: inherit;
-    color: var(--text);
-    background: var(--flaeche);
-    border: 1px solid var(--rand);
-    border-radius: var(--radius);
-    min-height: var(--tap);
-    padding: 0 12px;
+  .werkzeuge :global(textarea) {
     margin-bottom: 8px;
   }
 
@@ -448,14 +440,6 @@
   }
 
   .speller {
-    width: 100%;
-    font: inherit;
-    color: var(--text);
-    background: var(--flaeche);
-    border: 1px solid var(--rand);
-    border-radius: var(--radius);
-    min-height: var(--tap);
-    padding: 0 12px;
     margin-bottom: 8px;
   }
 

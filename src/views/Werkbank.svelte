@@ -22,6 +22,7 @@
   } from '../lib/blatt';
   import { zeichenbar } from '../lib/codeanzeige';
   import { alsLink, ausAdresse } from '../lib/teilen';
+  import { breitNachText, wachsen } from '../lib/wachsen';
   import {
     feldUmschreiben,
     speichereUmlauteAufloesen,
@@ -411,6 +412,7 @@
                     aria-label={`${spaltenname(blatt, spalte.id)}, Zeile ${reihe.zeile.nummer}`}
                     data-zelle={`${reihe.zeile.id}:${spalte.id}`}
                     enterkeyhint="next"
+                    use:breitNachText={reihe.zeile.werte[spalte.id] ?? ''}
                     oninput={(e) => setzeWert(reihe.zeile.id, spalte.id, e.currentTarget.value)}
                     onkeydown={(e) => beiTaste(e, reihe.zeile.id, spalte)}
                     onfocus={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
@@ -435,6 +437,7 @@
                   autocapitalize="off"
                   data-zelle={`${reihe.zeile.id}:${spalte.id}`}
                   enterkeyhint="next"
+                  use:breitNachText={reihe.zeile.werte[spalte.id] ?? ''}
                   oninput={(e) => getippt(e.currentTarget, reihe.zeile.id, spalte)}
                   onblur={(e) => getippt(e.currentTarget, reihe.zeile.id, spalte, true)}
                   onkeydown={(e) => beiTaste(e, reihe.zeile.id, spalte)}
@@ -551,6 +554,7 @@
         class="mono"
         rows="2"
         value={zelle.reihe.zeile.werte[zelle.spalte.id] ?? ''}
+        use:wachsen={zelle.reihe.zeile.werte[zelle.spalte.id] ?? ''}
         spellcheck="false"
         autocapitalize="off"
         enterkeyhint="next"
@@ -672,11 +676,14 @@
     padding: 0 8px;
   }
 
+  /* Wächst mit dem Text; zwei Zeilen sind das Mindestmaß. */
   textarea {
     width: 100%;
     padding: 6px 10px;
-    height: 3.4rem;
-    resize: vertical;
+    line-height: 1.35;
+    min-height: 3.4rem;
+    resize: none;
+    overflow: hidden;
   }
 
   .mono {
@@ -802,6 +809,12 @@
   }
 
   /* Ergebnisse dürfen mehrzeilig sein – ASCII binär steht Zeichen für Zeichen untereinander. */
+  /* Eine Zelle wird so breit wie ihr Text, statt ihn im Feld zu rollen –
+     die Tabelle rollt ohnehin seitlich. --textbreite setzt breitNachText. */
+  td input {
+    min-width: max(6.5rem, var(--textbreite, 0px));
+  }
+
   td .wert {
     color: var(--text-leise);
     white-space: pre;
@@ -827,7 +840,7 @@
     position: relative;
     display: flex;
     align-items: center;
-    min-width: max(6.5rem, max-content);
+    min-width: max(6.5rem, var(--textbreite, 0px));
     width: 100%;
     min-height: 40px;
   }

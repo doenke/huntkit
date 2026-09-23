@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Textzeile from './Textzeile.svelte';
   import {
     alsDezimalgrad, alsGradMinuten, alsGradMinutenSekunden, lese
   } from '../lib/koordinaten';
@@ -37,13 +38,14 @@
   }
 </script>
 
-<input
-  type="text"
-  bind:value={eingabe}
-  placeholder="51°30.789 N, 7°27.456 E"
-  spellcheck="false"
-  aria-label="Koordinate"
-/>
+<div class="feld">
+  <Textzeile
+    bind:value={eingabe}
+    placeholder="51°30.789 N, 7°27.456 E"
+    spellcheck="false"
+    aria-label="Koordinate"
+  />
+</div>
 
 <p class="hinweis">
   Erkannt werden alle drei Schreibweisen: Dezimalgrad, Grad mit Dezimalminuten und Grad,
@@ -71,17 +73,12 @@
 {/if}
 
 <style>
-  input {
-    width: 100%;
-    font: inherit;
-    font-family: ui-monospace, Menlo, Consolas, monospace;
-    color: var(--text);
-    background: var(--flaeche);
-    border: 1px solid var(--rand);
-    border-radius: var(--radius);
-    min-height: var(--tap);
-    padding: 0 12px;
+  .feld {
     margin-bottom: 10px;
+  }
+
+  .feld :global(textarea) {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
   }
 
   .hinweis {

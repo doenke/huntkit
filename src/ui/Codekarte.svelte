@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { wachsen } from '../lib/wachsen';
   import type { Codec } from '../codecs/types';
   import { standardOptionen } from '../codecs/types';
   import { anWerkbank } from '../lib/blatt';
@@ -94,6 +95,7 @@
     <textarea
       rows="2"
       value={klartext}
+      use:wachsen={klartext}
       placeholder="Text eintippen"
       spellcheck="false"
       autocapitalize="characters"
@@ -117,6 +119,7 @@
       class="mono"
       rows="2"
       value={kodiert}
+      use:wachsen={kodiert}
       placeholder={eintraege[0] ? `z.B. ${eintraege[0].darstellung}` : ''}
       spellcheck="false"
       autocapitalize="off"
@@ -295,9 +298,10 @@
     border: 1px solid var(--rand);
     border-radius: var(--radius);
     padding: 6px 10px;
-    resize: vertical;
-    /* Zwei Zeilen reichen; wer mehr braucht, zieht das Feld auf. */
-    height: 3.4rem;
+    /* Zwei Zeilen als Mindestmaß, darüber wächst das Feld mit dem Text –
+       gerollt wird in einem Textfeld nie. */
+    resize: none;
+    overflow: hidden;
     min-height: 3.4rem;
   }
 

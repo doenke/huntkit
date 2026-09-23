@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Textzeile from './Textzeile.svelte';
   import { CODECS, codec as findeCodec } from '../codecs/registry';
   import { standardOptionen } from '../codecs/types';
   import {
@@ -87,8 +88,7 @@
 
   <label>
     <span>Name</span>
-    <input
-      type="text"
+    <Textzeile
       value={spalte.titel ?? ''}
       placeholder={spaltenzeichen(Math.max(0, stelle))}
       oninput={(e) => (spalte.titel = e.currentTarget.value)}
@@ -202,8 +202,7 @@
                 {/each}
               </select>
             {:else}
-              <input
-                type="text"
+              <Textzeile
                 value={String(gebunden.wert)}
                 placeholder={option.platzhalter ?? ''}
                 oninput={(e) => setzeFest(option.id, e.currentTarget.value)}
@@ -263,6 +262,11 @@
     min-height: 40px;
     padding: 0 8px;
     max-width: 100%;
+  }
+
+  .tafel :global(textarea) {
+    min-height: 40px;
+    padding: 9px 8px;
   }
 
   .richtung {

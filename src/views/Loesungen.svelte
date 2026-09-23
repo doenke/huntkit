@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Textzeile from '../ui/Textzeile.svelte';
   import {
     buchstaben,
     laden,
@@ -79,8 +80,7 @@
 <div class="eingaben">
   <label>
     <span class="marke">Längen der gesuchten Wörter</span>
-    <input
-      type="text"
+    <Textzeile
       inputmode="numeric"
       bind:value={zustand.laengenText}
       placeholder="z. B. 5, 7, 7, 3, 9"
@@ -91,13 +91,12 @@
   <label>
     <span class="marke">Gefundenes Lösungswort</span>
     <span class="zeile">
-      <input
-        type="text"
+      <Textzeile
         bind:value={entwurf}
         placeholder="Wort eintippen"
         autocapitalize="characters"
         spellcheck="false"
-        onkeydown={(e) => e.key === 'Enter' && hinzufuegen()}
+        enter={hinzufuegen}
       />
       <button type="button" onclick={hinzufuegen} disabled={entwurf.trim().length === 0}>
         merken
@@ -257,15 +256,9 @@
     gap: 6px;
   }
 
-  input {
-    width: 100%;
-    font: inherit;
-    color: var(--text);
-    background: var(--flaeche);
-    border: 1px solid var(--rand);
-    border-radius: var(--radius);
-    min-height: var(--tap);
-    padding: 0 12px;
+  .zeile :global(textarea) {
+    flex: 1;
+    min-width: 0;
   }
 
   .stand {

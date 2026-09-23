@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Textzeile from './Textzeile.svelte';
   import { alsText, FARBEN, farbe, ringeFuer, wert } from '../lib/widerstand';
 
   let anzahl = $state<4 | 5 | 6>(4);
@@ -89,12 +90,12 @@
 
 <h3>Umgekehrt</h3>
 <div class="gruppe">
-  <input
-    type="text"
+  <Textzeile
     bind:value={gesucht}
     placeholder="z.B. 6,8k oder 470000"
     aria-label="Widerstandswert"
     spellcheck="false"
+    enter={ausWert}
   />
   <button type="button" onclick={ausWert}>Ringe zeigen</button>
 </div>
@@ -106,6 +107,13 @@
     gap: 6px;
     align-items: center;
     margin-bottom: 12px;
+  }
+
+  .gruppe :global(textarea) {
+    flex: 1 1 10rem;
+    width: auto;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
   .gruppe button {
@@ -161,8 +169,7 @@
     flex: 0 0 auto;
   }
 
-  select,
-  input {
+  select {
     font: inherit;
     color: var(--text);
     background: var(--flaeche);

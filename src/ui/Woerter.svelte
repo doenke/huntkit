@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Textzeile from './Textzeile.svelte';
   import { anagramme, istGeladen, suchen, woerterbuch, type Anagrammfund } from '../lib/woerter';
 
   let art = $state<'muster' | 'anagramm'>('muster');
@@ -44,13 +45,12 @@
 </div>
 
 <div class="eingabe">
-  <input
-    type="text"
+  <Textzeile
     bind:value={anfrage}
     placeholder={art === 'muster' ? '?A??LE oder GOLD*' : 'Buchstabenvorrat'}
     spellcheck="false"
     autocapitalize="off"
-    onkeydown={(e) => e.key === 'Enter' && suche()}
+    enter={suche}
   />
   <button type="button" onclick={suche} disabled={laeuft || !anfrage.trim()}>
     {laeuft ? '…' : 'suchen'}
@@ -119,20 +119,15 @@
 
   .eingabe {
     display: flex;
+    align-items: flex-start;
     gap: 6px;
     margin-bottom: 8px;
   }
 
-  input {
+  .eingabe :global(textarea) {
     flex: 1;
-    font: inherit;
+    min-width: 0;
     font-family: ui-monospace, Menlo, Consolas, monospace;
-    color: var(--text);
-    background: var(--flaeche);
-    border: 1px solid var(--rand);
-    border-radius: var(--radius);
-    min-height: var(--tap);
-    padding: 0 12px;
   }
 
   .eingabe button {

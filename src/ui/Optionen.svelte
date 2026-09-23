@@ -1,11 +1,12 @@
 <script lang="ts">
+  import Textzeile from './Textzeile.svelte';
   import type { Codec } from '../codecs/types';
 
   let { codec, werte }: { codec: Codec; werte: Record<string, string | number> } = $props();
 </script>
 
 {#each codec.optionen ?? [] as option (option.id)}
-  <label class="option">
+  <label class="option" class:text={option.art === 'text'}>
     <span>{option.titel}</span>
     {#if option.art === 'zahl'}
       <input
@@ -16,10 +17,8 @@
         oninput={(e) => (werte[option.id] = Number(e.currentTarget.value))}
       />
     {:else if option.art === 'text'}
-      <input
-        type="text"
-        class="breit"
-        value={werte[option.id] ?? option.standard}
+      <Textzeile
+        value={String(werte[option.id] ?? option.standard)}
         placeholder={option.platzhalter ?? ''}
         spellcheck="false"
         oninput={(e) => (werte[option.id] = e.currentTarget.value)}
@@ -60,5 +59,19 @@
 
   input { width: 5.5rem; }
 
-  input.breit { width: 9rem; }
+  /* Textoptionen (Schlüsselwort, Stellenliste) nehmen sich den Platz der Zeile
+     und wachsen bei langem Inhalt nach unten. */
+  .option.text {
+    flex: 1 1 14rem;
+  }
+
+  .option :global(textarea) {
+    flex: 1;
+    min-width: 9rem;
+    font-size: 0.95rem;
+    background: var(--grund);
+    border-radius: 8px;
+    min-height: 40px;
+    padding: 9px 8px;
+  }
 </style>

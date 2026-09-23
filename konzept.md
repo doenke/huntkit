@@ -112,6 +112,13 @@ Zeichnung da – ohne dass man die Spalte umschalten müsste. Das Feld füllt di
 aus, auch wenn die Zeichnung schmaler ist: Ein toter Streifen rechts daneben, in dem ein
 Tipp ins Leere geht, wäre von außen nicht zu unterscheiden von „öffnet im Bildmodus nicht“.
 
+**Kein Text rollt in einem Feld.** Mehrzeilige Felder wachsen nach unten, sobald der Text
+mehr Platz braucht – auch wenn er von außen kommt, etwa ein binäres ASCII-Ergebnis mit
+einer Zeile je Zeichen. Einzeilige Eingaben außerhalb der Tabelle (Optionen, Lösungen,
+Wortsuche, Koordinaten …) brechen ebenso nach unten um, nehmen aber keinen Zeilenumbruch
+an; Enter löst dort aus, was es vorher auch tat. Nur die Zellen der Werkbank bleiben
+einzeilig und werden stattdessen so breit wie ihr Text – die Tabelle rollt ohnehin seitlich.
+
 **Enter** springt in derselben Spalte eine Zeile tiefer und legt sie an, wenn es keine mehr
 gibt; Umschalt+Enter geht eine hoch. So tippt man eine Liste herunter, ohne abzusetzen.
 „Tiefer“ heißt dabei: in der Reihenfolge, die gerade zu sehen ist, nicht nach Eingabenummer
