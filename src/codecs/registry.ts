@@ -1,5 +1,6 @@
 import { abc123 } from './abc123';
 import { griechisch, kyrillisch } from './alphabete';
+import { aminosaeuren } from './aminosaeuren';
 import { ascii } from './ascii';
 import { basen } from './basen';
 import { braille } from './braille';
@@ -39,6 +40,7 @@ export const CODECS: ReadonlyArray<Codec> = [
   ipa,
   griechisch,
   kyrillisch,
+  aminosaeuren,
   caesar,
   atbash,
   vigenereCodec,
