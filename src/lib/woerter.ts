@@ -7,8 +7,12 @@
  * sortiert, damit gebräuchliche Wörter oben stehen und Bruchstücke unten.
  */
 
-let liste: string[] | null = null;
-let laden: Promise<string[]> | null = null;
+/** Deutsch für die Nachtschicht, Englisch für den Mystery Hunt. */
+export type Sprache = 'de' | 'en';
+
+const DATEI: Record<Sprache, string> = { de: 'woerter.txt', en: 'woerter-en.txt' };
+const listen: Partial<Record<Sprache, string[]>> = {};
+const laden: Partial<Record<Sprache, Promise<string[]>>> = {};
 
 /** Umlaute auflösen und großschreiben – so schreibt die Nachtschicht Lösungen. */
 export function vereinfacht(wort: string): string {
@@ -18,25 +22,31 @@ export function vereinfacht(wort: string): string {
     .replace(/[^A-Z]/g, '');
 }
 
-export function istGeladen(): boolean {
-  return liste !== null;
+export function istGeladen(sprache: Sprache = 'de'): boolean {
+  return listen[sprache] !== undefined;
 }
 
-export async function woerterbuch(): Promise<string[]> {
-  if (liste) return liste;
-  if (!laden) {
+export async function woerterbuch(sprache: Sprache = 'de'): Promise<string[]> {
+  const fertig = listen[sprache];
+  if (fertig) return fertig;
+  let laufend = laden[sprache];
+  if (!laufend) {
     // Relativer Pfad, damit die App auch im Unterverzeichnis läuft.
-    laden = fetch(new URL('woerter.txt', location.href))
+    laufend = fetch(new URL(DATEI[sprache], location.href))
       .then((antwort) => {
         if (!antwort.ok) throw new Error('nicht gefunden');
         return antwort.text();
       })
       .then((text) => {
-        liste = text.split('\n').filter((w) => w.length > 0);
+        const liste = text.split('\n').filter((w) => w.length > 0);
+        listen[sprache] = liste;
         return liste;
       });
+    // Ein Fehlschlag soll beim nächsten Versuch neu laden dürfen.
+    laufend.catch(() => delete laden[sprache]);
+    laden[sprache] = laufend;
   }
-  return laden;
+  return laufend;
 }
 
 /**
@@ -128,13 +138,14 @@ export function anagrammeIn(
   return { treffer, gesamt };
 }
 
-export async function suchen(muster: string, hoechstens = 200): Promise<Suchergebnis> {
-  return suchenIn(await woerterbuch(), muster, hoechstens);
+export async function suchen(muster: string, sprache: Sprache = 'de', hoechstens = 200): Promise<Suchergebnis> {
+  return suchenIn(await woerterbuch(sprache), muster, hoechstens);
 }
 
 export async function anagramme(
   buchstaben: string,
+  sprache: Sprache = 'de',
   hoechstens = 120
 ): Promise<{ treffer: Anagrammfund[]; gesamt: number }> {
-  return anagrammeIn(await woerterbuch(), buchstaben, hoechstens);
+  return anagrammeIn(await woerterbuch(sprache), buchstaben, hoechstens);
 }

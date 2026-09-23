@@ -28,14 +28,18 @@ export function offlineCache(): Plugin {
       const wurzel = konfiguration?.root ?? process.cwd();
       const verzeichnis = isAbsolute(ausgabe) ? ausgabe : resolve(wurzel, ausgabe);
       const dateien = sammleDateien(verzeichnis, verzeichnis).sort();
+      // Jede Datei traegt ihren Inhalts-Hash in der Adresse. Daran erkennt ein
+      // neuer Worker, was er aus dem alten Cache uebernehmen kann, statt es neu
+      // zu laden – die Wortlisten allein sind mehrere Megabyte.
+      const mitHash = dateien.map((d) => {
+        const hash = createHash('sha256').update(readFileSync(join(verzeichnis, d))).digest('hex').slice(0, 12);
+        return `${d}?v=${hash}`;
+      });
       // Die Version wechselt genau dann, wenn sich Inhalte aendern – damit
       // ersetzt der Service Worker seinen Cache nicht bei jedem Deployment neu.
-      const version = createHash('sha256')
-        .update(dateien.map((d) => d + readFileSync(join(verzeichnis, d))).join('\n'))
-        .digest('hex')
-        .slice(0, 12);
+      const version = createHash('sha256').update(mitHash.join('\n')).digest('hex').slice(0, 12);
 
-      writeFileSync(join(verzeichnis, 'sw.js'), serviceWorker(version, dateien), 'utf8');
+      writeFileSync(join(verzeichnis, 'sw.js'), serviceWorker(version, mitHash), 'utf8');
       this.info(`Service Worker: ${dateien.length} Dateien, Version ${version}`);
     }
   };
@@ -63,8 +67,24 @@ const DATEIEN = ${JSON.stringify(['./', ...dateien], null, 1)};
 // wartet. Sonst wuerde mitten im Raetsel der Unterbau unter der laufenden
 // Seite ausgetauscht. Uebernommen wird er erst auf Zuruf - oder von selbst,
 // sobald die letzte Seite zu ist.
+//
+// Was sich seit der letzten Version nicht geaendert hat, liegt schon im alten
+// Cache – unter derselben Adresse samt Inhalts-Hash. Das wird uebernommen,
+// statt es noch einmal herunterzuladen; nur Neues kommt aus dem Netz.
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(DATEIEN)));
+  e.waitUntil(
+    caches.open(CACHE).then((neu) =>
+      Promise.all(
+        DATEIEN.map(async (adresse) => {
+          const alt = adresse.includes('?v=') ? await caches.match(adresse) : undefined;
+          if (alt) return neu.put(adresse, alt);
+          const antwort = await fetch(adresse, { cache: 'no-cache' });
+          if (!antwort.ok) throw new Error(adresse + ': ' + antwort.status);
+          return neu.put(adresse, antwort);
+        })
+      )
+    )
+  );
 });
 
 self.addEventListener('message', (e) => {

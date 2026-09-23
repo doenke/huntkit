@@ -76,7 +76,9 @@ Fingeralphabet: Dessen Tafel stammt vom Landesverband Bayern der Gehörlosen
 e. V. und steht unter CC BY-SA 4.0 – siehe
 [`public/finger/LIZENZ.md`](public/finger/LIZENZ.md). Das Wörterbuch stammt aus
 [an-array-of-german-words](https://github.com/hexapode/an-array-of-german-words)
-(MIT) – siehe [`data/WOERTERBUCH.md`](data/WOERTERBUCH.md).
+(MIT), das englische aus [SCOWL](http://wordlist.aspell.net/) und
+[an-array-of-english-words](https://github.com/words/an-array-of-english-words) (MIT)
+– siehe [`data/WOERTERBUCH.md`](data/WOERTERBUCH.md).
 
 ## Entwickeln
 

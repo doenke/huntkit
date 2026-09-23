@@ -1,14 +1,37 @@
 <script lang="ts">
   import Textzeile from './Textzeile.svelte';
-  import { anagramme, istGeladen, suchen, woerterbuch, type Anagrammfund } from '../lib/woerter';
+  import {
+    anagramme,
+    istGeladen,
+    suchen,
+    woerterbuch,
+    type Anagrammfund,
+    type Sprache
+  } from '../lib/woerter';
 
+  /** Was man vor dem ersten Laden wissen sollte – die Listen sind nicht klein. */
+  const LISTEN: Record<Sprache, { titel: string; umfang: string; quelle: string }> = {
+    de: {
+      titel: 'Deutsch',
+      umfang: '117 000 Wörter, 1,3 MB',
+      quelle: 'an-array-of-german-words (MIT). Sie enthält auch Bruchstücke – die stehen weiter hinten.'
+    },
+    en: {
+      titel: 'English',
+      umfang: '277 000 Wörter, 2,8 MB',
+      quelle:
+        'SCOWL über wordlist-english (MIT), nach Gebräuchlichkeit geordnet; dahinter seltene Wörter aus an-array-of-english-words (MIT).'
+    }
+  };
+
+  let sprache = $state<Sprache>('de');
   let art = $state<'muster' | 'anagramm'>('muster');
   let anfrage = $state('');
   let treffer = $state<string[]>([]);
   let anagrammtreffer = $state<Anagrammfund[]>([]);
   let gesamt = $state(0);
   let laeuft = $state(false);
-  let geladen = $state(istGeladen());
+  let geladen = $state(istGeladen('de'));
   let fehler = $state('');
 
   async function suche() {
@@ -16,14 +39,14 @@
     laeuft = true;
     fehler = '';
     try {
-      await woerterbuch();
+      await woerterbuch(sprache);
       geladen = true;
       if (art === 'muster') {
-        const ergebnis = await suchen(anfrage);
+        const ergebnis = await suchen(anfrage, sprache);
         treffer = ergebnis.treffer;
         gesamt = ergebnis.gesamt;
       } else {
-        const ergebnis = await anagramme(anfrage);
+        const ergebnis = await anagramme(anfrage, sprache);
         anagrammtreffer = ergebnis.treffer;
         gesamt = ergebnis.gesamt;
       }
@@ -34,6 +57,24 @@
     }
   }
 </script>
+
+<div class="reiter">
+  {#each Object.entries(LISTEN) as [kennung, liste] (kennung)}
+    <button
+      type="button"
+      aria-pressed={sprache === kennung}
+      onclick={() => {
+        sprache = kennung as Sprache;
+        geladen = istGeladen(sprache);
+        treffer = [];
+        anagrammtreffer = [];
+        gesamt = 0;
+      }}
+    >
+      {liste.titel}
+    </button>
+  {/each}
+</div>
 
 <div class="reiter">
   <button type="button" aria-pressed={art === 'muster'} onclick={() => (art = 'muster')}>
@@ -60,8 +101,8 @@
 {#if art === 'muster'}
   <p class="hinweis">
     <span class="mono">?</span> steht für einen Buchstaben,
-    <span class="mono">*</span> für beliebig viele. Umlaute werden aufgelöst, „GROESSE“ findet
-    also „Größe“.
+    <span class="mono">*</span> für beliebig viele.{#if sprache === 'de'} Umlaute werden aufgelöst,
+      „GROESSE“ findet also „Größe“.{/if}
   </p>
 {:else}
   <p class="hinweis">
@@ -72,8 +113,8 @@
 
 {#if !geladen}
   <p class="hinweis">
-    Das Wörterbuch (117 000 Wörter, gut ein halbes Megabyte) wird beim ersten Suchen
-    geladen und liegt danach im Gerät.
+    Das Wörterbuch ({LISTEN[sprache].umfang}) wird beim ersten Suchen geladen und liegt
+    danach im Gerät.
   </p>
 {/if}
 
@@ -95,10 +136,7 @@
   </ul>
 {/if}
 
-<p class="quelle">
-  Wortliste: <a href="https://github.com/hexapode/an-array-of-german-words" target="_blank" rel="noreferrer">an-array-of-german-words</a>,
-  MIT-Lizenz. Sie enthält auch Bruchstücke – die stehen weiter hinten.
-</p>
+<p class="quelle">Wortliste: {LISTEN[sprache].quelle}</p>
 
 <style>
   .reiter {
