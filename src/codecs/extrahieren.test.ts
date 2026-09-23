@@ -126,6 +126,16 @@ describe('Zeichen zählen', () => {
     expect(zaehlen.encode('', { suche: 'E', schreibung: 'egal' }).text).toBe('');
     expect(zaehlen.encode('EEE', { suche: '', schreibung: 'egal' }).text).toBe('');
   });
+
+  it('zählt auf Wunsch jedes Zeichen einer Auswahl', () => {
+    const jedes = { suche: 'LPQRVWY', art: 'jedes', schreibung: 'egal' };
+    expect(zaehlen.encode('VIRTUELL', jedes).text).toBe('4');
+    expect(zaehlen.encode('Spur', jedes).text).toBe('2');
+    expect(zaehlen.encode('KISSEN', jedes).text).toBe('0');
+    expect(zaehlen.encode('Anna', { suche: 'a', art: 'jedes', schreibung: 'genau' }).text).toBe('1');
+    // Ohne Angabe bleibt es bei der Zeichenfolge, wie in älteren Werkbänken.
+    expect(zaehlen.encode('LPQ LPQ', { suche: 'LPQ', schreibung: 'egal' }).text).toBe('2');
+  });
 });
 
 describe('Länge', () => {

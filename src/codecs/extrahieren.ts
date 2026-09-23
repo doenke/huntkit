@@ -119,10 +119,20 @@ export const ausWoertern: Codec = {
 export const zaehlen: Codec = {
   id: 'zaehlen',
   name: 'Zeichen zählen',
-  beschreibung: 'Wie oft ein Zeichen im Text vorkommt.',
+  beschreibung: 'Wie oft ein Zeichen oder eine Zeichenfolge im Text vorkommt – oder wie viele Zeichen aus einer Auswahl.',
   einseitig: true,
   optionen: [
     { id: 'suche', titel: 'Zeichen', art: 'text', standard: 'E', platzhalter: 'E oder ·' },
+    {
+      id: 'art',
+      titel: 'Zählt',
+      art: 'auswahl',
+      standard: 'folge',
+      werte: [
+        { wert: 'folge', titel: 'die Zeichenfolge' },
+        { wert: 'jedes', titel: 'jedes dieser Zeichen' }
+      ]
+    },
     {
       id: 'schreibung',
       titel: 'Schreibung',
@@ -142,6 +152,12 @@ export const zaehlen: Codec = {
     const genau = text(optionen, 'schreibung', 'egal') === 'genau';
     const heuhaufen = genau ? eingabe : eingabe.toLowerCase();
     const nadel = genau ? suche : suche.toLowerCase();
+    // „AEIOU“ als Auswahl: Jedes Zeichen, das darin vorkommt, zählt einmal –
+    // die Vokale eines Worts, oder alle Buchstaben mit einem bestimmten Merkmal.
+    if (text(optionen, 'art', 'folge') === 'jedes') {
+      const auswahl = new Set(nadel);
+      return ergebnis(String([...heuhaufen].filter((z) => auswahl.has(z)).length));
+    }
     // Über split gezählt: Das zählt auch mehrstellige Suchen („.-“, „SCH“)
     // ohne Überlappung, so wie man von Hand zählen würde.
     return ergebnis(String(heuhaufen.split(nadel).length - 1));
