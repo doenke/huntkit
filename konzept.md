@@ -751,6 +751,11 @@ Werkbänke der Gruppe. Den Einladungslink sieht und teilt jedes Mitglied. Wer ih
 tritt mit einem Anzeigenamen als Gast bei, oder, wenn angemeldet, als er selbst. Tokens
 liegen auf dem Server nur als Hash.
 
+**Bedienung.** Anmelden, Gruppen anlegen, einladen, Mitglieder und Verlassen stehen auf
+der eigenen Seite `#/gruppen` (über „Mehr → Gruppen verwalten“), zusammen mit Serverstatus und
+Verbindungstest. In der Werkbank gibt es nur „In Gruppe kopieren …“ in der Verwaltung der
+Werkbänke und die Marke der Gruppe neben dem Namen.
+
 **Protokoll.** Jede Änderung wird mit altem und neuem Wert, Person und Zeit festgehalten. Die
 App zeigt es für die ganze Werkbank (Marke neben dem Namen) und je Zelle (Verlauf in der
 Zellbox). Zellen, die gerade jemand anderes geändert hat, sind kurz markiert, mit dessen

@@ -83,7 +83,7 @@ function oidcRueckkehr(array $get): string
     $o = oidcKonfiguration();
     if (!empty($get['error'])) {
         protokolliere('oidc', 'Anbieter meldet Fehler', ['error' => $get['error'], 'error_description' => $get['error_description'] ?? null]);
-        return appAdresse() . '#/werkbank?anmeldefehler=' . rawurlencode(
+        return appAdresse() . '#/gruppen?anmeldefehler=' . rawurlencode(
             'Der Anmeldedienst meldet „' . $get['error'] . '“' . (isset($get['error_description']) ? ': ' . $get['error_description'] : '')
         );
     }
@@ -177,7 +177,7 @@ function oidcRueckkehr(array $get): string
         [hash('sha256', $code), $benutzerId, jetzt()]
     );
     protokolliere('oidc', 'Angemeldet, zurück in die App', ['benutzer' => $benutzerId, 'app' => appAdresse()]);
-    return appAdresse() . '#/werkbank?anmeldung=' . $code;
+    return appAdresse() . '#/gruppen?anmeldung=' . $code;
 }
 
 function jwtNutzlast(string $jwt): array

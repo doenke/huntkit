@@ -19,7 +19,9 @@
     automatikUmschalten,
     leeren,
     gruppenname = () => undefined,
-    darfLoeschen = () => true
+    darfLoeschen = () => true,
+    gruppen = [],
+    inGruppeKopieren = () => {}
   }: {
     sammlung: Sammlung;
     wechseln: (id: string) => void;
@@ -35,6 +37,10 @@
     gruppenname?: (gruppe: string | undefined) => string | undefined;
     /** Werkbänke einer Gruppe löschen nur deren Admins. */
     darfLoeschen?: (werkbank: Werkbank) => boolean;
+    /** Gruppen, denen man angehört – Ziele für „in Gruppe kopieren“. */
+    gruppen?: Array<{ id: string; name: string }>;
+    /** Die offene Werkbank als Kopie in eine Gruppe legen. */
+    inGruppeKopieren?: (gruppe: string) => void;
   } = $props();
 
   let leerenGefragt = $state(false);
@@ -91,6 +97,24 @@
         {:else}
           <button type="button" onclick={() => verschicken(offene.id)}>Link verschicken</button>
           <button type="button" onclick={() => (leerenGefragt = true)}>Blatt leeren</button>
+          {#if gruppen.some((g) => g.id !== offene.gruppe)}
+            <select
+              aria-label="Offene Werkbank in eine Gruppe kopieren"
+              value=""
+              onchange={(e) => {
+                const ziel = e.currentTarget.value;
+                e.currentTarget.value = '';
+                if (ziel) inGruppeKopieren(ziel);
+              }}
+            >
+              <option value="">In Gruppe kopieren …</option>
+              {#each gruppen.filter((g) => g.id !== offene.gruppe) as g (g.id)}
+                <option value={g.id}>{g.name}</option>
+              {/each}
+            </select>
+          {:else if gruppen.length === 0}
+            <a class="gruppenlink" href="#/gruppen">Gruppen …</a>
+          {/if}
         {/if}
       </div>
     </div>
@@ -255,6 +279,17 @@
   .knoepfe .weg {
     flex: 0 0 auto;
     min-width: 40px;
+  }
+
+  .offene select {
+    min-height: 36px;
+    font-size: 0.8rem;
+  }
+
+  .gruppenlink {
+    align-self: center;
+    font-size: 0.8rem;
+    color: var(--akzent);
   }
 
   .gruppe {

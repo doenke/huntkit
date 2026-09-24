@@ -44,7 +44,8 @@ return [
         'issuer' => 'https://login.example.org/realms/huntkit',
         'client_id' => 'huntkit',
         'client_secret' => 'geheim',
-        // 'scopes' => 'openid profile email',
+        // Viele Anbieter liefern die Gruppen nur mit dem Scope „groups“:
+        'scopes' => 'openid profile email groups',
         // Wo die Gruppen im Token stehen (auch als Pfad, z. B. 'realm_access.roles'):
         // 'gruppen_claim' => 'groups',
         // Wer in dieser Gruppe ist, darf Gruppen anlegen:

@@ -3,9 +3,6 @@
   import { UEBUNGEN } from '../lib/uebungen';
   import Nachtausruestung from '../ui/Nachtausruestung.svelte';
   import Uebung from '../ui/Uebung.svelte';
-  import Gruppenverwaltung from '../ui/Gruppenverwaltung.svelte';
-  import Serverstatus from '../ui/Serverstatus.svelte';
-  import Verbindungstest from '../ui/Verbindungstest.svelte';
 
   let thema = $state<Thema>(gespeichertesThema());
 
@@ -42,13 +39,10 @@
 </div>
 
 <h2>Gruppen</h2>
-<div class="mehr-gruppen">
-  <Gruppenverwaltung />
-</div>
-
-<h2>Gruppen-Server</h2>
-<Serverstatus />
-<Verbindungstest />
+<p class="leise">
+  Mit einer Gruppe arbeiten mehrere Leute gleichzeitig an denselben Werkbänken.
+</p>
+<a class="seitenlink" href="#/gruppen">Gruppen verwalten →</a>
 
 <h2>Über</h2>
 <p class="leise">
@@ -71,6 +65,14 @@
 
   h2:first-of-type {
     margin-top: 0;
+  }
+
+  .seitenlink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-bottom: 8px;
+    color: var(--akzent);
   }
 
   .themen {

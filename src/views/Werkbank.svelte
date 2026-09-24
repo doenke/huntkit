@@ -45,7 +45,6 @@
   } from '../lib/umlautschalter';
   import Avatar from '../ui/Avatar.svelte';
   import Codeanzeige from '../ui/Codeanzeige.svelte';
-  import Gruppen from '../ui/Gruppen.svelte';
   import Protokoll from '../ui/Protokoll.svelte';
   import Textzeile from '../ui/Textzeile.svelte';
   import Sortierwahl from '../ui/Sortierwahl.svelte';
@@ -273,60 +272,39 @@
     meldung = `„${neu.name}“ liegt jetzt in der Gruppe`;
   }
 
-  function neueInGruppe(gruppe: string) {
-    const neu: WerkbankEintrag = { ...neueWerkbank(freierName(sammlung)), gruppe };
-    sammlung.werkbaenke.push(neu);
-    abgleich.lokal(gruppe, neu.id, neu.blatt, neu.name);
-    wechseln(neu.id);
-    verwaltungOffen = false;
-  }
-
-  /** Eine Gruppe hier vergessen. Ihre Werkbänke bleiben – als eigene. */
-  function gruppeVergessen(gruppe: string) {
-    for (const w of sammlung.werkbaenke) if (w.gruppe === gruppe) delete w.gruppe;
-    abgleich.vergessen(gruppe);
-  }
+  /** Gruppen, in die man die offene Werkbank kopieren kann. */
+  const gruppenZumKopieren = $derived.by(() => {
+    void gruppenansicht.version;
+    return Object.values(abgleich.speicher.gruppen)
+      .map((g) => ({ id: g.id, name: g.name }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  });
 
   /*
-   * Einladungen und die Rückkehr von der Anmeldung kommen über die Adresse:
-   * #/werkbank?einladung=…, ?anmeldung=… oder ?anmeldefehler=…
+   * Einladungen kommen über die Adresse: #/werkbank?einladung=…
+   * (Die Rückkehr von der Anmeldung landet auf der Seite „Gruppen“.)
    */
   let einladung = $state<{ code: string; gruppe: { id: string; name: string }; schonMitglied: boolean } | null>(null);
   let gastname = $state('');
   let beitrittsfehler = $state('');
-  /** Bleibt stehen, bis man es wegklickt – den Grund will man in Ruhe lesen. */
-  let anmeldefehler = $state('');
 
   async function ausGruppenadresse() {
     const wert = (name: string) => {
       const treffer = location.hash.match(new RegExp(`[?&]${name}=([^&]+)`));
       return treffer ? decodeURIComponent(treffer[1] as string) : null;
     };
-    const anmeldung = wert('anmeldung');
-    const fehler = wert('anmeldefehler');
     const code = wert('einladung');
-    if (!anmeldung && !fehler && !code) return;
-    history.replaceState(null, '', location.href.replace(/[?&](anmeldung|anmeldefehler|einladung)=[^&]+/g, ''));
-    if (fehler) anmeldefehler = fehler;
-    if (anmeldung) {
-      try {
-        await abgleich.anmeldungEinloesen(anmeldung);
-        meldung = `Angemeldet als ${abgleich.speicher.konto?.ich.name ?? ''}`;
-      } catch (e) {
-        anmeldefehler = e instanceof Error ? e.message : String(e);
-      }
-    }
-    if (code) {
-      try {
-        const info = await rufe<{ gruppe: { id: string; name: string }; schonMitglied: boolean }>(
-          `einladung.php?e=${encodeURIComponent(code)}`,
-          { token: abgleich.speicher.konto?.token ?? null }
-        );
-        einladung = { code, ...info };
-        beitrittsfehler = '';
-      } catch (e) {
-        meldung = e instanceof Error ? e.message : 'Die Einladung ließ sich nicht öffnen';
-      }
+    if (!code) return;
+    history.replaceState(null, '', location.href.replace(/[?&]einladung=[^&]+/, ''));
+    try {
+      const info = await rufe<{ gruppe: { id: string; name: string }; schonMitglied: boolean }>(
+        `einladung.php?e=${encodeURIComponent(code)}`,
+        { token: abgleich.speicher.konto?.token ?? null }
+      );
+      einladung = { code, ...info };
+      beitrittsfehler = '';
+    } catch (e) {
+      meldung = e instanceof Error ? e.message : 'Die Einladung ließ sich nicht öffnen';
     }
   }
 
@@ -761,17 +739,6 @@
   <p class="meldung">{meldung}</p>
 {/if}
 
-{#if anmeldefehler}
-  <section class="einladung" role="alert">
-    <strong>Anmeldung fehlgeschlagen</strong>
-    <p class="hinweis warn">{anmeldefehler}</p>
-    <p class="hinweis">Mehr steht im Server-Log (huntkit.log im Daten-Ordner neben der App) und unter „Mehr → Serverstatus“.</p>
-    <div class="knoepfe">
-      <button type="button" onclick={() => (anmeldefehler = '')}>schließen</button>
-    </div>
-  </section>
-{/if}
-
 {#if einladung}
   <section class="einladung">
     <strong>Gruppe „{einladung.gruppe.name}“ beitreten</strong>
@@ -829,13 +796,8 @@
     verschicken={(id) => void verschicken(id)}
     {automatikUmschalten}
     {leeren}
-  />
-  <Gruppen
-    offene={werkbank}
+    gruppen={gruppenZumKopieren}
     {inGruppeKopieren}
-    {neueInGruppe}
-    {gruppeVergessen}
-    melde={(text) => (meldung = text)}
   />
   </div>
 {/if}

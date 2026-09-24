@@ -4,7 +4,7 @@
   import Gruppen from './Gruppen.svelte';
 
   /**
-   * Die Gruppen unter „Mehr“: anmelden, Gruppen anlegen, Mitglieder und
+   * Die Gruppen auf ihrer eigenen Seite: anmelden, Gruppen anlegen, Mitglieder und
    * Einladungen verwalten – ohne erst eine Werkbank aufzumachen. Den Abgleich
    * der Werkbänke übernimmt weiter die Werkbank selbst.
    */
@@ -40,14 +40,14 @@
     color: var(--akzent);
   }
 
-  /* Unter „Mehr“ steht die Überschrift schon darüber – der Trennstrich oben fällt weg. */
-  :global(.mehr-gruppen .gruppen) {
+  /* Auf der Seite „Gruppen“ steht die Überschrift schon darüber – Trennstrich und Titel fallen weg. */
+  :global(.seite-gruppen .gruppen) {
     border-top: none;
     margin-top: 0;
     padding-top: 0;
   }
 
-  :global(.mehr-gruppen .gruppen > .kopf > strong) {
+  :global(.seite-gruppen .gruppen > .kopf > strong) {
     visibility: hidden;
   }
 </style>

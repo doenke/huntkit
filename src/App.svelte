@@ -1,11 +1,12 @@
 <script lang="ts">
   import { beobachteVersion, browserUmgebung, type Versionswache } from './lib/neuversion';
-  import { aktuelleSeite, geheZu, SEITEN, type Seite } from './lib/router';
+  import { aktuelleSeite, geheZu, leistenplatz, SEITEN, type Seite } from './lib/router';
   import Werkbank from './views/Werkbank.svelte';
   import Codes from './views/Codes.svelte';
   import Nachschlagen from './views/Nachschlagen.svelte';
   import Loesungen from './views/Loesungen.svelte';
   import Mehr from './views/Mehr.svelte';
+  import Gruppenseite from './views/Gruppenseite.svelte';
 
   let seite = $state<Seite>(aktuelleSeite());
 
@@ -56,6 +57,8 @@
     <Nachschlagen />
   {:else if seite === 'loesungen'}
     <Loesungen />
+  {:else if seite === 'gruppen'}
+    <Gruppenseite />
   {:else}
     <Mehr />
   {/if}
@@ -75,7 +78,7 @@
   {#each SEITEN as eintrag (eintrag.id)}
     <button
       type="button"
-      aria-current={seite === eintrag.id ? 'page' : undefined}
+      aria-current={leistenplatz(seite) === eintrag.id ? 'page' : undefined}
       onclick={() => geheZu(eintrag.id)}
     >
       {eintrag.titel}

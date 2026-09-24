@@ -18,7 +18,7 @@ try {
         ? $fehler->getMessage()
         : 'Die Anmeldung hat nicht geklappt – Details im Server-Log (huntkit.log).';
     try {
-        header('Location: ' . appAdresse() . '#/werkbank?anmeldefehler=' . rawurlencode($text), true, 302);
+        header('Location: ' . appAdresse() . '#/gruppen?anmeldefehler=' . rawurlencode($text), true, 302);
     } catch (Throwable) {
         http_response_code(500);
         header('Content-Type: text/plain; charset=utf-8');
