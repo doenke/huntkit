@@ -18,6 +18,37 @@
     return abgleich.speicher.konto?.ich ?? null;
   });
 
+  /*
+   * Die Bereiche stecken in einem Menü oben rechts – eine feste Leiste
+   * unten kostete auf dem Handy dauerhaft Platz. Zu geht es mit einem Tipp
+   * daneben, mit Escape oder mit der Wahl eines Bereichs.
+   */
+  let menueOffen = $state(false);
+  const seitentitel = $derived(
+    SEITEN.find((s) => s.id === seite)?.titel ?? (seite === 'gruppen' ? 'Gruppen' : '')
+  );
+
+  function waehle(ziel: Seite) {
+    menueOffen = false;
+    geheZu(ziel);
+  }
+
+  $effect(() => {
+    if (!menueOffen) return;
+    const klick = (e: MouseEvent) => {
+      if (!e.composedPath().some((el) => el instanceof Element && el.hasAttribute('data-menue'))) menueOffen = false;
+    };
+    const taste = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') menueOffen = false;
+    };
+    document.addEventListener('click', klick);
+    document.addEventListener('keydown', taste);
+    return () => {
+      document.removeEventListener('click', klick);
+      document.removeEventListener('keydown', taste);
+    };
+  });
+
   $effect(() => {
     const beiWechsel = () => (seite = aktuelleSeite());
     addEventListener('hashchange', beiWechsel);
@@ -53,12 +84,42 @@
 </script>
 
 <header>
-  <h1>huntkit</h1>
-  {#if angemeldet}
-    <a class="konto" href="#/gruppen" title={`Angemeldet als ${angemeldet.name} – Gruppen`}>
-      <Avatar name={angemeldet.name} bild={angemeldet.avatar} groesse={28} />
-    </a>
-  {/if}
+  <h1>
+    huntkit
+    {#if seitentitel}<span class="seite">· {seitentitel}</span>{/if}
+  </h1>
+  <div class="rechts">
+    {#if angemeldet}
+      <a class="konto" href="#/gruppen" title={`Angemeldet als ${angemeldet.name} – Gruppen`}>
+        <Avatar name={angemeldet.name} bild={angemeldet.avatar} groesse={28} />
+      </a>
+    {/if}
+    <div class="menue" data-menue>
+      <button
+        type="button"
+        class="hamburger"
+        aria-label="Menü"
+        aria-expanded={menueOffen}
+        aria-controls="hauptmenue"
+        onclick={() => (menueOffen = !menueOffen)}
+      >
+        <span aria-hidden="true">{menueOffen ? '✕' : '☰'}</span>
+      </button>
+      {#if menueOffen}
+        <nav id="hauptmenue" aria-label="Hauptbereiche">
+          {#each SEITEN as eintrag (eintrag.id)}
+            <button
+              type="button"
+              aria-current={leistenplatz(seite) === eintrag.id ? 'page' : undefined}
+              onclick={() => waehle(eintrag.id)}
+            >
+              {eintrag.titel}
+            </button>
+          {/each}
+        </nav>
+      {/if}
+    </div>
+  </div>
 </header>
 
 <main>
@@ -87,26 +148,77 @@
   </div>
 {/if}
 
-<nav aria-label="Hauptbereiche">
-  {#each SEITEN as eintrag (eintrag.id)}
-    <button
-      type="button"
-      aria-current={leistenplatz(seite) === eintrag.id ? 'page' : undefined}
-      onclick={() => geheZu(eintrag.id)}
-    >
-      {eintrag.titel}
-    </button>
-  {/each}
-</nav>
 
 <style>
   header {
-    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    padding: 6px 8px 6px 16px;
     border-bottom: 1px solid var(--rand);
+    background: var(--grund);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+  }
+
+  .rechts {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .seite {
+    color: var(--text-leise);
+    font-weight: normal;
+    letter-spacing: normal;
+  }
+
+  .menue {
+    position: relative;
+  }
+
+  .hamburger {
+    width: var(--tap);
+    height: var(--tap);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    color: var(--text);
+  }
+
+  nav {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 12rem;
+    display: grid;
+    gap: 2px;
+    padding: 6px;
+    background: var(--flaeche);
+    border: 1px solid var(--rand);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+  }
+
+  nav button {
+    min-height: var(--tap);
+    text-align: left;
+    padding: 0 14px;
+    background: none;
+    border: none;
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 1rem;
+  }
+
+  nav button[aria-current='page'] {
+    background: var(--flaeche-hoch);
+    color: var(--akzent);
   }
 
   .konto {
@@ -124,8 +236,7 @@
   }
 
   main {
-    /* Platz fuer die feste Leiste unten lassen */
-    padding: 16px 16px calc(var(--tap) + 32px + env(safe-area-inset-bottom));
+    padding: 16px 16px calc(32px + env(safe-area-inset-bottom));
     max-width: 62rem;
     margin: 0 auto;
     width: 100%;
@@ -133,40 +244,11 @@
     min-height: 0;
   }
 
-  nav {
-    position: fixed;
-    inset: auto 0 0 0;
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
-    gap: 1px;
-    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-    background: var(--flaeche);
-    border-top: 1px solid var(--rand);
-  }
-
-  nav button {
-    background: none;
-    border: none;
-    border-radius: var(--radius);
-    color: var(--text-leise);
-    /* Fuenf Bereiche muessen auch auf ein schmales Handy passen: Die Schrift
-       schrumpft mit der Breite, bleibt auf grossen Schirmen aber normal. */
-    font-size: clamp(0.62rem, 2.6vw, 0.85rem);
-    padding: 0 2px;
-    white-space: nowrap;
-  }
-
-  nav button[aria-current='page'] {
-    background: var(--flaeche-hoch);
-    color: var(--text);
-  }
-
-  /* Sitzt über der Leiste und nimmt keinen Platz im Inhalt weg – die Arbeit
+  /* Sitzt über dem Inhalt und nimmt ihm keinen Platz weg – die Arbeit
      soll weitergehen können, auch wenn der Hinweis stehen bleibt. */
   .neuversion {
     position: fixed;
-    inset: auto 8px calc(var(--tap) + 22px + env(safe-area-inset-bottom)) 8px;
+    inset: auto 8px calc(12px + env(safe-area-inset-bottom)) 8px;
     z-index: 2;
     display: flex;
     align-items: center;
@@ -200,19 +282,6 @@
     .neuversion {
       inset: auto 16px 16px auto;
       max-width: 26rem;
-    }
-  }
-
-  @media (min-width: 40rem) {
-    nav {
-      position: sticky;
-      top: 0;
-      inset-inline: auto;
-      grid-auto-columns: max-content;
-      justify-content: center;
-      border-top: none;
-      border-bottom: 1px solid var(--rand);
-      order: -1;
     }
   }
 </style>
