@@ -12,12 +12,6 @@
   }
 </script>
 
-<h2>Gruppen</h2>
-<p class="leise">
-  Mit einer Gruppe arbeiten mehrere Leute gleichzeitig an denselben Werkbänken.
-</p>
-<a class="seitenlink" href="#/gruppen">Gruppen verwalten →</a>
-
 <h2>Übungen</h2>
 <p class="leise">
   Kleine Rätsel zum Kennenlernen der Werkzeuge. Gelöst wird mit der Werkbank –
@@ -67,13 +61,6 @@
     margin-top: 0;
   }
 
-  .seitenlink {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    margin-bottom: 8px;
-    color: var(--akzent);
-  }
 
   .themen {
     display: grid;
