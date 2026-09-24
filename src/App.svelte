@@ -1,6 +1,6 @@
 <script lang="ts">
   import { beobachteVersion, browserUmgebung, type Versionswache } from './lib/neuversion';
-  import { aktuelleSeite, geheZu, leistenplatz, SEITEN, type Seite } from './lib/router';
+  import { aktuelleSeite, geheZu, SEITEN, type Seite } from './lib/router';
   import Werkbank from './views/Werkbank.svelte';
   import Codes from './views/Codes.svelte';
   import Nachschlagen from './views/Nachschlagen.svelte';
@@ -9,6 +9,7 @@
   import Gruppenseite from './views/Gruppenseite.svelte';
   import { abgleich, ansicht as gruppenansicht } from './lib/gruppe/gruppen.svelte';
   import Avatar from './ui/Avatar.svelte';
+  import { ANMELDEADRESSE } from './lib/gruppe/api';
 
   let seite = $state<Seite>(aktuelleSeite());
 
@@ -31,6 +32,27 @@
   function waehle(ziel: Seite) {
     menueOffen = false;
     geheZu(ziel);
+  }
+
+  /** Gibt es überhaupt eine Anmeldung? Erst beim Öffnen des Menüs nachfragen. */
+  const oidc = $derived.by(() => {
+    void gruppenansicht.version;
+    return abgleich.info?.oidc;
+  });
+
+  function menueUmschalten() {
+    menueOffen = !menueOffen;
+    if (menueOffen && !abgleich.info) void abgleich.kontoLaden();
+  }
+
+  function anmelden() {
+    menueOffen = false;
+    location.href = ANMELDEADRESSE;
+  }
+
+  function abmelden() {
+    menueOffen = false;
+    void abgleich.abmelden();
   }
 
   $effect(() => {
@@ -101,7 +123,7 @@
         aria-label="Menü"
         aria-expanded={menueOffen}
         aria-controls="hauptmenue"
-        onclick={() => (menueOffen = !menueOffen)}
+        onclick={menueUmschalten}
       >
         <span aria-hidden="true">{menueOffen ? '✕' : '☰'}</span>
       </button>
@@ -110,12 +132,29 @@
           {#each SEITEN as eintrag (eintrag.id)}
             <button
               type="button"
-              aria-current={leistenplatz(seite) === eintrag.id ? 'page' : undefined}
+              aria-current={seite === eintrag.id ? 'page' : undefined}
               onclick={() => waehle(eintrag.id)}
             >
               {eintrag.titel}
             </button>
           {/each}
+          <hr />
+          <button
+            type="button"
+            aria-current={seite === 'gruppen' ? 'page' : undefined}
+            onclick={() => waehle('gruppen')}
+          >
+            Gruppen
+          </button>
+          {#if angemeldet}
+            <button type="button" class="konto-eintrag" onclick={abmelden}>
+              <Avatar name={angemeldet.name} bild={angemeldet.avatar} groesse={22} />
+              <span>Abmelden <small>{angemeldet.name}</small></span>
+            </button>
+          {:else if oidc !== false}
+            <!-- Ohne eingerichteten Anmeldedienst gibt es nichts anzumelden. -->
+            <button type="button" onclick={anmelden}>Anmelden</button>
+          {/if}
         </nav>
       {/if}
     </div>
@@ -214,6 +253,25 @@
     border-radius: var(--radius);
     color: var(--text);
     font-size: 1rem;
+  }
+
+  nav hr {
+    width: 100%;
+    margin: 4px 0;
+    border: none;
+    border-top: 1px solid var(--rand);
+  }
+
+  .konto-eintrag {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .konto-eintrag small {
+    display: block;
+    color: var(--text-leise);
+    font-size: 0.75rem;
   }
 
   nav button[aria-current='page'] {

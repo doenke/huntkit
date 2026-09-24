@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ausHash, leistenplatz } from './router';
+import { ausHash } from './router';
 
 describe('Hash-Routing', () => {
   it('erkennt bekannte Seiten', () => {
@@ -13,10 +13,8 @@ describe('Hash-Routing', () => {
     expect(ausHash('#/gibtesnicht')).toBe('werkbank');
   });
 
-  it('kennt Unterseiten, die in der Leiste zu einer anderen gehören', () => {
+  it('kennt die Gruppen-Seite', () => {
     expect(ausHash('#/gruppen?anmeldung=abc')).toBe('gruppen');
-    expect(leistenplatz('gruppen')).toBe('mehr');
-    expect(leistenplatz('codes')).toBe('codes');
   });
 
   it('ignoriert weitere Pfadteile', () => {

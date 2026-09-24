@@ -15,19 +15,14 @@ export const SEITEN: ReadonlyArray<{ id: Seite; titel: string }> = [
 
 const STANDARD: Seite = 'werkbank';
 
-/** Seiten ohne eigenen Platz in der Leiste – sie gehören zu einer anderen. */
-const UNTERSEITEN: Partial<Record<Seite, Seite>> = { gruppen: 'mehr' };
-
-/** Welcher Knopf der Leiste zu einer Seite leuchtet. */
-export function leistenplatz(seite: Seite): Seite {
-  return UNTERSEITEN[seite] ?? seite;
-}
+/** Seiten, die im Menü unter den Hauptbereichen stehen. */
+const WEITERE: ReadonlyArray<Seite> = ['gruppen'];
 
 export function ausHash(hash: string): Seite {
   // Alles ab ? gehört zu den Parametern – geteilte Links hängen dort den
   // Werkbank-Stand an.
   const name = hash.replace(/^#\/?/, '').split('?')[0]?.split('/')[0];
-  if (name && name in UNTERSEITEN) return name as Seite;
+  if (WEITERE.includes(name as Seite)) return name as Seite;
   return SEITEN.some((s) => s.id === name) ? (name as Seite) : STANDARD;
 }
 
