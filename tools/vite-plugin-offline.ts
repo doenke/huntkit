@@ -50,6 +50,9 @@ function sammleDateien(wurzel: string, verzeichnis: string): string[] {
   for (const eintrag of readdirSync(verzeichnis)) {
     const pfad = join(verzeichnis, eintrag);
     if (statSync(pfad).isDirectory()) {
+      // Der Server-Teil für Gruppen wird nie gecacht – er ist ja gerade das,
+      // was nicht offline geht.
+      if (relative(wurzel, pfad) === 'api') continue;
       gefunden.push(...sammleDateien(wurzel, pfad));
     } else if (eintrag !== 'sw.js') {
       gefunden.push(relative(wurzel, pfad).split(sep).join(posix.sep));
@@ -94,13 +97,17 @@ self.addEventListener('message', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((namen) => Promise.all(namen.filter((n) => n !== CACHE).map((n) => caches.delete(n))))
+      // Avatare der Gruppenmitglieder haben ihren eigenen Cache und bleiben.
+      .then((namen) => Promise.all(namen.filter((n) => n !== CACHE && n !== 'huntkit-avatare').map((n) => caches.delete(n))))
       .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  // Anfragen an den Gruppen-Server gehen am Worker vorbei: Ereignisströme
+  // und frische Stände dürfen nie aus dem Cache kommen.
+  if (new URL(e.request.url).pathname.startsWith(new URL('api/', self.registration.scope).pathname)) return;
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then((treffer) => {
       if (treffer) return treffer;

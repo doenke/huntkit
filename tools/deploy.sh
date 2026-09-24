@@ -88,11 +88,15 @@ echo "Lade '$QUELLE' nach ${DEPLOY_PATH} (${DEPLOY_PROTOCOL:-sftp}) ..."
 # nichts zu sehen. Die beiden Zeilen im Protokoll zeigen sofort, was wirklich
 # passiert ist.
 
+# --exclude-glob: Eine config.php, die jemand im api-Ordner abgelegt hat,
+# ueberlebt das Spiegeln. Vorgesehen ist sie ohnehin ausserhalb (siehe
+# server/config.beispiel.php).
+#
 # --env-password: Das Passwort steht in der Umgebung, nicht in der
 # Kommandozeile – sonst waere es in der Prozessliste sichtbar.
 LFTP_PASSWORD="$DEPLOY_PASSWORD" lftp -u "$DEPLOY_USER" --env-password "$ZIEL" <<LFTP
 ${EINSTELLUNGEN}
-mirror --reverse --delete --no-perms --parallel=4 --verbose '${QUELLE}' '${DEPLOY_PATH}'
+mirror --reverse --delete --no-perms --parallel=4 --verbose --exclude-glob api/config*.php '${QUELLE}' '${DEPLOY_PATH}'
 echo ---- Arbeitsverzeichnis nach der Anmeldung ----
 pwd
 echo ---- Was dort liegt ----

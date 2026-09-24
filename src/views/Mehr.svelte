@@ -3,6 +3,7 @@
   import { UEBUNGEN } from '../lib/uebungen';
   import Nachtausruestung from '../ui/Nachtausruestung.svelte';
   import Uebung from '../ui/Uebung.svelte';
+  import Verbindungstest from '../ui/Verbindungstest.svelte';
 
   let thema = $state<Thema>(gespeichertesThema());
 
@@ -38,10 +39,15 @@
   {/each}
 </div>
 
+<h2>Gruppen-Server</h2>
+<Verbindungstest />
+
 <h2>Über</h2>
 <p class="leise">
   huntkit läuft vollständig offline und ohne Server. Einmal geladen, bleibt alles
-  auf dem Gerät – auch der Stand der Werkbank und der Lösungswörter.
+  auf dem Gerät – auch der Stand der Werkbank und der Lösungswörter. Nur wer einer
+  Gruppe beitritt, gleicht deren Werkbänke über den Server ab; alles andere bleibt
+  trotzdem auf dem Gerät.
 </p>
 <p class="leise">
   Die Zeichen des Fingeralphabets stammen vom Landesverband Bayern der Gehörlosen

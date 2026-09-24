@@ -26,6 +26,12 @@ export interface Werkbank {
   blatt: Blatt;
   /** Nur bei ausgeschaltetem automatischem Speichern: ungespeicherte Änderungen. */
   entwurf?: Blatt;
+  /**
+   * Gehört die Werkbank einer Gruppe, steht hier deren Kennung. Dann ist die
+   * Kennung der Werkbank auch die auf dem Server, und gespeichert wird
+   * immer automatisch – einen Entwurf, den nur einer sieht, gibt es dort nicht.
+   */
+  gruppe?: string;
 }
 
 export interface Sammlung {
@@ -91,7 +97,8 @@ export function ausGespeichertem(roh: unknown, altesBlatt?: unknown): Sammlung {
       name: typeof w.name === 'string' && w.name.trim() ? w.name : 'Werkbank',
       geaendert: typeof w.geaendert === 'number' ? w.geaendert : Date.now(),
       blatt: inHeutigerForm(w.blatt),
-      ...(w.entwurf && istBlatt(w.entwurf) ? { entwurf: inHeutigerForm(w.entwurf) } : {})
+      ...(w.entwurf && istBlatt(w.entwurf) ? { entwurf: inHeutigerForm(w.entwurf) } : {}),
+      ...(typeof w.gruppe === 'string' ? { gruppe: w.gruppe } : {})
     }));
     const aktiv = werkbaenke.some((w) => w.id === roh.aktiv) ? roh.aktiv : (werkbaenke[0] as Werkbank).id;
     return { aktiv, werkbaenke, automatisch: roh.automatisch !== false };
@@ -142,7 +149,7 @@ export function uebernimm(sammlung: Sammlung, stand: Blatt, jetzt = Date.now()):
   const werkbank = aktiveWerkbank(sammlung);
   const neu = JSON.stringify(stand);
   const gespeichert = JSON.stringify(werkbank.blatt);
-  if (sammlung.automatisch) {
+  if (sammlung.automatisch || werkbank.gruppe) {
     if (neu === gespeichert && !werkbank.entwurf) return false;
     werkbank.blatt = JSON.parse(neu) as Blatt;
     delete werkbank.entwurf;

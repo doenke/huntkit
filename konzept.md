@@ -286,8 +286,12 @@ Nach Nutzen-pro-Aufwand sortiert – die oberen zahlen sich im Hunt am schnellst
 
 ### 4.3 Bewusst außen vor
 
-Kein Konto, kein Login, keine Synchronisierung, keine Statistik, kein Tracking. Das würde
-einen Server erfordern und widerspricht der Vorgabe. Teilen läuft über Links und Export.
+Keine Statistik, kein Tracking. Die App braucht kein Konto und keinen Server; Teilen läuft
+über Links und Export.
+
+Einzige Ausnahme, und nur auf Wunsch: **Gruppen** (§7.10). Wer einer beitritt, gleicht deren
+Werkbänke über einen kleinen PHP-Teil auf demselben Webspace ab. Alles andere bleibt, wie es
+ist – offline, ohne Konto, auf dem Gerät.
 
 ---
 
@@ -709,6 +713,52 @@ Push auf main
   greifbar – wichtig, wenn kurz vor der Veranstaltung etwas schiefgeht.
 - Auf Wunsch zusätzlich GitHub Pages als Zweitadresse. Kostet eine Zeile und ist ein
   brauchbarer Ausweichweg, wenn der Webspace klemmt.
+- Der PHP-Teil für Gruppen (`server/api`) wird beim Bauen nach `dist/api/` gelegt und
+  geht mit demselben Upload hoch. Seine `config.php` liegt **neben** dem Zielordner
+  (`…/huntkit-daten/config.php`), damit das Spiegeln sie nicht löscht.
+- **Testordner für den Gruppen-Branch:** Ist das Secret `DEPLOY_PATH_GRUPPEN` gesetzt, landet
+  der Branch dort, etwa in `/home/webzwenka/kanonenwiese.de/huntkit-gruppen`. Die Fassung auf
+  `main` bleibt davon unberührt.
+
+### 7.10 Gruppen: gemeinsam an Werkbänken
+
+Mehrere Leute arbeiten gleichzeitig an denselben Werkbänken. Das ist eine Option: Ohne
+Gruppe ändert sich nichts, und auch in einer Gruppe arbeitet jedes Gerät offline weiter.
+
+**Abgleich.** Ein Blatt wird als flache Tabelle von Schlüsseln betrachtet (`name`,
+`spalten`, `spalte/<id>`, `zeile/<id>`, `z/<zeile>/<spalte>`). Der Server vergibt je Gruppe
+eine fortlaufende Nummer. Für jeden Schlüssel gilt die zuletzt angekommene Änderung.
+Verschiedene Zellen verschmelzen deshalb von selbst; bei derselben Zelle gewinnt, wer
+später beim Server ist. Mehr braucht es nicht, weil jede Eingabezelle schon eine feste
+Adresse hat. Werkzeugspalten werden gerechnet, nur ihre Einstellungen gehen über die
+Leitung. Die **Sortierung bleibt je Gerät**, sie ist reine Ansicht. Einen Entwurfsmodus gibt es
+bei Gruppen-Werkbänken nicht.
+
+Im Gerät liegt je Werkbank der bestätigte Stand und darüber ein **Ausgang** mit eigenen
+Änderungen, die noch unterwegs sind. Angezeigt wird beides übereinander. So springt eine
+Zelle nicht zurück, während man tippt, und ohne Netz wartet der Ausgang, bis wieder
+Verbindung besteht. Code: `src/lib/gruppe/`.
+
+**Echtzeit.** Einfacher Webspace kann keine WebSockets. Die App fragt deshalb alle 1,5 s nach
+(Polling). Erlaubt die `config.php` Server-Sent Events, meldet eine kurze Verbindung (25 s,
+dann neu), dass es Neues gibt. Die Daten selbst kommen weiter über den normalen Abruf. Ob
+SSE auf dem Webspace trägt, zeigt „Mehr → Serververbindung testen“.
+
+**Zugang.** OIDC-Anmeldung (PKCE, ohne Bibliothek). Gruppen anlegen darf nur, wer beim
+Anmeldedienst in der Gruppe `huntkit-admin` ist (einstellbar); wer anlegt, ist Admin der
+Gruppe. Admins nehmen bekannte OIDC-Benutzer auf, entfernen Mitglieder und löschen
+Werkbänke der Gruppe. Den Einladungslink sieht und teilt jedes Mitglied. Wer ihn öffnet,
+tritt mit einem Anzeigenamen als Gast bei, oder, wenn angemeldet, als er selbst. Tokens
+liegen auf dem Server nur als Hash.
+
+**Protokoll.** Jede Änderung wird mit altem und neuem Wert, Person und Zeit festgehalten. Die
+App zeigt es für die ganze Werkbank (Marke neben dem Namen) und je Zelle (Verlauf in der
+Zellbox). Zellen, die gerade jemand anderes geändert hat, sind kurz markiert, mit dessen
+Bild.
+
+**Avatare** kommen aus dem `picture`-Claim. Der Server lädt sie einmal herunter und liefert
+sie selbst aus: Die App lädt nichts von fremden Servern, und im Cache des Geräts sind sie
+auch offline da. Ohne Bild gibt es Initialen.
 
 ---
 

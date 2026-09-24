@@ -17,7 +17,9 @@
     umbenennen,
     verschicken,
     automatikUmschalten,
-    leeren
+    leeren,
+    gruppenname = () => undefined,
+    darfLoeschen = () => true
   }: {
     sammlung: Sammlung;
     wechseln: (id: string) => void;
@@ -29,6 +31,10 @@
     automatikUmschalten: () => void;
     /** Die offene Werkbank leeren. */
     leeren: () => void;
+    /** Name der Gruppe, der eine Werkbank gehört – oder nichts. */
+    gruppenname?: (gruppe: string | undefined) => string | undefined;
+    /** Werkbänke einer Gruppe löschen nur deren Admins. */
+    darfLoeschen?: (werkbank: Werkbank) => boolean;
   } = $props();
 
   let leerenGefragt = $state(false);
@@ -112,7 +118,10 @@
           </div>
         {:else}
           <button type="button" class="wahl" onclick={() => wechseln(werkbank.id)} aria-current={aktiv}>
-            <span class="name">{werkbank.name}</span>
+            <span class="name">
+              {werkbank.name}
+              {#if gruppenname(werkbank.gruppe)}<span class="gruppe">{gruppenname(werkbank.gruppe)}</span>{/if}
+            </span>
             <span class="info">
               {zeilen(werkbank)} · {zeit(werkbank.geaendert)}
               {#if werkbank.entwurf}<span class="entwurf">· ungespeichert</span>{/if}
@@ -124,21 +133,23 @@
         <div class="knoepfe">
           {#if loeschenGefragt === werkbank.id}
             <button type="button" class="ernst" onclick={() => { entfernen(werkbank.id); loeschenGefragt = null; }}>
-              wirklich löschen
+              {werkbank.gruppe ? 'für alle löschen' : 'wirklich löschen'}
             </button>
             <button type="button" onclick={() => (loeschenGefragt = null)}>abbrechen</button>
           {:else}
             <button type="button" onclick={() => verschicken(werkbank.id)}>Link</button>
             <button type="button" onclick={() => umbenennenBeginnen(werkbank)}>umbenennen</button>
             <button type="button" onclick={() => kopieren(werkbank.id)}>Kopie</button>
-            <button
-              type="button"
-              class="weg"
-              onclick={() => { loeschenGefragt = werkbank.id; umbenennend = null; }}
-              aria-label={`${werkbank.name} löschen`}
-            >
-              ✕
-            </button>
+            {#if darfLoeschen(werkbank)}
+              <button
+                type="button"
+                class="weg"
+                onclick={() => { loeschenGefragt = werkbank.id; umbenennend = null; }}
+                aria-label={werkbank.gruppe ? `${werkbank.name} für die ganze Gruppe löschen` : `${werkbank.name} löschen`}
+              >
+                ✕
+              </button>
+            {/if}
           {/if}
         </div>
       </li>
@@ -244,6 +255,18 @@
   .knoepfe .weg {
     flex: 0 0 auto;
     min-width: 40px;
+  }
+
+  .gruppe {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 6px;
+    border: 1px solid var(--akzent);
+    border-radius: 999px;
+    color: var(--akzent);
+    font-size: 0.7rem;
+    font-weight: normal;
+    vertical-align: middle;
   }
 
   .ernst {

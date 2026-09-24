@@ -1,0 +1,16 @@
+# Bausteine (Dateien mit Unterstrich) und eine versehentlich hier abgelegte
+# config.php werden nie ausgeliefert.
+<FilesMatch "^(_.*|config.*)\.php$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Keine Komprimierung fuer Ereignisstroeme – sonst puffert der Server.
+<IfModule mod_env.c>
+  SetEnvIf Request_URI "(ereignisse|echtzeittest)\.php$" no-gzip=1
+</IfModule>

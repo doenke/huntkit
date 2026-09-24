@@ -68,6 +68,14 @@ Rest von Phase 5:
 - **Link teilen** – der ganze Werkbank-Stand steckt im Fragment der Adresse und
   erreicht nie einen Server.
 
+Auf dem Gruppen-Branch (noch nicht auf `main`):
+
+- **Gruppen** – mehrere Leute arbeiten gleichzeitig an denselben Werkbänken, mit
+  Protokoll, wer welche Zelle geändert hat. Anmeldung über OIDC, Gäste über
+  Einladungslink. Braucht den PHP-Teil in [`server/`](server/) und eine
+  `config.php` (Vorlage: [`server/config.beispiel.php`](server/config.beispiel.php));
+  ohne ihn läuft die App wie bisher. Details in [konzept.md §7.10](konzept.md).
+
 Grundlage der Zeichentabellen ist das Regelheft der Dortmunder Nachtschicht;
 Herkunft und Proben stehen in [`src/codecs/QUELLE.md`](src/codecs/QUELLE.md).
 
