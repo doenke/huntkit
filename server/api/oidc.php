@@ -9,8 +9,14 @@ try {
     header('Cache-Control: no-store');
     header('Location: ' . $ziel, true, 302);
 } catch (Throwable $fehler) {
-    if (!$fehler instanceof ApiFehler) error_log('huntkit oidc: ' . $fehler);
-    $text = $fehler instanceof ApiFehler ? $fehler->getMessage() : 'Die Anmeldung hat nicht geklappt.';
+    protokolliere('oidc', 'Anmeldung abgebrochen: ' . $fehler->getMessage(), $fehler instanceof ApiFehler
+        ? ['status' => $fehler->status]
+        : ['art' => get_class($fehler), 'ort' => $fehler->getFile() . ':' . $fehler->getLine()]);
+    // Fehler aus der Datenbank oder dem Code kommen nur mit debug im Klartext
+    // in die App; im Log stehen sie immer.
+    $text = $fehler instanceof ApiFehler || debugAn()
+        ? $fehler->getMessage()
+        : 'Die Anmeldung hat nicht geklappt – Details im Server-Log (huntkit.log).';
     try {
         header('Location: ' . appAdresse() . '#/werkbank?anmeldefehler=' . rawurlencode($text), true, 302);
     } catch (Throwable) {

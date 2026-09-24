@@ -3,6 +3,7 @@
   import { UEBUNGEN } from '../lib/uebungen';
   import Nachtausruestung from '../ui/Nachtausruestung.svelte';
   import Uebung from '../ui/Uebung.svelte';
+  import Serverstatus from '../ui/Serverstatus.svelte';
   import Verbindungstest from '../ui/Verbindungstest.svelte';
 
   let thema = $state<Thema>(gespeichertesThema());
@@ -40,6 +41,7 @@
 </div>
 
 <h2>Gruppen-Server</h2>
+<Serverstatus />
 <Verbindungstest />
 
 <h2>Über</h2>

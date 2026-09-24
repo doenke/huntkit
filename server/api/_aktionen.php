@@ -30,6 +30,7 @@ function kontoAnfrage(string $methode, array $get, array $post): array
         $eintrag = zeile('SELECT * FROM ' . t('einmalcodes') . ' WHERE code_hash = ?', [$hash]);
         fuehreAus('DELETE FROM ' . t('einmalcodes') . ' WHERE code_hash = ? OR erstellt < ?', [$hash, jetzt() - 600_000]);
         if (!$eintrag || jetzt() - (int) $eintrag['erstellt'] > 300_000) {
+            protokolliere('konto', 'Einmalcode ungültig', ['gefunden' => (bool) $eintrag]);
             throw new ApiFehler(400, 'Der Anmeldecode ist abgelaufen. Bitte noch einmal anmelden.');
         }
         $token = neueSitzung((int) $eintrag['benutzer_id'], null);
@@ -427,4 +428,85 @@ function protokollAnfrage(string $methode, array $get, array $post): array
         'von' => (int) $z['mitglied_id'],
         'zeit' => (int) $z['zeit']
     ], $liste)];
+}
+
+/* ---------- Serverstatus ---------- */
+
+/**
+ * Wie es dem Server geht – für „Mehr“ in der App: PHP, Datenbank, Tabellen,
+ * Größe, Log, Anmeldedienst. Keine Inhalte, keine Zugangsdaten; die genaue
+ * Fehlermeldung der Datenbank nur mit debug (sie nennt oft Host und Benutzer).
+ */
+function statusAnfrage(): array
+{
+    $k = konfiguration();
+    $ergebnis = [
+        'php' => PHP_VERSION,
+        'erweiterungen' => [
+            'pdo_mysql' => extension_loaded('pdo_mysql'),
+            'pdo_sqlite' => extension_loaded('pdo_sqlite'),
+            'curl' => extension_loaded('curl'),
+            'openssl' => extension_loaded('openssl'),
+            'mbstring' => extension_loaded('mbstring')
+        ],
+        'echtzeit' => $k['echtzeit'],
+        'debug' => (bool) $k['debug'],
+        'log' => ['aktiv' => logdatei() !== null, 'datei' => logdatei() !== null ? basename((string) logdatei()) : null],
+        'datenbank' => ['verbunden' => false],
+        'oidc' => ['eingerichtet' => $k['oidc'] !== null]
+    ];
+
+    try {
+        $pdo = db();
+        $sqlite = istSqlite($pdo);
+        $db = ['verbunden' => true, 'treiber' => $sqlite ? 'SQLite' : 'MySQL/MariaDB', 'version' => $pdo->getAttribute(PDO::ATTR_SERVER_VERSION)];
+        $version = zeile('SELECT wert FROM ' . t('meta') . " WHERE schluessel = 'schema'");
+        $db['schema'] = (int) ($version['wert'] ?? 0);
+        $namen = ['meta', 'benutzer', 'gruppen', 'mitglieder', 'sitzungen', 'stand', 'aenderungen', 'oidc_vorgaenge', 'einmalcodes'];
+        $groessen = [];
+        if (!$sqlite) {
+            foreach (zeilen(
+                'SELECT TABLE_NAME AS n, DATA_LENGTH + INDEX_LENGTH AS b FROM information_schema.TABLES
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE ?',
+                [str_replace('_', '\\_', konfiguration()['praefix']) . '%']
+            ) as $z) $groessen[$z['n']] = (int) $z['b'];
+        }
+        $tabellen = [];
+        $gesamt = 0;
+        foreach ($namen as $n) {
+            $voll = t($n);
+            try {
+                $zeilen = (int) (zeile("SELECT COUNT(*) AS n FROM $voll")['n'] ?? 0);
+                $bytes = $groessen[$voll] ?? null;
+                $gesamt += $bytes ?? 0;
+                $tabellen[] = ['name' => $voll, 'da' => true, 'zeilen' => $zeilen, 'bytes' => $bytes];
+            } catch (PDOException) {
+                $tabellen[] = ['name' => $voll, 'da' => false];
+            }
+        }
+        if ($sqlite) {
+            $datei = preg_replace('/^sqlite:/', '', (string) $k['db']['dsn']);
+            foreach (['', '-wal', '-shm'] as $endung) {
+                if (is_file($datei . $endung)) $gesamt += (int) filesize($datei . $endung);
+            }
+        }
+        $db['tabellen'] = $tabellen;
+        $db['bytes'] = $gesamt;
+        $ergebnis['datenbank'] = $db;
+    } catch (Throwable $fehler) {
+        $ergebnis['datenbank'] = ['verbunden' => false, 'fehler' => $fehler->getMessage()];
+    }
+
+    if ($k['oidc'] !== null) {
+        require_once __DIR__ . '/_oidc.php';
+        try {
+            $anbieter = oidcAnbieter();
+            $ergebnis['oidc'] += ['erreichbar' => true, 'issuer' => $k['oidc']['issuer'], 'redirect_uri' => oidcRueckadresse(),
+                'anlegegruppe' => $k['oidc']['anlegegruppe'], 'gruppen_claim' => $k['oidc']['gruppen_claim'],
+                'userinfo' => !empty($anbieter['userinfo_endpoint'])];
+        } catch (Throwable $fehler) {
+            $ergebnis['oidc'] += ['erreichbar' => false, 'fehler' => $fehler->getMessage()];
+        }
+    }
+    return $ergebnis;
 }

@@ -9,6 +9,7 @@ declare(strict_types=1);
 require __DIR__ . '/../api/_aktionen.php';
 require __DIR__ . '/../api/_oidc.php';
 
+$GLOBALS['HUNTKIT_STILL'] = true;
 $GLOBALS['HUNTKIT_KONFIGURATION'] = mitStandards([
     'db' => ['dsn' => 'sqlite::memory:'],
     'oidc' => ['issuer' => 'https://idp.test', 'client_id' => 'huntkit', 'client_secret' => 's']
@@ -168,6 +169,14 @@ pruefe(scheitert(400, fn () => kontoAnfrage('POST', [], ['aktion' => 'einloesen'
 echo "Bildtyp\n";
 pruefe(bildtyp($png) === 'image/png', 'PNG erkannt');
 pruefe(bildtyp('<svg onload=alert(1)>') === null, 'SVG abgelehnt');
+
+echo "Status\n";
+$GLOBALS['HUNTKIT_HTTP'] = fn () => [200, json_encode(['authorization_endpoint' => 'https://idp.test/a', 'token_endpoint' => 'https://idp.test/t'])];
+$st = statusAnfrage();
+pruefe($st['datenbank']['verbunden'] === true && $st['datenbank']['schema'] === 1, 'Datenbank verbunden, Schema 1');
+pruefe(count(array_filter($st['datenbank']['tabellen'], fn ($t) => $t['da'])) === 9, 'alle neun Tabellen da');
+pruefe($st['oidc']['erreichbar'] === true, 'Anmeldedienst erreichbar');
+pruefe(!str_contains(json_encode($st), 'geheim') && !str_contains(json_encode($st), '"s"'), 'keine Geheimnisse im Status');
 
 echo $fehlschlaege === 0 ? "\nAlles gut.\n" : "\n$fehlschlaege fehlgeschlagen.\n";
 exit($fehlschlaege === 0 ? 0 : 1);

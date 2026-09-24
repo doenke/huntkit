@@ -54,6 +54,13 @@ return [
         // 'redirect_uri' => 'https://huntkit.kanonenwiese.de/api/oidc.php',
     ],
 
+    // Server-Log: Ohne Angabe schreibt der Server nach huntkit.log im
+    // Daten-Ordner (dort, wo diese Datei liegt). Geheimes wird geschwaerzt.
+    // 'log' => '/pfad/zu/huntkit.log',   // oder false: nur error_log von PHP
+    // Fehler aus Datenbank und Code im Klartext in der App anzeigen – nur zum
+    // Einrichten, sie koennen Hostnamen und Benutzernamen enthalten:
+    // 'debug' => true,
+
     // Nur noetig, wenn der Server die Adresse der App falsch ermittelt
     // (etwa hinter einem Proxy):
     // 'app_url' => 'https://huntkit.kanonenwiese.de/',

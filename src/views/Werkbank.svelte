@@ -294,6 +294,8 @@
   let einladung = $state<{ code: string; gruppe: { id: string; name: string }; schonMitglied: boolean } | null>(null);
   let gastname = $state('');
   let beitrittsfehler = $state('');
+  /** Bleibt stehen, bis man es wegklickt – den Grund will man in Ruhe lesen. */
+  let anmeldefehler = $state('');
 
   async function ausGruppenadresse() {
     const wert = (name: string) => {
@@ -305,13 +307,13 @@
     const code = wert('einladung');
     if (!anmeldung && !fehler && !code) return;
     history.replaceState(null, '', location.href.replace(/[?&](anmeldung|anmeldefehler|einladung)=[^&]+/g, ''));
-    if (fehler) meldung = `Anmeldung fehlgeschlagen: ${fehler}`;
+    if (fehler) anmeldefehler = fehler;
     if (anmeldung) {
       try {
         await abgleich.anmeldungEinloesen(anmeldung);
         meldung = `Angemeldet als ${abgleich.speicher.konto?.ich.name ?? ''}`;
       } catch (e) {
-        meldung = e instanceof Error ? e.message : 'Anmeldung fehlgeschlagen';
+        anmeldefehler = e instanceof Error ? e.message : String(e);
       }
     }
     if (code) {
@@ -757,6 +759,17 @@
 
 {#if meldung}
   <p class="meldung">{meldung}</p>
+{/if}
+
+{#if anmeldefehler}
+  <section class="einladung" role="alert">
+    <strong>Anmeldung fehlgeschlagen</strong>
+    <p class="hinweis warn">{anmeldefehler}</p>
+    <p class="hinweis">Mehr steht im Server-Log (huntkit.log im Daten-Ordner neben der App) und unter „Mehr → Serverstatus“.</p>
+    <div class="knoepfe">
+      <button type="button" onclick={() => (anmeldefehler = '')}>schließen</button>
+    </div>
+  </section>
 {/if}
 
 {#if einladung}

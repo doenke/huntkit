@@ -50,7 +50,7 @@ function konfiguration(): array
 
 function mitStandards(array $k): array
 {
-    $k += ['praefix' => 'hk_', 'echtzeit' => 'polling', 'oidc' => null, 'app_url' => null];
+    $k += ['praefix' => 'hk_', 'echtzeit' => 'polling', 'oidc' => null, 'app_url' => null, 'debug' => false, 'log' => null];
     if (is_array($k['oidc'])) {
         $k['oidc'] += [
             'scopes' => 'openid profile email',
@@ -65,6 +65,61 @@ function mitStandards(array $k): array
     return $k;
 }
 
+/* ---------- Protokoll ---------- */
+
+/**
+ * Wohin das Server-Log geht: 'log' aus der config.php, sonst huntkit.log im
+ * Daten-Ordner neben der App (dort, wo auch die config.php liegt). Klappt
+ * beides nicht, landet es im error_log von PHP.
+ */
+function logdatei(): ?string
+{
+    $k = $GLOBALS['HUNTKIT_KONFIGURATION'] ?? null;
+    if (is_array($k) && $k['log'] === false) return null;
+    if (is_array($k) && is_string($k['log']) && $k['log'] !== '') return $k['log'];
+    $ordner = dirname(__DIR__) . '-daten';
+    return is_dir($ordner) && is_writable($ordner) ? "$ordner/huntkit.log" : null;
+}
+
+/**
+ * Eine Zeile ins Log. Geheimes (Tokens, Codes, Passwörter) wird vorher
+ * unkenntlich gemacht – das Log soll man herumzeigen können.
+ */
+function protokolliere(string $bereich, string $text, array $daten = []): void
+{
+    if (isset($GLOBALS['HUNTKIT_STILL'])) return;
+    $zeile = date('Y-m-d H:i:s') . " [$bereich] $text";
+    if ($daten) $zeile .= ' ' . json_encode(geschwaerzt($daten), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $datei = logdatei();
+    if ($datei === null || @file_put_contents($datei, $zeile . "\n", FILE_APPEND | LOCK_EX) === false) {
+        error_log('huntkit ' . $zeile);
+    }
+}
+
+const GEHEIME_FELDER = ['access_token', 'id_token', 'refresh_token', 'code', 'code_verifier', 'client_secret',
+    'passwort', 'token', 'state', 'nonce', 'verifier'];
+
+function geschwaerzt(mixed $wert, int $tiefe = 0): mixed
+{
+    if (is_array($wert)) {
+        if ($tiefe > 4) return '…';
+        $aus = [];
+        foreach ($wert as $k => $v) {
+            $aus[$k] = is_string($k) && in_array(strtolower($k), GEHEIME_FELDER, true)
+                ? (is_string($v) ? '***(' . strlen($v) . ')' : '***')
+                : geschwaerzt($v, $tiefe + 1);
+        }
+        return $aus;
+    }
+    if (is_string($wert) && strlen($wert) > 500) return substr($wert, 0, 500) . '…';
+    return $wert;
+}
+
+function debugAn(): bool
+{
+    return (bool) (($GLOBALS['HUNTKIT_KONFIGURATION'] ?? [])['debug'] ?? false);
+}
+
 /* ---------- Datenbank ---------- */
 
 function db(): PDO
@@ -73,11 +128,16 @@ function db(): PDO
     $k = konfiguration();
     $d = $k['db'] ?? null;
     if (!is_array($d) || empty($d['dsn'])) throw new ApiFehler(503, 'Keine Datenbank eingerichtet.');
-    $pdo = new PDO($d['dsn'], $d['benutzer'] ?? null, $d['passwort'] ?? null, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false
-    ]);
+    try {
+        $pdo = new PDO($d['dsn'], $d['benutzer'] ?? null, $d['passwort'] ?? null, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false
+        ]);
+    } catch (PDOException $fehler) {
+        protokolliere('db', 'Verbindung fehlgeschlagen', ['dsn' => preg_replace('/password=[^;]*/i', 'password=***', $d['dsn']), 'fehler' => $fehler->getMessage()]);
+        throw new ApiFehler(503, 'Keine Verbindung zur Datenbank' . (debugAn() ? ': ' . $fehler->getMessage() : ' – Details im Server-Log.'));
+    }
     if (istSqlite($pdo)) {
         $pdo->exec('PRAGMA busy_timeout = 5000');
         // Mit WAL blockieren Lesende die Schreibenden nicht – wichtig, weil
@@ -161,6 +221,7 @@ function richteEin(PDO $pdo): void
     $abfrage->execute();
     $version = (int) ($abfrage->fetchColumn() ?: 0);
     if ($version >= SCHEMA_VERSION) return;
+    protokolliere('db', "Lege Tabellen an (Schema $version → " . SCHEMA_VERSION . ')', ['treiber' => $sqlite ? 'sqlite' : 'mysql']);
 
     $auto = $sqlite ? 'INTEGER PRIMARY KEY AUTOINCREMENT' : 'BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY';
     $blob = $sqlite ? 'BLOB' : 'MEDIUMBLOB';
@@ -245,7 +306,15 @@ function richteEin(PDO $pdo): void
             erstellt BIGINT NOT NULL
         )$engine"
     ];
-    foreach ($befehle as $sql) $pdo->exec($sql);
+    foreach ($befehle as $sql) {
+        try {
+            $pdo->exec($sql);
+        } catch (PDOException $fehler) {
+            protokolliere('db', 'Anlegen fehlgeschlagen', ['sql' => preg_replace('/\s+/', ' ', $sql), 'fehler' => $fehler->getMessage()]);
+            throw $fehler;
+        }
+    }
+    protokolliere('db', 'Tabellen angelegt');
     $upsert = $sqlite
         ? "INSERT INTO $meta (schluessel, wert) VALUES ('schema', ?) ON CONFLICT(schluessel) DO UPDATE SET wert = excluded.wert"
         : "INSERT INTO $meta (schluessel, wert) VALUES ('schema', ?) ON DUPLICATE KEY UPDATE wert = VALUES(wert)";
@@ -423,11 +492,16 @@ function antworte(callable $arbeit): void
         $ergebnis = $arbeit();
         echo json_encode($ergebnis, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     } catch (ApiFehler $fehler) {
+        if ($fehler->status >= 500) protokolliere('api', $fehler->getMessage(), ['adresse' => $_SERVER['REQUEST_URI'] ?? '']);
         http_response_code($fehler->status);
         echo json_encode(['fehler' => $fehler->getMessage()], JSON_UNESCAPED_UNICODE);
     } catch (Throwable $fehler) {
-        error_log('huntkit: ' . $fehler);
+        protokolliere('api', 'Unerwarteter Fehler: ' . $fehler->getMessage(), [
+            'adresse' => $_SERVER['REQUEST_URI'] ?? '',
+            'ort' => $fehler->getFile() . ':' . $fehler->getLine()
+        ]);
         http_response_code(500);
-        echo json_encode(['fehler' => 'Fehler auf dem Server.'], JSON_UNESCAPED_UNICODE);
+        $text = debugAn() ? 'Fehler auf dem Server: ' . $fehler->getMessage() : 'Fehler auf dem Server – Details im Server-Log.';
+        echo json_encode(['fehler' => $text], JSON_UNESCAPED_UNICODE);
     }
 }
