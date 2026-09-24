@@ -47,6 +47,9 @@
     klartext = codec.decode(wert, werte).text;
   }
 
+  /** Tasten und Raster lassen den Fokus im Codefeld, wie in der Werkbank. */
+  const behalteFokus = (e: MouseEvent) => e.preventDefault();
+
   function anhaengen(stueck: string) {
     const vorher = kodiert.length > 0 && trenner && !kodiert.endsWith(trenner) ? trenner : '';
     ausKodiert(kodiert + vorher + stueck);
@@ -134,11 +137,11 @@
 {#if codec.eingabetasten}
   <div class="tasten">
     {#each codec.eingabetasten as taste (taste.titel)}
-      <button type="button" title={taste.hinweis} onclick={() => ausKodiert(kodiert + taste.einfuegen)}>
+      <button type="button" onmousedown={behalteFokus} title={taste.hinweis} onclick={() => ausKodiert(kodiert + taste.einfuegen)}>
         {taste.titel}
       </button>
     {/each}
-    <button type="button" onclick={loeschen} disabled={!kodiert} aria-label="letztes Zeichen löschen">
+    <button type="button" onmousedown={behalteFokus} onclick={loeschen} disabled={!kodiert} aria-label="letztes Zeichen löschen">
       ⌫
     </button>
   </div>
@@ -178,7 +181,7 @@
   {#each sichtbar as eintrag, stelle (stelle)}
     {@const glyph = codec.zeichne?.(eintrag.zeichen) ?? null}
     {@const codebild = glyph ? null : (codec.zeichneCode?.(eintrag.darstellung) ?? null)}
-    <button type="button" onclick={() => anhaengen(eintrag.darstellung)}>
+    <button type="button" onmousedown={behalteFokus} onclick={() => anhaengen(eintrag.darstellung)}>
       {#if glyph}
         <svg viewBox={glyph.viewBox} aria-hidden="true">
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->

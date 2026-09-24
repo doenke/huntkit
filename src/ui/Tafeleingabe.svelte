@@ -28,6 +28,13 @@
     setzen(wert + vorher + stueck);
   }
 
+  /**
+   * Die Tasten nehmen den Fokus nicht an sich: Er bleibt im Feld, in das
+   * geschrieben wird. Sonst löst Enter danach nicht „nächste Zeile“ aus,
+   * sondern drückt die zuletzt geklickte Taste ein zweites Mal.
+   */
+  const behalteFokus = (e: MouseEvent) => e.preventDefault();
+
   function loeschen() {
     setzen(trenner ? wert.replace(/\s*\S+\s*$/, '') : [...wert].slice(0, -1).join(''));
   }
@@ -37,7 +44,7 @@
   {#if tafel.eingabetasten}
     <div class="tasten">
       {#each tafel.eingabetasten as taste (taste.titel)}
-        <button type="button" title={taste.hinweis} onclick={() => setzen(wert + taste.einfuegen)}>
+        <button type="button" onmousedown={behalteFokus} title={taste.hinweis} onclick={() => setzen(wert + taste.einfuegen)}>
           {taste.titel}
         </button>
       {/each}
@@ -47,7 +54,7 @@
   {#if gruppen.length > 1}
     <div class="abschnitte">
       {#each gruppen as name (name)}
-        <button type="button" aria-pressed={aktiv === name} onclick={() => (gruppe = name)}>
+        <button type="button" onmousedown={behalteFokus} aria-pressed={aktiv === name} onclick={() => (gruppe = name)}>
           {name}
         </button>
       {/each}
@@ -58,7 +65,7 @@
     {#each sichtbar as eintrag, stelle (stelle)}
       {@const glyph = tafel.zeichne?.(eintrag.zeichen) ?? null}
       {@const codebild = glyph ? null : (tafel.zeichneCode?.(eintrag.darstellung) ?? null)}
-      <button type="button" onclick={() => anhaengen(eintrag.darstellung)}>
+      <button type="button" onmousedown={behalteFokus} onclick={() => anhaengen(eintrag.darstellung)}>
         {#if glyph}
           <svg viewBox={glyph.viewBox} aria-hidden="true">
             <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -81,8 +88,8 @@
   </div>
 
   <div class="fuss">
-    <button type="button" onclick={loeschen} disabled={wert.length === 0}>⌫ letztes</button>
-    <button type="button" onclick={() => setzen('')} disabled={wert.length === 0}>leeren</button>
+    <button type="button" onmousedown={behalteFokus} onclick={loeschen} disabled={wert.length === 0}>⌫ letztes</button>
+    <button type="button" onmousedown={behalteFokus} onclick={() => setzen('')} disabled={wert.length === 0}>leeren</button>
   </div>
 {/if}
 
