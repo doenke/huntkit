@@ -53,69 +53,103 @@
   );
 </script>
 
-<article class="uebung">
-  <h3>
-    {uebung.titel}
-    {#if geloest}<span class="haken" title="auf diesem Gerät gelöst">✓ gelöst</span>{/if}
-  </h3>
-
-  <svg
-    class="raster"
-    viewBox={`0 0 ${spalten * ABSTAND} ${reihen * ABSTAND}`}
-    role="img"
-    aria-label="Punkteraster"
-  >
-    {#each punkte as p, i (i)}
-      <circle
-        class:erhaben={p.erhaben}
-        cx={p.x * ABSTAND + ABSTAND / 2}
-        cy={p.y * ABSTAND + ABSTAND / 2}
-        r={p.erhaben ? ABSTAND * 0.32 : ABSTAND * 0.14}
-      />
-    {/each}
-  </svg>
-
-  <div class="antwort">
-    <Textzeile
-      bind:value={antwort}
-      enter={pruefen}
-      placeholder="Lösungswort"
-      spellcheck="false"
-      autocapitalize="characters"
-      aria-label="Lösungswort"
-      oninput={() => (geprueft = null)}
-    />
-    <button type="button" onclick={pruefen} disabled={!antwort.trim()}>prüfen</button>
-  </div>
-  {#if geprueft === 'richtig'}
-    <p class="meldung richtig">Richtig – {uebung.loesung}!</p>
-  {:else if geprueft === 'falsch'}
-    <p class="meldung falsch">Noch nicht.</p>
-  {/if}
-
-  {#if offeneTipps > 0}
-    <ol class="tipps">
-      {#each uebung.tipps.slice(0, offeneTipps) as tipp, i (i)}
-        <li>{tipp}</li>
+<!-- Eingeklappt: Das Raster allein füllt sonst den halben Bildschirm. -->
+<details class="uebung">
+  <summary>
+    <h3>
+      {uebung.titel}
+      {#if geloest}<span class="haken" title="auf diesem Gerät gelöst">✓ gelöst</span>{/if}
+    </h3>
+  </summary>
+  <div class="inhalt">
+    <svg
+      class="raster"
+      viewBox={`0 0 ${spalten * ABSTAND} ${reihen * ABSTAND}`}
+      role="img"
+      aria-label="Punkteraster"
+    >
+      {#each punkte as p, i (i)}
+        <circle
+          class:erhaben={p.erhaben}
+          cx={p.x * ABSTAND + ABSTAND / 2}
+          cy={p.y * ABSTAND + ABSTAND / 2}
+          r={p.erhaben ? ABSTAND * 0.32 : ABSTAND * 0.14}
+        />
       {/each}
-    </ol>
-  {/if}
+    </svg>
 
-  <div class="knoepfe">
-    {#if offeneTipps < uebung.tipps.length}
-      <button type="button" onclick={() => (offeneTipps += 1)}>
-        {offeneTipps === 0 ? 'Tipp' : 'noch ein Tipp'} ({offeneTipps + 1}/{uebung.tipps.length})
-      </button>
+    <div class="antwort">
+      <Textzeile
+        bind:value={antwort}
+        enter={pruefen}
+        placeholder="Lösungswort"
+        spellcheck="false"
+        autocapitalize="characters"
+        aria-label="Lösungswort"
+        oninput={() => (geprueft = null)}
+      />
+      <button type="button" onclick={pruefen} disabled={!antwort.trim()}>prüfen</button>
+    </div>
+    {#if geprueft === 'richtig'}
+      <p class="meldung richtig">Richtig – {uebung.loesung}!</p>
+    {:else if geprueft === 'falsch'}
+      <p class="meldung falsch">Noch nicht.</p>
     {/if}
-    <button type="button" onclick={loesungswegOeffnen}>Lösungsweg als Werkbank</button>
+
+    {#if offeneTipps > 0}
+      <ol class="tipps">
+        {#each uebung.tipps.slice(0, offeneTipps) as tipp, i (i)}
+          <li>{tipp}</li>
+        {/each}
+      </ol>
+    {/if}
+
+    <div class="knoepfe">
+      {#if offeneTipps < uebung.tipps.length}
+        <button type="button" onclick={() => (offeneTipps += 1)}>
+          {offeneTipps === 0 ? 'Tipp' : 'noch ein Tipp'} ({offeneTipps + 1}/{uebung.tipps.length})
+        </button>
+      {/if}
+      <button type="button" onclick={loesungswegOeffnen}>Lösungsweg als Werkbank</button>
+    </div>
   </div>
-</article>
+</details>
 
 <style>
   .uebung {
+    margin-bottom: 12px;
+    border: 1px solid var(--rand);
+    border-radius: var(--radius);
+    padding: 0 12px;
+  }
+
+  summary {
+    cursor: pointer;
+    padding: 10px 0;
+    min-height: 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::before {
+    content: '▸';
+    color: var(--text-leise);
+  }
+
+  .uebung[open] > summary::before {
+    content: '▾';
+  }
+
+  .inhalt {
     display: grid;
     gap: 10px;
-    margin-bottom: 24px;
+    padding-bottom: 12px;
   }
 
   h3 {

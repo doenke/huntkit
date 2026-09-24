@@ -7,8 +7,16 @@
   import Loesungen from './views/Loesungen.svelte';
   import Mehr from './views/Mehr.svelte';
   import Gruppenseite from './views/Gruppenseite.svelte';
+  import { abgleich, ansicht as gruppenansicht } from './lib/gruppe/gruppen.svelte';
+  import Avatar from './ui/Avatar.svelte';
 
   let seite = $state<Seite>(aktuelleSeite());
+
+  /** Wer angemeldet ist – steht gespeichert auf dem Gerät, also auch offline. */
+  const angemeldet = $derived.by(() => {
+    void gruppenansicht.version;
+    return abgleich.speicher.konto?.ich ?? null;
+  });
 
   $effect(() => {
     const beiWechsel = () => (seite = aktuelleSeite());
@@ -46,6 +54,11 @@
 
 <header>
   <h1>huntkit</h1>
+  {#if angemeldet}
+    <a class="konto" href="#/gruppen" title={`Angemeldet als ${angemeldet.name} – Gruppen`}>
+      <Avatar name={angemeldet.name} bild={angemeldet.avatar} groesse={28} />
+    </a>
+  {/if}
 </header>
 
 <main>
@@ -90,6 +103,18 @@
   header {
     padding: 12px 16px;
     border-bottom: 1px solid var(--rand);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .konto {
+    display: inline-flex;
+    border-radius: 50%;
+    /* Ein Tippziel in Fingergröße, auch wenn das Bild kleiner ist. */
+    padding: 8px;
+    margin: -8px;
   }
 
   h1 {

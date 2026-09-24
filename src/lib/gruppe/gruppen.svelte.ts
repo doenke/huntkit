@@ -39,6 +39,10 @@ export const abgleich = new Gruppenabgleich({
   }
 });
 
+// Vor dem Schließen alles sichern, egal welche Seite gerade offen ist –
+// der Speicher schreibt sonst gebündelt mit kurzer Verzögerung.
+if (typeof addEventListener === 'function') addEventListener('pagehide', () => abgleich.sichereJetzt());
+
 /** Wer die Werkbank-Meldungen bekommt – die Werkbank-Ansicht, solange sie offen ist. */
 export function empfangeWerkbaenke(f: Werkbankmeldung | null): void {
   empfaenger = f;

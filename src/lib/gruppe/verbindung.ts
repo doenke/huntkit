@@ -144,14 +144,15 @@ export class Gruppenabgleich {
       abruf: this.abruf
     });
     this.speicher.konto = { token: antwort.token, ich: antwort.ich };
-    this.sichere();
+    // Sofort: Wer gleich danach neu lädt, soll angemeldet bleiben.
+    this.sichereJetzt();
     await this.kontoLaden();
   }
 
   async abmelden(): Promise<void> {
     const token = this.speicher.konto?.token;
     delete this.speicher.konto;
-    this.sichere();
+    this.sichereJetzt();
     this.meldungen.zustand();
     if (token) await rufe('konto.php', { token, koerper: { aktion: 'abmelden' }, abruf: this.abruf }).catch(() => {});
   }
