@@ -703,8 +703,11 @@ Push auf main
   `rsync`- oder `lftp`-Aufruf. Begründung: Eine Deploy-Action aus dem Marketplace ist genau
   die Art externer Abhängigkeit, die vermieden werden soll – und sie bekommt die
   Zugangsdaten zum Webspace zu sehen.
-- **Upload nur nach grünen Tests** und nur bei Push auf `main`, sonst bleibt die alte
-  Version stehen.
+- **Upload nur nach grünen Tests** und nur vom Live-Branch (`LIVE_BRANCH` im Workflow),
+  sonst bleibt die alte Version stehen. Zurzeit ist das der Gruppen-Branch
+  `claude/dazzling-cori-ss0ls8`; `main` wird nur gebaut und getestet. Fixes auf `main` gehen
+  live, sobald `main` in den Gruppen-Branch gemergt ist. Zurück auf `main`: `LIVE_BRANCH`
+  auf beiden Branches umstellen und auf `main` pushen – das Spiegeln räumt `api/` dann mit ab.
 - Der Upload spiegelt `dist/` in das Zielverzeichnis und räumt dort auf, was nicht mehr
   dazugehört (`mirror -R --delete`). Das betrifft ausschließlich
   `/home/webzwenka/kanonenwiese.de/huntkit`.
@@ -716,9 +719,6 @@ Push auf main
 - Der PHP-Teil für Gruppen (`server/api`) wird beim Bauen nach `dist/api/` gelegt und
   geht mit demselben Upload hoch. Seine `config.php` liegt **neben** dem Zielordner
   (`…/huntkit-daten/config.php`), damit das Spiegeln sie nicht löscht.
-- **Testordner für den Gruppen-Branch:** Ist das Secret `DEPLOY_PATH_GRUPPEN` gesetzt, landet
-  der Branch dort, etwa in `/home/webzwenka/kanonenwiese.de/huntkit-gruppen`. Die Fassung auf
-  `main` bleibt davon unberührt.
 
 ### 7.10 Gruppen: gemeinsam an Werkbänken
 

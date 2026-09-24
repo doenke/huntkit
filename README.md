@@ -68,7 +68,7 @@ Rest von Phase 5:
 - **Link teilen** – der ganze Werkbank-Stand steckt im Fragment der Adresse und
   erreicht nie einen Server.
 
-Auf dem Gruppen-Branch (noch nicht auf `main`):
+Auf dem Gruppen-Branch, der zurzeit live ist (noch nicht auf `main`):
 
 - **Gruppen** – mehrere Leute arbeiten gleichzeitig an denselben Werkbänken, mit
   Protokoll, wer welche Zelle geändert hat. Anmeldung über OIDC, Gäste über
