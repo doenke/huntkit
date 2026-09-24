@@ -107,8 +107,11 @@
 
 <header>
   <h1>
-    huntkit
-    {#if seitentitel}<span class="seite">· {seitentitel}</span>{/if}
+    <!-- Der Titel führt zur Werkbank, der Startseite. -->
+    <a class="heim" href="#/werkbank" title="Zur Werkbank" onclick={() => (menueOffen = false)}>
+      huntkit
+      {#if seitentitel}<span class="seite">· {seitentitel}</span>{/if}
+    </a>
   </h1>
   <div class="rechts">
     {#if angemeldet}
@@ -291,6 +294,11 @@
     margin: 0;
     font-size: 1.1rem;
     letter-spacing: 0.04em;
+  }
+
+  .heim {
+    color: inherit;
+    text-decoration: none;
   }
 
   main {
