@@ -103,7 +103,10 @@
     // Nach den Klicks der Elemente selbst: Die haben ihre Box schon geöffnet
     // oder gewechselt, hier geht es nur noch um Klicks ins Leere.
     const klick = (e: MouseEvent) => {
-      if (e.target instanceof Element && e.target.closest('[data-box]')) return;
+      // Der Pfad stammt vom Zeitpunkt des Klicks. Ein Knopf, der sich beim
+      // Klick selbst ersetzt (etwa „✕“ durch „wirklich löschen“), ist
+      // hier schon aus dem Dokument – `closest` fände seine Box nicht mehr.
+      if (e.composedPath().some((el) => el instanceof Element && el.hasAttribute('data-box'))) return;
       alleSchliessen();
     };
     const taste = (e: KeyboardEvent) => {
