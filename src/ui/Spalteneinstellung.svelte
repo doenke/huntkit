@@ -46,7 +46,6 @@
     if (gewaehlt?.einseitig) spalte.richtung = 'encode';
   }
 
-  /** Tafel gewählt: Die passende Entschlüsselung entsteht gleich daneben. */
   /** Nach einem Tafelwechsel: wie viele Zellen sich nicht umwandeln ließen. */
   let nichtUmgewandelt = $state(0);
 
@@ -90,6 +89,18 @@
     <strong>Spalte {spaltenzeichen(Math.max(0, stelle))}</strong>
     <button type="button" onclick={schliessen} aria-label="Einstellungen schließen">fertig</button>
   </div>
+
+  {#if spalte.art === 'werkzeug'}
+    <!-- Das Werkzeug zuerst: Es ist das, was man an einer Werkzeugspalte am häufigsten umstellt. -->
+    <label>
+      <span>Werkzeug</span>
+      <select value={spalte.codecId} onchange={(e) => setzeWerkzeug(e.currentTarget.value)}>
+        {#each werkzeuge as eintrag (eintrag.id)}
+          <option value={eintrag.id}>{eintrag.name}</option>
+        {/each}
+      </select>
+    </label>
+  {/if}
 
   <label>
     <span>Name</span>
@@ -141,15 +152,6 @@
       <select value={spalte.quelle} onchange={(e) => (spalte.quelle = e.currentTarget.value)}>
         {#each quellen as quelle (quelle.id)}
           <option value={quelle.id}>{spaltenname(blatt, quelle.id)}</option>
-        {/each}
-      </select>
-    </label>
-
-    <label>
-      <span>Werkzeug</span>
-      <select value={spalte.codecId} onchange={(e) => setzeWerkzeug(e.currentTarget.value)}>
-        {#each werkzeuge as eintrag (eintrag.id)}
-          <option value={eintrag.id}>{eintrag.name}</option>
         {/each}
       </select>
     </label>
