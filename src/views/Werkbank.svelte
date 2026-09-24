@@ -50,7 +50,9 @@
   import Sortierwahl from '../ui/Sortierwahl.svelte';
   import Spalteneinstellung from '../ui/Spalteneinstellung.svelte';
   import Tafeleingabe from '../ui/Tafeleingabe.svelte';
+  import Tour from '../ui/Tour.svelte';
   import Werkbaenke from '../ui/Werkbaenke.svelte';
+  import { merkeTourGesehen, tourGesehen, WERKBANK_TOUR, type Tourschritt } from '../lib/tour';
   import Zellenanalyse from '../ui/Zellenanalyse.svelte';
 
   /**
@@ -106,6 +108,54 @@
     einstellung = null;
     verwaltungOffen = false;
   }
+  /*
+   * Die Tour durch die Werkbank. Sie startet von selbst, wenn jemand die App
+   * zum ersten Mal öffnet und noch nichts in der Werkbank steht; danach über
+   * das ? neben „+ Zeile“ oder einen Link mit „?tour“.
+   */
+  let tourAn = $state(false);
+
+  function starteTour() {
+    alleSchliessen();
+    tourAn = true;
+    merkeTourGesehen();
+  }
+
+  function beendeTour() {
+    tourAn = false;
+    alleSchliessen();
+  }
+
+  /** Für jeden Schritt die passende Box – gezeigt wird an der ersten Zeile und Spalte. */
+  function tourSchritt(schritt: Tourschritt) {
+    const spalte = blatt.spalten[0];
+    const zeile = berechnung.zeilen[0]?.zeile;
+    if (schritt.oeffne === 'zelle' && spalte && zeile) zeigeZelle({ spalte: spalte.id, zeile: zeile.id });
+    else if (schritt.oeffne === 'einstellung' && spalte) zeigeEinstellung(spalte.id);
+    else alleSchliessen();
+  }
+
+  $effect(() => {
+    const vonAdresse = () => {
+      if (!/[?&]tour\b/.test(location.hash)) return;
+      history.replaceState(null, '', location.href.replace(/[?&]tour\b/, ''));
+      starteTour();
+    };
+    vonAdresse();
+    addEventListener('hashchange', vonAdresse);
+    return () => removeEventListener('hashchange', vonAdresse);
+  });
+
+  $effect(() => {
+    untrack(() => {
+      if (tourAn || tourGesehen() || /[?&]w=/.test(location.hash)) return;
+      const leer =
+        sammlung.werkbaenke.length === 1 &&
+        blatt.zeilen.every((z) => Object.values(z.werte).every((w) => !w?.trim()));
+      if (leer) starteTour();
+    });
+  });
+
 
   $effect(() => {
     // Nach den Klicks der Elemente selbst: Die haben ihre Box schon geöffnet
@@ -685,6 +735,7 @@
     class="titel"
     aria-expanded={verwaltungOffen}
     data-box
+    data-tour="werkbank-name"
     onclick={verwaltungUmschalten}
     title="Werkbänke verwalten und wechseln"
   >
@@ -707,8 +758,9 @@
     </button>
   {/if}
   <div class="leiste">
-    <button type="button" onclick={zeileHinzufuegen}>+ Zeile</button>
+    <button type="button" data-tour="neue-zeile" onclick={zeileHinzufuegen}>+ Zeile</button>
     <select
+      data-tour="neue-spalte"
       aria-label="Spalte hinzufügen"
       value=""
       onchange={(e) => {
@@ -722,6 +774,13 @@
       <option value="werkzeug">Werkzeug auf eine Spalte</option>
       <option value="position">Platz in einer Reihenfolge</option>
     </select>
+    <button
+      type="button"
+      class="hilfe"
+      onclick={starteTour}
+      aria-label="Tour durch die Werkbank"
+      title="Tour durch die Werkbank"
+    >?</button>
   </div>
 </div>
 
@@ -809,7 +868,7 @@
         <th class="ecke" title="Nummer der Eingabe">#</th>
         {#each blatt.spalten as spalte, i (spalte.id)}
           <th>
-            <div class="kopfzelle" data-box>
+            <div class="kopfzelle" data-box data-tour={i === 0 ? 'spaltenkopf' : undefined}>
               <button type="button" class="spaltenkopf" onclick={() => zeigeEinstellung(einstellung === spalte.id ? null : spalte.id)}>
                 <span class="buchstabe">{spaltenzeichen(i)}</span>
                 <span class="name">
@@ -845,7 +904,7 @@
       </tr>
     </thead>
     <tbody>
-      {#each berechnung.zeilen as reihe (reihe.zeile.id)}
+      {#each berechnung.zeilen as reihe, zi (reihe.zeile.id)}
         <tr>
           <th class="nr">
             <span class="nummer">{reihe.zeile.nummer}</span>
@@ -855,11 +914,12 @@
               </span>
             {/if}
           </th>
-          {#each blatt.spalten as spalte (spalte.id)}
+          {#each blatt.spalten as spalte, si (spalte.id)}
             {@const inhalt = reihe.zellen[spalte.id]}
             {@const frisch = werkbank.gruppe ? gruppenansicht.frisch[`${werkbank.id}|${zellschluessel(reihe.zeile.id, spalte.id)}`] : undefined}
             <td
               data-box
+              data-tour={zi === 0 && si === 0 ? 'zelle' : undefined}
               class:aktiv={gewaehlt?.spalte === spalte.id && gewaehlt?.zeile === reihe.zeile.id}
               class:fehler={Boolean(inhalt?.fehler)}
               class:frisch={Boolean(frisch)}
@@ -959,7 +1019,7 @@
 {/if}
 
 {#if spalteEinstellung}
-  <div data-box>
+  <div data-box data-tour="spalteneinstellung">
   <Spalteneinstellung
     {blatt}
     spalte={spalteEinstellung}
@@ -969,7 +1029,7 @@
   </div>
 {/if}
 
-<section class="sortierung">
+<section class="sortierung" data-tour="sortieren">
   <div class="zeile">
     <strong>Sortieren</strong>
   </div>
@@ -982,7 +1042,7 @@
 </section>
 
 {#if zelle}
-  <section class="zelle" data-box>
+  <section class="zelle" data-box data-tour="zellenbox">
     <div class="zeile">
       <strong>
         {spaltenname(blatt, zelle.spalte.id)} · Zeile {zelle.reihe.zeile.nummer}
@@ -1077,6 +1137,16 @@
   </section>
 {/if}
 
+
+
+{#if tourAn}
+  <Tour
+    schritte={WERKBANK_TOUR}
+    beiSchritt={tourSchritt}
+    beenden={beendeTour}
+    zumSchluss={{ titel: 'zu den Übungen', aktion: () => { beendeTour(); location.hash = '#/mehr'; } }}
+  />
+{/if}
 
 <style>
   .kopf {
@@ -1241,6 +1311,13 @@
   .leiste select {
     min-height: 38px;
     font-size: 0.8rem;
+  }
+
+  .leiste .hilfe {
+    min-width: 38px;
+    padding: 0;
+    font-weight: 700;
+    color: var(--akzent);
   }
 
   .hinweis {
