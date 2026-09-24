@@ -3,6 +3,7 @@
   import { UEBUNGEN } from '../lib/uebungen';
   import Nachtausruestung from '../ui/Nachtausruestung.svelte';
   import Uebung from '../ui/Uebung.svelte';
+  import Gruppenverwaltung from '../ui/Gruppenverwaltung.svelte';
   import Serverstatus from '../ui/Serverstatus.svelte';
   import Verbindungstest from '../ui/Verbindungstest.svelte';
 
@@ -38,6 +39,11 @@
       <span>{eintrag.hinweis}</span>
     </button>
   {/each}
+</div>
+
+<h2>Gruppen</h2>
+<div class="mehr-gruppen">
+  <Gruppenverwaltung />
 </div>
 
 <h2>Gruppen-Server</h2>

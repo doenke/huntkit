@@ -21,9 +21,10 @@
     gruppeVergessen,
     melde
   }: {
-    offene: Werkbank;
-    inGruppeKopieren: (gruppe: string) => void;
-    neueInGruppe: (gruppe: string) => void;
+    /** Nur in der Werkbank: die offene Werkbank und was man mit ihr in einer Gruppe tun kann. */
+    offene?: Werkbank;
+    inGruppeKopieren?: (gruppe: string) => void;
+    neueInGruppe?: (gruppe: string) => void;
     gruppeVergessen: (gruppe: string) => void;
     melde: (text: string) => void;
   } = $props();
@@ -177,15 +178,20 @@
     {#each stand.gruppen as g (g.id)}
       {@const status = g.status}
       {@const admin = g.details?.rolle === 'admin'}
-      <li class:hier={offene.gruppe === g.id}>
+      <li class:hier={offene?.gruppe === g.id}>
         <button type="button" class="wahl" onclick={() => aufklappen(g.id)} aria-expanded={offen === g.id}>
           <span class="name">{g.name}</span>
           <span class="info">
-            <span class="punkt {status?.verbindung ?? 'start'}" aria-hidden="true"></span>
-            {VERBINDUNG[status?.verbindung ?? 'start']}
-            {#if status?.ausstehend}· {status.ausstehend} ausstehend{/if}
-            {#if g.details}· {g.details.mitglieder.length} {g.details.mitglieder.length === 1 ? 'Mitglied' : 'Mitglieder'}{/if}
-            {#if admin}· Admin{:else if g.details?.rolle === 'gast'}· Gast{/if}
+            <!-- Außerhalb der Werkbank läuft kein Abgleich; dann gibt es auch keinen Verbindungsstand. -->
+            {#if status && status.verbindung !== 'start'}
+              <span class="punkt {status.verbindung}" aria-hidden="true"></span>
+            {/if}
+            {[
+              status && status.verbindung !== 'start' ? VERBINDUNG[status.verbindung] : '',
+              status?.ausstehend ? `${status.ausstehend} ausstehend` : '',
+              g.details ? `${g.details.mitglieder.length} ${g.details.mitglieder.length === 1 ? 'Mitglied' : 'Mitglieder'}` : '',
+              admin ? 'Admin' : g.details?.rolle === 'gast' ? 'Gast' : ''
+            ].filter(Boolean).join(' · ')}
           </span>
         </button>
 
@@ -197,12 +203,14 @@
         {:else}
           <div class="knoepfe">
             <button type="button" onclick={() => void einladen(g.id, g.name)}>Einladen</button>
-            {#if offene.gruppe !== g.id}
-              <button type="button" onclick={() => inGruppeKopieren(g.id)} title="Die offene Werkbank als Kopie in diese Gruppe legen">
+            {#if offene && inGruppeKopieren && offene.gruppe !== g.id}
+              <button type="button" onclick={() => inGruppeKopieren?.(g.id)} title="Die offene Werkbank als Kopie in diese Gruppe legen">
                 offene Werkbank hierher kopieren
               </button>
             {/if}
-            <button type="button" onclick={() => neueInGruppe(g.id)}>+ Werkbank</button>
+            {#if neueInGruppe}
+              <button type="button" onclick={() => neueInGruppe?.(g.id)}>+ Werkbank</button>
+            {/if}
           </div>
         {/if}
 
