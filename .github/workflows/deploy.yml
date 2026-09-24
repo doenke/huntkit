@@ -2,8 +2,7 @@ name: Bauen und veröffentlichen
 
 on:
   push:
-    # Gebaut und getestet werden beide; auf den Webspace kommt nur LIVE_BRANCH.
-    branches: [main, claude/dazzling-cori-ss0ls8]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -16,10 +15,10 @@ permissions:
   contents: read
 
 env:
-  # Nur dieser Branch landet auf dem Webspace. Zurueck auf main: hier umstellen –
-  # auf BEIDEN Branches, denn jeder Push laeuft mit der Workflow-Datei seines
-  # eigenen Branches.
-  LIVE_BRANCH: claude/dazzling-cori-ss0ls8
+  # Nur dieser Branch landet auf dem Webspace. Soll einmal ein anderer live
+  # gehen: hier umstellen und ihn oben bei push eintragen – auf BEIDEN
+  # Branches, denn jeder Push laeuft mit der Workflow-Datei seines eigenen.
+  LIVE_BRANCH: main
 
 jobs:
   bauen:
