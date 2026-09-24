@@ -40,7 +40,9 @@
     } catch (e) {
       const status = (e as { status?: number }).status ?? 0;
       return {
-        erreichbar: status !== 0 && status !== 404,
+        // 403 und 404 kommen vom Webserver, nicht von huntkit: PHP läuft dort nicht
+        // oder der Ordner ist gesperrt. Unser PHP antwortet ohne Einrichtung mit 503.
+        erreichbar: status !== 0 && status !== 403 && status !== 404,
         eingerichtet: false,
         fehler: e instanceof Error ? e.message : String(e)
       };
@@ -103,6 +105,11 @@
   const empfehlung = $derived.by(() => {
     const e = ergebnis;
     if (!e || e.laeuft) return null;
+    // Kommt gar nichts an und antwortet auch der Server nicht, lässt sich über SSE
+    // nichts sagen – dann läuft PHP nicht oder der Ordner api/ ist gesperrt.
+    if (e.beendet === 'fehler' && e.server && !e.server.erreichbar) {
+      return 'Der Server ist nicht erreichbar – der Test sagt so nichts über SSE. Läuft PHP auf dem Webspace, und ist der Ordner api/ freigegeben?';
+    }
     if (e.beendet === 'fehler') return 'Server-Sent Events kommen hier nicht an. Es bleibt beim Polling: echtzeit => \'polling\'.';
     if (einzeln === false) return 'Die Ereignisse kommen gebündelt an – irgendwo puffert der Server. Besser beim Polling bleiben.';
     if ((e.gehalten ?? 0) < DAUER * 1000 - 2000) {
