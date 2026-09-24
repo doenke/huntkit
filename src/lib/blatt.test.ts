@@ -14,6 +14,7 @@ import {
   spaltenzeichen,
   zeigtBild,
   type Blatt,
+  wechsleTafel,
   type SpaltenId,
   type Werkzeugspalte
 } from './blatt';
@@ -501,5 +502,57 @@ describe('Sortierung ohne eine gelöschte Spalte', () => {
 
   it('lässt eine Sortierung ohne diese Spalte, wie sie ist', () => {
     expect(sortierungOhne({ ...erste, dann: zweite }, 'c')).toEqual({ ...erste, dann: zweite });
+  });
+});
+
+describe('Tafel wechseln', () => {
+  function spalteMit(...texte: string[]) {
+    const spalte = neueEingabespalte();
+    const blatt: Blatt = {
+      spalten: [spalte],
+      zeilen: texte.map((text, i) => {
+        const zeile = neueZeile(i + 1);
+        zeile.werte[spalte.id] = text;
+        return zeile;
+      })
+    };
+    return { blatt, spalte, werte: () => blatt.zeilen.map((z) => z.werte[spalte.id]) };
+  }
+
+  it('wandelt Klartext in die neue Tafel um und legt die Entschlüsselung daneben', () => {
+    const { blatt, spalte, werte } = spalteMit('SOS', 'HALLO');
+    expect(wechsleTafel(blatt, spalte, 'braille')).toBe(0);
+    expect(werte()).toEqual(['⠎⠕⠎', '⠓⠁⠇⠇⠕']);
+    const daneben = blatt.spalten[1];
+    expect(daneben?.art === 'werkzeug' && daneben.codecId).toBe('braille');
+    expect(rechne(blatt).zeilen.map((z) => z.zellen[daneben?.id ?? '']?.text)).toEqual(['SOS', 'HALLO']);
+  });
+
+  it('wandelt von Code zu Code und zurück zu Klartext', () => {
+    const { blatt, spalte, werte } = spalteMit('SOS');
+    wechsleTafel(blatt, spalte, 'morse');
+    expect(werte()).toEqual(['... --- ...']);
+    wechsleTafel(blatt, spalte, 'braille');
+    expect(werte()).toEqual(['⠎⠕⠎']);
+    wechsleTafel(blatt, spalte, undefined);
+    expect(werte()).toEqual(['SOS']);
+    expect(spalte.tafel).toBeUndefined();
+    // Die Entschlüsselung daneben hat nichts mehr zu tun und ist weg.
+    expect(blatt.spalten).toHaveLength(1);
+  });
+
+  it('lässt die Entschlüsselung stehen, wenn etwas auf ihr aufbaut', () => {
+    const { blatt, spalte } = spalteMit('SOS');
+    wechsleTafel(blatt, spalte, 'morse');
+    const daneben = blatt.spalten[1]!;
+    blatt.spalten.push(neueWerkzeugspalte(daneben.id, 'caesar'));
+    wechsleTafel(blatt, spalte, undefined);
+    expect(blatt.spalten).toHaveLength(3);
+  });
+
+  it('lässt Zellen stehen, die sich nicht vollständig umwandeln lassen', () => {
+    const { blatt, spalte, werte } = spalteMit('SOS', 'A€B', '');
+    expect(wechsleTafel(blatt, spalte, 'morse')).toBe(1);
+    expect(werte()).toEqual(['... --- ...', 'A€B', '']);
   });
 });

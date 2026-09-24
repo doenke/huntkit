@@ -4,7 +4,7 @@
   import { ausSpalteMoeglich, standardOptionen } from '../codecs/types';
   import Sortierwahl from './Sortierwahl.svelte';
   import {
-    begleiteTafel,
+    wechsleTafel,
     spaltenDavor,
     spaltenname,
     spaltenzeichen,
@@ -47,10 +47,12 @@
   }
 
   /** Tafel gewählt: Die passende Entschlüsselung entsteht gleich daneben. */
+  /** Nach einem Tafelwechsel: wie viele Zellen sich nicht umwandeln ließen. */
+  let nichtUmgewandelt = $state(0);
+
   function setzeTafel(id: string) {
     if (spalte.art !== 'eingabe') return;
-    spalte.tafel = id || undefined;
-    begleiteTafel(blatt, spalte);
+    nichtUmgewandelt = wechsleTafel(blatt, spalte, id || undefined);
   }
 
   function bindung(optionId: string) {
@@ -109,9 +111,16 @@
       </select>
     </label>
     <p class="hinweis">
-      Die Zelle behält, was eingetippt wurde – Morse bleibt Morse. Die passende
-      Entschlüsselung entsteht gleich als Spalte daneben.
+      Was schon in der Spalte steht, wird beim Wechsel mit umgewandelt – aus Klartext
+      wird Braille, aus Morse wird Braille. Die passende Entschlüsselung entsteht gleich
+      als Spalte daneben.
     </p>
+    {#if nichtUmgewandelt > 0}
+      <p class="hinweis warn">
+        {nichtUmgewandelt === 1 ? 'Eine Zelle ließ' : `${nichtUmgewandelt} Zellen ließen`} sich
+        nicht vollständig umwandeln und {nichtUmgewandelt === 1 ? 'steht' : 'stehen'} unverändert da.
+      </p>
+    {/if}
   {/if}
 
   {#if spalte.art === 'position'}
@@ -310,6 +319,10 @@
     margin: 0;
     color: var(--text-leise);
     font-size: 0.75rem;
+  }
+
+  .hinweis.warn {
+    color: var(--warn);
   }
 
   .fuss {

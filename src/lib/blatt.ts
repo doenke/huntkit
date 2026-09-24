@@ -424,6 +424,62 @@ export function begleiteTafel(blatt: Blatt, spalte: Eingabespalte): Werkzeugspal
   return begleiter;
 }
 
+/**
+ * Die Codetafel einer Eingabespalte wechseln und mitnehmen, was schon
+ * drinsteht: Aus eingetipptem Klartext wird Braille, aus Morse wird Braille,
+ * aus Braille wieder Klartext. Gelesen wird mit der alten Tafel, geschrieben
+ * mit der neuen, jeweils mit ihren Standardeinstellungen.
+ *
+ * Eine Zelle, die sich nicht verlustfrei umwandeln lässt – ein Zeichen, das
+ * die eine Tafel nicht kennt –, bleibt, wie sie ist; wie viele das sind, sagt
+ * der Rückgabewert. Lieber sieht man dort den alten Inhalt als einen halben.
+ */
+export function wechsleTafel(blatt: Blatt, spalte: Eingabespalte, neu: string | undefined): number {
+  const alt = spalte.tafel ? codec(spalte.tafel) : undefined;
+  const ziel = neu ? codec(neu) : undefined;
+  let behalten = 0;
+  if (alt !== ziel) {
+    for (const zeile of blatt.zeilen) {
+      const text = zeile.werte[spalte.id];
+      if (!text?.trim()) continue;
+      const klar = alt ? alt.decode(text, standardOptionen(alt)) : { text, luecken: [] };
+      const umgewandelt =
+        klar.luecken.length > 0 ? null : ziel ? ziel.encode(klar.text, standardOptionen(ziel)) : klar;
+      if (!umgewandelt || umgewandelt.luecken.length > 0) {
+        behalten++;
+        continue;
+      }
+      zeile.werte[spalte.id] = umgewandelt.text;
+    }
+  }
+  spalte.tafel = neu || undefined;
+  if (spalte.tafel) begleiteTafel(blatt, spalte);
+  else begleiterEntfernen(blatt, spalte);
+  return behalten;
+}
+
+/**
+ * Ohne Tafel gibt es nichts mehr zu entschlüsseln: Die automatisch
+ * entstandene Spalte daneben geht mit – aber nur, solange nichts anderes
+ * auf ihr aufbaut. Sonst bleibt sie stehen, und man entscheidet selbst.
+ */
+function begleiterEntfernen(blatt: Blatt, spalte: Eingabespalte): void {
+  const stelle = blatt.spalten.findIndex((s) => s.id === spalte.id);
+  const daneben = blatt.spalten[stelle + 1];
+  if (!(daneben?.art === 'werkzeug' && daneben.ausTafel && daneben.quelle === spalte.id)) return;
+  const id = daneben.id;
+  const benutzt =
+    blatt.spalten.some(
+      (s) =>
+        (s.art === 'werkzeug' &&
+          (s.quelle === id || Object.values(s.optionen).some((o) => o.art === 'spalte' && o.spalte === id))) ||
+        (s.art === 'position' && (s.nach?.spalte === id || s.nach?.dann?.spalte === id))
+    ) ||
+    blatt.sortierung?.spalte === id ||
+    blatt.sortierung?.dann?.spalte === id;
+  if (!benutzt) blatt.spalten.splice(stelle + 1, 1);
+}
+
 /** Zeigt diese Spalte Bilder? Ohne ausdrückliche Wahl: ja. */
 export function zeigtBild(spalte: Spalte): boolean {
   return spalte.darstellung !== 'zeichen';
