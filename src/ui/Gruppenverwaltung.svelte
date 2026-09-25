@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { abgleich } from '../lib/gruppe/gruppen.svelte';
+  import { abgleich, aktiveGruppe, setzeAktiveGruppe } from '../lib/gruppe/gruppen.svelte';
   import { ladeSammlung, sichereSammlung } from '../lib/sammlung';
   import Gruppen from './Gruppen.svelte';
 
@@ -20,8 +20,10 @@
   /**
    * Eine Gruppe hier vergessen. Ihre Werkbänke bleiben als eigene – genau wie
    * in der Werkbank. Die ist gerade nicht offen, also direkt im Speicher.
+   * War sie die aktive Gruppe, arbeitet man danach wieder auf dem Gerät.
    */
   function gruppeVergessen(gruppe: string) {
+    if (aktiveGruppe() === gruppe) setzeAktiveGruppe(null);
     const sammlung = ladeSammlung();
     for (const w of sammlung.werkbaenke) if (w.gruppe === gruppe) delete w.gruppe;
     sichereSammlung(sammlung);

@@ -7,7 +7,7 @@
   /**
    * Alles rund um Gruppen: anmelden, anlegen, einladen, Mitglieder, verlassen –
    * und für die Einrichtung der Zustand des Servers. Gearbeitet wird in der
-   * Werkbank; dort gibt es nur noch „in Gruppe kopieren“.
+   * Werkbank und im Kreuzworträtsel – in der Gruppe, die im Menü aktiv ist.
    *
    * Hierher kommt man auch nach der Anmeldung zurück:
    * #/gruppen?anmeldung=… oder ?anmeldefehler=…
@@ -60,8 +60,9 @@
 </div>
 
 <p class="leise">
-  Gearbeitet wird in der Werkbank: Dort legt „In Gruppe kopieren …“ in der Verwaltung der
-  Werkbänke die offene Werkbank in eine Gruppe. Werkbänke einer Gruppe tragen deren Namen.
+  Im Menü unter „Arbeiten in“ wählst du, wo du arbeitest: in einer Gruppe oder nur auf diesem
+  Gerät. Werkbänke und Kreuzworträtsel gehören dann diesem Ort. „Kopieren nach …“ in der
+  Verwaltung der Werkbänke legt die offene Werkbank an einen anderen Ort.
 </p>
 
 <h2>Server</h2>

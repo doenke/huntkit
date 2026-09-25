@@ -1,28 +1,31 @@
 <script lang="ts">
   import Symbol from './Symbol.svelte';
   import Textzeile from './Textzeile.svelte';
-  import type { Sammlung, Werkbank } from '../lib/sammlung';
+  import type { Werkbank } from '../lib/sammlung';
 
   /**
-   * Verwaltung der gespeicherten Werkbänke: wechseln, neu anlegen, kopieren,
-   * umbenennen, löschen, in eine Gruppe kopieren.
+   * Verwaltung der Werkbänke am aktuellen Ort (dieses Gerät oder die aktive
+   * Gruppe): wechseln, neu anlegen, kopieren, umbenennen, löschen und an
+   * einen anderen Ort kopieren.
    * Nur Anzeige und Bedienung; was dabei mit der offenen Arbeit passiert,
    * entscheidet die Werkbank selbst.
    */
   let {
-    sammlung,
+    werkbaenke,
+    aktiv: aktivId,
     wechseln,
     neu,
     kopieren,
     entfernen,
     umbenennen,
     leeren,
-    gruppenname = () => undefined,
     darfLoeschen = () => true,
-    gruppen = [],
-    inGruppeKopieren = () => {}
+    ziele = [],
+    kopierenNach = () => {}
   }: {
-    sammlung: Sammlung;
+    werkbaenke: Werkbank[];
+    /** Die offene Werkbank. */
+    aktiv: string;
     wechseln: (id: string) => void;
     neu: () => void;
     kopieren: (id: string) => void;
@@ -30,14 +33,12 @@
     umbenennen: (id: string, name: string) => void;
     /** Die offene Werkbank leeren. */
     leeren: () => void;
-    /** Name der Gruppe, der eine Werkbank gehört – oder nichts. */
-    gruppenname?: (gruppe: string | undefined) => string | undefined;
     /** Werkbänke einer Gruppe löschen nur deren Admins. */
     darfLoeschen?: (werkbank: Werkbank) => boolean;
-    /** Gruppen, denen man angehört – Ziele für „in Gruppe kopieren“. */
-    gruppen?: Array<{ id: string; name: string }>;
-    /** Die offene Werkbank als Kopie in eine Gruppe legen. */
-    inGruppeKopieren?: (gruppe: string) => void;
+    /** Die anderen Orte – `null` ist dieses Gerät. */
+    ziele?: Array<{ id: string | null; name: string }>;
+    /** Die offene Werkbank als Kopie an einen anderen Ort legen. */
+    kopierenNach?: (gruppe: string | null) => void;
   } = $props();
 
   /** Rückfrage vor Leeren oder Löschen – je Werkbank höchstens eine. */
@@ -47,7 +48,7 @@
   let neuerName = $state('');
 
   // Zuletzt bearbeitete oben – die sucht man meistens.
-  const liste = $derived([...sammlung.werkbaenke].sort((a, b) => b.geaendert - a.geaendert));
+  const liste = $derived([...werkbaenke].sort((a, b) => b.geaendert - a.geaendert));
 
   function zeit(ms: number): string {
     const datum = new Date(ms);
@@ -83,14 +84,13 @@
 
   <!--
     Eine Zeile je Werkbank: links der Name zum Wechseln, rechts kleine
-    Symbol-Knöpfe. Leeren und in eine Gruppe kopieren gibt es nur an der
+    Symbol-Knöpfe. Leeren und an einen anderen Ort kopieren gibt es nur an der
     offenen Werkbank, denn beides betrifft die Arbeit, die man vor sich hat.
   -->
   <ul>
     {#each liste as werkbank (werkbank.id)}
-      {@const aktiv = werkbank.id === sammlung.aktiv}
+      {@const aktiv = werkbank.id === aktivId}
       {@const frage = gefragt?.id === werkbank.id ? gefragt.was : null}
-      {@const ziele = aktiv ? gruppen.filter((g) => g.id !== werkbank.gruppe) : []}
       <li class:aktiv>
         {#if umbenennend === werkbank.id}
           <div class="umbenennen">
@@ -99,10 +99,7 @@
           </div>
         {:else}
           <button type="button" class="wahl" onclick={() => wechseln(werkbank.id)} aria-current={aktiv}>
-            <span class="name">
-              {werkbank.name}
-              {#if gruppenname(werkbank.gruppe)}<span class="gruppe">{gruppenname(werkbank.gruppe)}</span>{/if}
-            </span>
+            <span class="name">{werkbank.name}</span>
             <span class="info">
               {zeilen(werkbank)} · {zeit(werkbank.geaendert)}
               {#if aktiv}<span class="offen">· offen</span>{/if}
@@ -135,21 +132,22 @@
                   <Symbol name="radierer" />
                 </button>
                 {#if ziele.length > 0}
-                  <!-- Die Auswahl liegt unsichtbar über dem Symbol: ein Tipp öffnet die Liste der Gruppen. -->
-                  <label class="symbol auswahl" title="In eine Gruppe kopieren">
+                  <!-- Die Auswahl liegt unsichtbar über dem Symbol: ein Tipp öffnet die Liste der Orte. -->
+                  <label class="symbol auswahl" title="Kopieren nach …">
                     <Symbol name="gruppe" />
                     <select
-                      aria-label="Offene Werkbank in eine Gruppe kopieren"
+                      aria-label="Offene Werkbank an einen anderen Ort kopieren"
                       value=""
                       onchange={(e) => {
-                        const ziel = e.currentTarget.value;
+                        const stelle = e.currentTarget.value;
                         e.currentTarget.value = '';
-                        if (ziel) inGruppeKopieren(ziel);
+                        const ziel = stelle === '' ? undefined : ziele[Number(stelle)];
+                        if (ziel) kopierenNach(ziel.id);
                       }}
                     >
-                      <option value="">In Gruppe kopieren …</option>
-                      {#each ziele as g (g.id)}
-                        <option value={g.id}>{g.name}</option>
+                      <option value="">Kopieren nach …</option>
+                      {#each ziele as z, i (z.id ?? '')}
+                        <option value={String(i)}>{z.name}</option>
                       {/each}
                     </select>
                   </label>
@@ -313,18 +311,6 @@
     min-height: 32px;
     padding: 0 10px;
     font-size: 0.78rem;
-  }
-
-  .gruppe {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 0 6px;
-    border: 1px solid var(--akzent);
-    border-radius: 999px;
-    color: var(--akzent);
-    font-size: 0.7rem;
-    font-weight: normal;
-    vertical-align: middle;
   }
 
   .ernst {

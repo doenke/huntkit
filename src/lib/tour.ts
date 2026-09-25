@@ -20,7 +20,7 @@ export const WERKBANK_TOUR: ReadonlyArray<Tourschritt> = [
   {
     ziel: 'werkbank-name',
     titel: 'Deine Werkbank',
-    text: 'Hier löst du Rätsel – als Tabelle. Ein Tipp auf den Namen öffnet die Verwaltung: Werkbänke wechseln, neu anlegen, kopieren oder in eine Gruppe legen.'
+    text: 'Hier löst du Rätsel – als Tabelle. Ein Tipp auf den Namen öffnet die Verwaltung: Werkbänke wechseln, neu anlegen, kopieren oder an einen anderen Ort kopieren.'
   },
   {
     ziel: 'neue-zeile',

@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { untrack } from 'svelte';
   import Textzeile from '../ui/Textzeile.svelte';
-  import { abgleich, ansicht as gruppenansicht, mitglied } from '../lib/gruppe/gruppen.svelte';
+  import { abgleich, aktiveGruppe, ansicht as gruppenansicht, mitglied } from '../lib/gruppe/gruppen.svelte';
   import { wortschluessel, wortwert, zustandAus } from '../lib/kreuzwortgruppe';
   import {
     buchstaben,
@@ -24,34 +23,8 @@
    * stimmte nicht mehr.
    */
 
-  /** Wo das Rätsel liegt: '' ist dieses Gerät, sonst die Kennung der Gruppe. */
-  const ORT = 'huntkit:kreuzwort-ort';
-  let ort = $state(ortLaden());
-
-  function ortLaden(): string {
-    try {
-      return localStorage.getItem(ORT) ?? '';
-    } catch {
-      return '';
-    }
-  }
-
-  function ortWaehlen(neu: string) {
-    ort = neu;
-    hinweis = null;
-    try {
-      localStorage.setItem(ORT, neu);
-    } catch {
-      // Dann eben beim nächsten Mal wieder dieses Gerät.
-    }
-  }
-
-  const gruppen = $derived.by(() => {
-    void gruppenansicht.version;
-    return Object.values(abgleich.speicher.gruppen).map((g) => ({ id: g.id, name: g.name }));
-  });
-  /** Die gewählte Gruppe – nur solange man ihr noch angehört. */
-  const gruppe = $derived(gruppen.some((g) => g.id === ort) ? ort : null);
+  /** Das Rätsel gehört der aktiven Gruppe; ohne sie liegt es auf diesem Gerät. */
+  const gruppe = $derived(aktiveGruppe());
 
   let lokal = $state(laden());
   const geteilt = $derived.by(() => {
@@ -77,24 +50,10 @@
     sichern(lokal);
   });
 
-  // Während die Seite offen ist, gleicht sie die Gruppen ab – wie die Werkbank.
+  // Wechselt die aktive Gruppe, gilt ein Hinweis zum alten Rätsel nicht mehr.
   $effect(() => {
-    abgleich.start();
-    const sicht = () => abgleich.setzeSichtbar(document.visibilityState === 'visible');
-    const online = () => abgleich.wiederOnline();
-    document.addEventListener('visibilitychange', sicht);
-    addEventListener('online', online);
-    return () => {
-      document.removeEventListener('visibilitychange', sicht);
-      removeEventListener('online', online);
-      abgleich.sichereJetzt();
-      abgleich.stopp();
-    };
-  });
-
-  $effect(() => {
-    const g = gruppe;
-    untrack(() => abgleich.setzeAktiv(g));
+    void gruppe;
+    hinweis = null;
   });
 
   const verbindung = $derived.by(() => {
@@ -189,23 +148,12 @@
 
 <p class="leise">Längen aus dem Gitter abzählen, gefundene Wörter eintippen.</p>
 
-{#if gruppen.length > 0}
-  <label class="ort">
-    <span class="marke">Rätsel</span>
-    <select value={gruppe ?? ''} onchange={(e) => ortWaehlen(e.currentTarget.value)}>
-      <option value="">nur auf diesem Gerät</option>
-      {#each gruppen as g (g.id)}
-        <option value={g.id}>gemeinsam mit {g.name}</option>
-      {/each}
-    </select>
-    {#if verbindung && (verbindung.verbindung === 'offline' || verbindung.verbindung === 'kein-zugang')}
-      <span class="leise">
-        {verbindung.verbindung === 'offline' ? 'offline' : 'kein Zugang'}{verbindung.ausstehend > 0
-          ? ` – ${verbindung.ausstehend} ${verbindung.ausstehend === 1 ? 'Änderung wartet' : 'Änderungen warten'}`
-          : ''}
-      </span>
-    {/if}
-  </label>
+{#if verbindung && (verbindung.verbindung === 'offline' || verbindung.verbindung === 'kein-zugang')}
+  <p class="leise">
+    {verbindung.verbindung === 'offline' ? 'offline' : 'kein Zugang'}{verbindung.ausstehend > 0
+      ? ` – ${verbindung.ausstehend} ${verbindung.ausstehend === 1 ? 'Änderung wartet' : 'Änderungen warten'}`
+      : ''}
+  </p>
 {/if}
 
 <div class="eingaben">
@@ -371,23 +319,6 @@
   .leise {
     color: var(--text-leise);
     font-size: 0.85rem;
-  }
-
-  .ort {
-    display: grid;
-    gap: 2px;
-    margin-top: 10px;
-  }
-
-  .ort select {
-    font: inherit;
-    color: var(--text);
-    background: var(--flaeche);
-    border: 1px solid var(--rand);
-    border-radius: var(--radius);
-    min-height: 44px;
-    padding: 0 8px;
-    max-width: 100%;
   }
 
   .eingaben {

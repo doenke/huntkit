@@ -21,7 +21,7 @@ import { ApiFehler, rufe, type Abruf, type GruppenDetails, type Kontoinfo, type 
  * Hält die Gruppen mit dem Server in Gleichklang: schickt den Ausgang, holt
  * Neues ab und meldet, welche Werkbank sich geändert hat.
  *
- * Abgeholt wird per Polling – alle 1,5 s für die Gruppe der offenen Werkbank,
+ * Abgeholt wird per Polling – alle 1,5 s für die aktive Gruppe,
  * seltener für die übrigen und bei verstecktem Tab. Erlaubt der Server
  * Server-Sent Events, klingelt er stattdessen, sobald es Neues gibt; dann
  * wird nur noch zur Sicherheit gelegentlich nachgesehen. Scheitert die
@@ -99,7 +99,7 @@ export class Gruppenabgleich {
     this.klingelAus();
   }
 
-  /** Die Gruppe der offenen Werkbank bekommt den schnellen Takt (und die Klingel). */
+  /** Die aktive Gruppe bekommt den schnellen Takt (und die Klingel). */
   setzeAktiv(gruppe: string | null): void {
     if (this.aktiv === gruppe) return;
     this.aktiv = gruppe;

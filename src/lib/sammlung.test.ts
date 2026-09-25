@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { leeresBlatt, type Blatt } from './blatt';
 import {
   aktiveWerkbank,
+  amOrt,
   ausGespeichertem,
   entferne,
   freierName,
   neueWerkbank,
+  oeffne,
   uebernimm,
+  werkbankAmOrt,
   type Sammlung
 } from './sammlung';
 
@@ -118,5 +121,52 @@ describe('Laden', () => {
     expect(gelesen.werkbaenke[0]!.blatt).toEqual(entwurf);
     expect(gelesen.werkbaenke[0]).not.toHaveProperty('entwurf');
     expect(gelesen).not.toHaveProperty('automatisch');
+  });
+});
+
+describe('Orte: dieses Gerät und Gruppen', () => {
+  function gemischt(): Sammlung {
+    const sammlung = sammlungMit('Lokal alt', 'Lokal neu', 'Gruppe A', 'Gruppe B');
+    const [alt, neu, a, b] = sammlung.werkbaenke;
+    alt!.geaendert = 1;
+    neu!.geaendert = 2;
+    a!.gruppe = 'g1';
+    a!.geaendert = 3;
+    b!.gruppe = 'g1';
+    b!.geaendert = 4;
+    return sammlung;
+  }
+
+  it('ordnet Werkbänke ihrem Ort zu', () => {
+    const [lokal, , inGruppe] = gemischt().werkbaenke;
+    expect(amOrt(lokal!, null)).toBe(true);
+    expect(amOrt(lokal!, 'g1')).toBe(false);
+    expect(amOrt(inGruppe!, 'g1')).toBe(true);
+    expect(amOrt(inGruppe!, null)).toBe(false);
+  });
+
+  it('öffnet am Ort ohne Merker die zuletzt geänderte', () => {
+    const sammlung = gemischt();
+    expect(werkbankAmOrt(sammlung, null)?.name).toBe('Lokal neu');
+    expect(werkbankAmOrt(sammlung, 'g1')?.name).toBe('Gruppe B');
+    expect(werkbankAmOrt(sammlung, 'g2')).toBeUndefined();
+  });
+
+  it('merkt sich je Ort die zuletzt offene', () => {
+    const sammlung = gemischt();
+    oeffne(sammlung, sammlung.werkbaenke[0]!.id);
+    oeffne(sammlung, sammlung.werkbaenke[2]!.id);
+    expect(aktiveWerkbank(sammlung).name).toBe('Gruppe A');
+    expect(werkbankAmOrt(sammlung, null)?.name).toBe('Lokal alt');
+    expect(werkbankAmOrt(sammlung, 'g1')?.name).toBe('Gruppe A');
+  });
+
+  it('behält die Merker beim Speichern, verwirft kaputte', () => {
+    const sammlung = gemischt();
+    oeffne(sammlung, sammlung.werkbaenke[2]!.id);
+    const roh = JSON.parse(JSON.stringify(sammlung));
+    roh.zuletzt.kaputt = 7;
+    const gelesen = ausGespeichertem(roh);
+    expect(gelesen.zuletzt).toEqual({ g1: sammlung.werkbaenke[2]!.id });
   });
 });
