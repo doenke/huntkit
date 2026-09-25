@@ -149,6 +149,10 @@
           >
             Gruppen
           </button>
+          <!-- Die Werkbank startet die Tour, sobald die Adresse „?tour“ trägt – auch wenn sie schon offen ist. -->
+          <button type="button" onclick={() => { menueOffen = false; location.hash = '#/werkbank?tour'; }}>
+            Tour durch die Werkbank
+          </button>
           {#if angemeldet}
             <button type="button" class="konto-eintrag" onclick={abmelden}>
               <Avatar name={angemeldet.name} bild={angemeldet.avatar} groesse={22} />

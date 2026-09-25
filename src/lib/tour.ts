@@ -61,7 +61,7 @@ export const WERKBANK_TOUR: ReadonlyArray<Tourschritt> = [
   },
   {
     titel: 'Los geht’s',
-    text: 'Am besten lernst du es an einem Rätsel: Unter „Mehr“ warten Übungen, samt Lösungsweg als fertige Werkbank. Diese Tour gibt es jederzeit wieder über das ? neben „+ Zeile“.'
+    text: 'Am besten lernst du es an einem Rätsel: Unter „Mehr“ warten Übungen, samt Lösungsweg als fertige Werkbank. Diese Tour gibt es jederzeit wieder im Menü ☰ oben rechts.'
   }
 ];
 

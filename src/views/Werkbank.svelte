@@ -111,7 +111,7 @@
   /*
    * Die Tour durch die Werkbank. Sie startet von selbst, wenn jemand die App
    * zum ersten Mal öffnet und noch nichts in der Werkbank steht; danach über
-   * das ? neben „+ Zeile“ oder einen Link mit „?tour“.
+   * das Menü oder einen Link mit „?tour“ – beides landet hier als Adresse.
    */
   let tourAn = $state(false);
 
@@ -774,13 +774,6 @@
       <option value="werkzeug">Werkzeug auf eine Spalte</option>
       <option value="position">Platz in einer Reihenfolge</option>
     </select>
-    <button
-      type="button"
-      class="hilfe"
-      onclick={starteTour}
-      aria-label="Tour durch die Werkbank"
-      title="Tour durch die Werkbank"
-    >?</button>
   </div>
 </div>
 
@@ -1311,13 +1304,6 @@
   .leiste select {
     min-height: 38px;
     font-size: 0.8rem;
-  }
-
-  .leiste .hilfe {
-    min-width: 38px;
-    padding: 0;
-    font-weight: 700;
-    color: var(--akzent);
   }
 
   .hinweis {
