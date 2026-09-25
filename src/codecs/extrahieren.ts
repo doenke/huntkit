@@ -43,6 +43,7 @@ function zeichenliste(eingabe: string, optionen: OptionWerte | undefined): strin
 export const jedesN: Codec = {
   id: 'jedes-n',
   name: 'Jeden n-ten',
+  nurWerkbank: true,
   beschreibung:
     'Jeden n-ten Buchstaben herausziehen – oder einmal den n-ten, etwa aus jedem Wort den ersten. Negative n zählen von hinten.',
   einseitig: true,
@@ -103,6 +104,7 @@ export const jedesN: Codec = {
 export const stellen: Codec = {
   id: 'stellen',
   name: 'Buchstaben an Stellen',
+  nurWerkbank: true,
   beschreibung: 'Eine Liste von Stellen angeben, z.B. 3,1,4,1,5 – gezählt ab 1.',
   einseitig: true,
   optionen: [
@@ -135,6 +137,7 @@ export const stellen: Codec = {
 export const zaehlen: Codec = {
   id: 'zaehlen',
   name: 'Zeichen zählen',
+  nurWerkbank: true,
   beschreibung: 'Wie oft ein Zeichen oder eine Zeichenfolge im Text vorkommt – oder wie viele Zeichen aus einer Auswahl.',
   einseitig: true,
   optionen: [
@@ -203,6 +206,7 @@ const ZAEHLT_MIT: Record<string, (zeichen: string) => boolean> = {
 export const laenge: Codec = {
   id: 'laenge',
   name: 'Länge',
+  nurWerkbank: true,
   beschreibung: 'Wie lang der Text ist – wahlweise nach Zeichen, Buchstaben, Ziffern oder Wörtern.',
   einseitig: true,
   optionen: [
@@ -297,6 +301,7 @@ export function gitterLesen(zeichen: string[], breite: number, richtung: string)
 export const gitter: Codec = {
   id: 'gitter',
   name: 'Gitter lesen',
+  nurWerkbank: true,
   beschreibung: 'Text zeilenweise in ein Gitter füllen und in anderer Richtung auslesen.',
   einseitig: true,
   optionen: [

@@ -94,6 +94,13 @@ export interface Codec {
   nurNachschlagen?: boolean;
 
   /**
+   * Das Gegenstück: ein reines Werkbank-Werkzeug wie „Jeden n-ten“ oder
+   * „Länge“. Es hat nichts zum Nachschlagen und fehlt deshalb in der
+   * Codes-Übersicht. Das Periodensystem hat dort eine eigene Seite.
+   */
+  nurWerkbank?: boolean;
+
+  /**
    * Der Schritt kennt keine Gegenrichtung. Aus „jeden dritten Buchstaben“ lässt
    * sich der ursprüngliche Text nicht zurückgewinnen – die Oberfläche blendet
    * den Richtungsschalter dann aus, statt eine Umkehr vorzutäuschen.

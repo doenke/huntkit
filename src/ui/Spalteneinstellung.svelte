@@ -3,6 +3,7 @@
   import { CODECS, codec as findeCodec } from '../codecs/registry';
   import { ausSpalteMoeglich, standardOptionen } from '../codecs/types';
   import Sortierwahl from './Sortierwahl.svelte';
+  import Symbol from './Symbol.svelte';
   import {
     wechsleTafel,
     spaltenDavor,
@@ -25,6 +26,9 @@
     schliessen,
     entfernen
   }: { blatt: Blatt; spalte: Spalte; schliessen: () => void; entfernen: () => void } = $props();
+
+  // Der Papierkorb sitzt gleich neben dem Kreuz – ein Fehltipp soll nicht gleich die Spalte kosten.
+  let loeschenFragen = $state(false);
 
   const stelle = $derived(blatt.spalten.findIndex((s) => s.id === spalte.id));
   const quellen = $derived(spaltenDavor(blatt, spalte.id));
@@ -87,7 +91,25 @@
 <div class="tafel">
   <div class="kopf">
     <strong>Spalte {spaltenzeichen(Math.max(0, stelle))}</strong>
-    <button type="button" onclick={schliessen} aria-label="Einstellungen schließen">fertig</button>
+    <span class="symbole">
+      {#if loeschenFragen}
+        <button type="button" class="ernst" onclick={entfernen}>löschen</button>
+        <button type="button" onclick={() => (loeschenFragen = false)}>abbrechen</button>
+      {:else}
+        <button
+          type="button"
+          class="symbol"
+          onclick={() => (loeschenFragen = true)}
+          aria-label="Spalte löschen"
+          title="Spalte löschen"
+        >
+          <Symbol name="papierkorb" />
+        </button>
+      {/if}
+      <button type="button" class="symbol" onclick={schliessen} aria-label="schließen" title="schließen">
+        <Symbol name="schliessen" />
+      </button>
+    </span>
   </div>
 
   {#if spalte.art === 'werkzeug'}
@@ -225,9 +247,6 @@
     {/each}
   {/if}
 
-  <div class="fuss">
-    <button type="button" class="ernst" onclick={entfernen}>Spalte löschen</button>
-  </div>
 </div>
 
 <style>
@@ -250,9 +269,33 @@
     gap: 8px;
   }
 
+  .symbole {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
   .kopf button {
     min-height: 34px;
     font-size: 0.8rem;
+  }
+
+  .symbol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text-leise);
+    border-radius: 8px;
+  }
+
+  .symbol:hover {
+    color: var(--text);
+    background: var(--flaeche-hoch);
   }
 
   label,
@@ -327,14 +370,7 @@
     color: var(--warn);
   }
 
-  .fuss {
-    display: flex;
-    justify-content: flex-end;
-  }
-
   .ernst {
-    min-height: 36px;
-    font-size: 0.8rem;
     border-color: var(--warn);
     color: var(--warn);
   }

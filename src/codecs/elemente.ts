@@ -66,6 +66,7 @@ function uebersetze(eingabe: string, von: Feld, nach: Feld) {
 export const elemente: Codec = {
   id: 'elemente',
   name: 'Periodensystem',
+  nurWerkbank: true,
   quellen: [nachtschicht('Q', 'Periodensystem der Elemente'), raetselnacht('I', 'Periodensystem der Elemente'), wikipedia('Periodensystem (Datei:Periodic_table_(German)_EN.svg)', 'https://de.wikipedia.org/wiki/Datei:Periodic_table_(German)_EN.svg')],
   beschreibung: 'Elementangaben ineinander übersetzen.',
   optionen: [

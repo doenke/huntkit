@@ -25,15 +25,15 @@
 <Nachtausruestung />
 
 <h2>Darstellung</h2>
-<div class="themen">
+<div class="themen" role="group" aria-label="Darstellung">
   {#each THEMEN as eintrag (eintrag.id)}
     <button
       type="button"
       aria-pressed={thema === eintrag.id}
+      title={eintrag.hinweis}
       onclick={() => waehle(eintrag.id)}
     >
-      <strong>{eintrag.titel}</strong>
-      <span>{eintrag.hinweis}</span>
+      {eintrag.titel}
     </button>
   {/each}
 </div>
@@ -62,27 +62,37 @@
   }
 
 
+  /* Ein Umschalter in einer Reihe: drei Knöpfe, die aneinanderstoßen. */
   .themen {
-    display: grid;
-    gap: 8px;
+    display: flex;
     margin-bottom: 24px;
   }
 
   .themen button {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 2px;
-    padding: 8px 14px;
-    text-align: left;
+    flex: 1 1 0;
+    min-height: 44px;
+    padding: 0 8px;
+    border-radius: 0;
+  }
+
+  .themen button + button {
+    margin-left: -1px;
+  }
+
+  .themen button:first-child {
+    border-radius: var(--radius) 0 0 var(--radius);
+  }
+
+  .themen button:last-child {
+    border-radius: 0 var(--radius) var(--radius) 0;
   }
 
   .themen button[aria-pressed='true'] {
+    position: relative;
     border-color: var(--akzent);
+    color: var(--akzent);
   }
 
-  .themen span,
   .leise {
     color: var(--text-leise);
     font-size: 0.9rem;

@@ -34,6 +34,7 @@ function inSchreibungVon(vorlage: string, ersatz: string): string {
 export const ersetzen: Codec = {
   id: 'ersetzen',
   name: 'Ersetzen',
+  nurWerkbank: true,
   beschreibung:
     'Jedes Zeichen der ersten Liste wird durch das Zeichen an gleicher Stelle der zweiten ersetzt. Ohne Gegenstück wird es gelöscht.',
   einseitig: true,

@@ -228,10 +228,6 @@
 {/if}
 
 <style>
-  h2 {
-    margin: 0 0 4px;
-  }
-
   .leise {
     color: var(--text-leise);
     font-size: 0.85rem;

@@ -8,6 +8,7 @@
    */
   let offen = $state<string | null>(null);
   const gewaehlt = $derived(offen ? findeCodec(offen) : undefined);
+  const liste = CODECS.filter((c) => !c.nurWerkbank);
 </script>
 
 {#if gewaehlt}
@@ -18,7 +19,7 @@
   {/key}
 {:else}
   <ul class="liste">
-    {#each CODECS as eintrag (eintrag.id)}
+    {#each liste as eintrag (eintrag.id)}
       <li>
         <button type="button" onclick={() => (offen = eintrag.id)}>
           <span class="name">{eintrag.name}</span>
@@ -30,10 +31,6 @@
 {/if}
 
 <style>
-  h2 {
-    margin: 0 0 10px;
-  }
-
   .liste {
     list-style: none;
     margin: 0;
