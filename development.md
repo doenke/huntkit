@@ -33,4 +33,5 @@ Punkte, die in diese App sollen:
 ## Ideen für später
 
 - Copy & Paste nach Excel, inkl. Formeln
+  - dabei auf die Sprache achten (z.B. deutsches Excel: `SUMME` statt `SUM`, `;` statt `,` als Trennzeichen)
 - Copy & Paste einer Textspalte
