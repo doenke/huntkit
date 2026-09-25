@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Blatt } from '../blatt';
+import { wortschluessel, zustandAus } from '../kreuzwortgruppe';
 import type { Abruf, ServerAenderung } from './api';
 import { Gruppenabgleich } from './verbindung';
 
@@ -200,5 +201,47 @@ describe('Takt', () => {
     await vi.advanceTimersByTimeAsync(1000);
     expect(server.stand.get('w1|z/r1/s')?.wert).toBe('JETZT');
     a.stopp();
+  });
+});
+
+describe('Kreuzworträtsel der Gruppe', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {} });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('kommt bei den anderen an, ohne als Werkbank aufzutauchen', async () => {
+    const server = nachgebauterServer();
+    const anna = geraet(server, 'anna');
+    const bernd = geraet(server, 'bernd');
+    await vi.advanceTimersByTimeAsync(100);
+
+    anna.a.kreuzwortSetzen('g', [['laengen', '5, 7'], [wortschluessel('Hund')!, { text: 'Hund', eingetragen: false, zeit: 1 }]]);
+    await vi.advanceTimersByTimeAsync(3000);
+
+    const beiBernd = zustandAus(bernd.a.kreuzwort('g'));
+    expect(beiBernd.laengenText).toBe('5, 7');
+    expect(beiBernd.woerter.map((w) => w.text)).toEqual(['Hund']);
+    expect(bernd.a.kreuzwortEintrag('g', 'wort/HUND')?.von).toBe(1);
+    expect(bernd.empfangen.size).toBe(0);
+    expect(bernd.a.werkbaenke('g')).toEqual([]);
+  });
+
+  it('macht aus demselben Wort von zwei Leuten nur eines', async () => {
+    const server = nachgebauterServer();
+    const anna = geraet(server, 'anna');
+    const bernd = geraet(server, 'bernd');
+    await vi.advanceTimersByTimeAsync(100);
+
+    // Beide finden es gleichzeitig, bevor einer vom anderen weiß.
+    anna.a.kreuzwortSetzen('g', [[wortschluessel('Roter Kater')!, { text: 'Roter Kater', eingetragen: false, zeit: 1 }]]);
+    bernd.a.kreuzwortSetzen('g', [[wortschluessel('roterkater')!, { text: 'roterkater', eingetragen: false, zeit: 2 }]]);
+    await vi.advanceTimersByTimeAsync(3000);
+
+    for (const g of [anna, bernd]) expect(zustandAus(g.a.kreuzwort('g')).woerter).toHaveLength(1);
   });
 });

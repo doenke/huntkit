@@ -1,12 +1,15 @@
 import type { Blatt } from '../blatt';
 import { kennung } from '../blatt';
+import { istKreuzwort, kreuzwortKennung } from '../kreuzwortgruppe';
 import {
+  ansicht,
   bestaetige,
   blattAus,
   ladeGruppenspeicher,
   neueGruppe,
   nimmLokal,
   nimmServer,
+  setzeAusgang,
   sichereGruppenspeicher,
   werkbaenkeDer,
   type Gruppenspeicher,
@@ -264,7 +267,34 @@ export class Gruppenabgleich {
   werkbaenke(gruppe: string): Array<{ id: string; blatt: Blatt; name: string; geloescht: boolean }> {
     const g = this.speicher.gruppen[gruppe];
     if (!g) return [];
-    return werkbaenkeDer(g).map((id) => ({ id, ...blattAus(g, id) }));
+    return werkbaenkeDer(g)
+      .filter((id) => !istKreuzwort(id))
+      .map((id) => ({ id, ...blattAus(g, id) }));
+  }
+
+  /* ---------- Kreuzworträtsel ---------- */
+
+  /** Das Kreuzworträtsel der Gruppe als Schlüssel – bestätigt, mit dem Ausgang obendrauf. */
+  kreuzwort(gruppe: string): Record<string, unknown> {
+    const g = this.speicher.gruppen[gruppe];
+    return g ? ansicht(g, kreuzwortKennung(gruppe)) : {};
+  }
+
+  /** Einen Schlüssel des Kreuzworträtsels ändern; `null` löscht ihn. */
+  kreuzwortSetzen(gruppe: string, aenderungen: ReadonlyArray<readonly [string, unknown]>): void {
+    const g = this.speicher.gruppen[gruppe];
+    if (!g || aenderungen.length === 0) return;
+    for (const [schluessel, wert] of aenderungen) setzeAusgang(g, kreuzwortKennung(gruppe), schluessel, wert, kennung);
+    this.sichere();
+    this.aktualisiereStatus(gruppe);
+    // Die Seite liest nach jeder Meldung frisch – so steht die eigene Eingabe sofort da.
+    this.meldungen.zustand();
+    this.plane(gruppe, 250);
+  }
+
+  /** Wer einen Schlüssel des Kreuzworträtsels zuletzt geändert hat. */
+  kreuzwortEintrag(gruppe: string, schluessel: string) {
+    return this.eintrag(gruppe, kreuzwortKennung(gruppe), schluessel);
   }
 
   /** Wer einen Schlüssel zuletzt geändert hat, soweit bekannt. */
@@ -384,7 +414,12 @@ export class Gruppenabgleich {
     // Unbekannte Namen im Protokoll? Dann ist jemand neu dazugekommen.
     const bekannt = new Set([...(g.details?.mitglieder ?? []), ...(g.details?.ehemalige ?? [])].map((m) => m.id));
     if (fremd.some((a) => !bekannt.has(a.von))) void this.detailsLaden(gruppe);
-    for (const w of geaendert) this.meldungen.werkbank(gruppe, w, blattAus(g, w));
+    let kreuzwort = false;
+    for (const w of geaendert) {
+      if (istKreuzwort(w)) kreuzwort = true;
+      else this.meldungen.werkbank(gruppe, w, blattAus(g, w));
+    }
+    if (kreuzwort) this.meldungen.zustand();
     if (!ersterAbruf && fremd.length > 0) this.meldungen.fremd?.(gruppe, fremd);
   }
 

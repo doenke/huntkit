@@ -219,7 +219,7 @@ Periodensystem die sieben Perioden. Damit passt jede Karte ohne Seitenscrollen a
 Handy (390×844 geprüft); gerollt wird höchstens im Raster, während Textfelder und Tasten
 stehen bleiben.
 
-### 3.5 Lösungswörter (steht für sich)
+### 3.5 Lösungswörter (Kreuzworträtsel)
 
 Rätselrallyes und Bilderrätsel bestehen aus vielen kleinen Rätseln, die je ein Lösungswort
 ergeben; die Wörter wandern anschließend in ein Wortgitter. Wer ein Wort gefunden hat, weiß
@@ -240,7 +240,20 @@ keine Erkennung. Er rechnet nur eines aus, dafür durchgehend:
 - Jeder Buchstabe trägt **seine Stelle** unter sich, und ein Tipp darauf hebt ihn überall
   hervor – so findet man Kreuzungspunkte, ohne zu zählen.
 
+- **Kein Wort doppelt:** Ein Wort mit denselben Buchstaben wie ein schon gefundenes
+  (Groß- und Kleinschreibung, Leerzeichen und Bindestriche zählen nicht) wird abgewiesen,
+  schon beim Tippen – zwei gleiche Wörter belegten sonst zwei Lücken.
+
 Der Stand bleibt auf dem Gerät (`localStorage`) und übersteht das Neuladen.
+
+**In der Gruppe:** Wer einer Gruppe angehört, wählt oben, ob das Rätsel nur auf dem Gerät
+liegt oder gemeinsam mit der Gruppe. Jede Gruppe hat genau ein Rätsel. Es läuft über
+denselben Abgleich wie die Werkbänke, unter der Kennung `kreuzwort-<gruppe>`, und
+erscheint deshalb nicht als Werkbank. Schlüssel sind `laengen` und `wort/<Buchstaben>` –
+der Schlüssel eines Worts sind seine Buchstaben. Tippen zwei Leute gleichzeitig dasselbe
+Wort, landen beide auf demselben Schlüssel; ein doppeltes Wort kann so auch dann nicht
+entstehen, wenn der Server die zweite Eingabe erst später sieht. Beim Hinweis auf ein
+schon gefundenes Wort steht dabei, wer es gefunden hat.
 
 ---
 

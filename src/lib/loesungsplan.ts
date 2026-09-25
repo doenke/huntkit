@@ -88,6 +88,20 @@ export function laengenLesen(text: string): { laengen: number[]; unlesbar: strin
   return { laengen: laengen.sort((a, b) => a - b), unlesbar };
 }
 
+/**
+ * Woran man ein Lösungswort wiedererkennt: seine Buchstaben, groß. „Roter
+ * Kater“ und „roterkater“ sind dasselbe Wort – im Gitter stehen sie gleich.
+ */
+export function wortform(text: string): string {
+  return buchstaben(text).join('');
+}
+
+/** Das schon gefundene Wort mit denselben Buchstaben, falls es eins gibt. */
+export function schonGefunden(woerter: ReadonlyArray<Wort>, text: string): Wort | undefined {
+  const form = wortform(text);
+  return form ? woerter.find((w) => wortform(w.text) === form) : undefined;
+}
+
 export function neuesWort(text: string): Wort {
   return { id: kennung(), text, eingetragen: false };
 }

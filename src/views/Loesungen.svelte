@@ -1,5 +1,8 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import Textzeile from '../ui/Textzeile.svelte';
+  import { abgleich, ansicht as gruppenansicht, mitglied } from '../lib/gruppe/gruppen.svelte';
+  import { wortschluessel, wortwert, zustandAus } from '../lib/kreuzwortgruppe';
   import {
     buchstaben,
     laden,
@@ -8,47 +11,157 @@
     leererZustand,
     neuesWort,
     planen,
-    sichern
+    schonGefunden,
+    sichern,
+    type Zustand
   } from '../lib/loesungsplan';
 
   /**
    * Lösungswörter für ein Kreuzwort- oder Bilderrätsel sammeln und den Lücken
-   * im Gitter zuordnen. Eigener Bereich, ohne Verbindung zum Rest der App.
+   * im Gitter zuordnen – allein auf diesem Gerät oder gemeinsam in einer
+   * Gruppe. Ein Wort, das schon gefunden ist, lässt sich nicht noch einmal
+   * eintragen: Zwei gleiche Wörter belegten sonst zwei Lücken, und der Plan
+   * stimmte nicht mehr.
    */
 
-  let zustand = $state(laden());
+  /** Wo das Rätsel liegt: '' ist dieses Gerät, sonst die Kennung der Gruppe. */
+  const ORT = 'huntkit:kreuzwort-ort';
+  let ort = $state(ortLaden());
+
+  function ortLaden(): string {
+    try {
+      return localStorage.getItem(ORT) ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  function ortWaehlen(neu: string) {
+    ort = neu;
+    hinweis = null;
+    try {
+      localStorage.setItem(ORT, neu);
+    } catch {
+      // Dann eben beim nächsten Mal wieder dieses Gerät.
+    }
+  }
+
+  const gruppen = $derived.by(() => {
+    void gruppenansicht.version;
+    return Object.values(abgleich.speicher.gruppen).map((g) => ({ id: g.id, name: g.name }));
+  });
+  /** Die gewählte Gruppe – nur solange man ihr noch angehört. */
+  const gruppe = $derived(gruppen.some((g) => g.id === ort) ? ort : null);
+
+  let lokal = $state(laden());
+  const geteilt = $derived.by(() => {
+    void gruppenansicht.version;
+    return gruppe ? abgleich.kreuzwort(gruppe) : {};
+  });
+  const zustand: Zustand = $derived(gruppe ? zustandAus(geteilt) : lokal);
+
   let entwurf = $state('');
   /** Ein angetippter Buchstabe wird überall hervorgehoben – so findet man Kreuzungen. */
   let hervorgehoben = $state<string | null>(null);
   let leerenGefragt = $state(false);
+  let hinweis = $state<string | null>(null);
 
   const gelesen = $derived(laengenLesen(zustand.laengenText));
   const plan = $derived(planen(gelesen.laengen, zustand.woerter));
   /** Ohne Längen gibt es keine Lücken – dann ist kein Wort „falsch“, nur ungeordnet. */
   const ohneLaengen = $derived(gelesen.laengen.length === 0);
+  /** Schon beim Tippen: Gibt es das Wort schon? */
+  const doppelt = $derived(schonGefunden(zustand.woerter, entwurf));
 
   $effect(() => {
-    sichern(zustand);
+    sichern(lokal);
   });
+
+  // Während die Seite offen ist, gleicht sie die Gruppen ab – wie die Werkbank.
+  $effect(() => {
+    abgleich.start();
+    const sicht = () => abgleich.setzeSichtbar(document.visibilityState === 'visible');
+    const online = () => abgleich.wiederOnline();
+    document.addEventListener('visibilitychange', sicht);
+    addEventListener('online', online);
+    return () => {
+      document.removeEventListener('visibilitychange', sicht);
+      removeEventListener('online', online);
+      abgleich.sichereJetzt();
+      abgleich.stopp();
+    };
+  });
+
+  $effect(() => {
+    const g = gruppe;
+    untrack(() => abgleich.setzeAktiv(g));
+  });
+
+  const verbindung = $derived.by(() => {
+    void gruppenansicht.version;
+    return gruppe ? abgleich.status[gruppe] : undefined;
+  });
+
+  /** Wer ein Wort der Gruppe gefunden hat. */
+  function finder(id: string): string | null {
+    if (!gruppe) return null;
+    const von = abgleich.kreuzwortEintrag(gruppe, id)?.von;
+    return von === undefined ? null : mitglied(gruppe, von).name;
+  }
+
+  function schonGefundenText(wort: { id: string; text: string }): string {
+    const wer = finder(wort.id);
+    return `„${wort.text}“ ist schon gefunden${wer ? ` – von ${wer}` : ''}.`;
+  }
+
+  function setzeLaengen(text: string) {
+    if (gruppe) abgleich.kreuzwortSetzen(gruppe, [['laengen', text]]);
+    else lokal.laengenText = text;
+  }
 
   function hinzufuegen() {
     const text = entwurf.trim();
     if (text.length === 0 || laengeVon(text) === 0) return;
-    zustand.woerter.push(neuesWort(text));
+    const schonDa = schonGefunden(zustand.woerter, text);
+    if (schonDa) {
+      hinweis = schonGefundenText(schonDa);
+      return;
+    }
+    hinweis = null;
+    if (gruppe) {
+      const schluessel = wortschluessel(text);
+      if (!schluessel) return;
+      abgleich.kreuzwortSetzen(gruppe, [[schluessel, { text, eingetragen: false, zeit: Date.now() }]]);
+    } else {
+      lokal.woerter.push(neuesWort(text));
+    }
     entwurf = '';
   }
 
   function entfernen(id: string) {
-    zustand.woerter = zustand.woerter.filter((w) => w.id !== id);
+    if (gruppe) abgleich.kreuzwortSetzen(gruppe, [[id, null]]);
+    else lokal.woerter = lokal.woerter.filter((w) => w.id !== id);
   }
 
   function abhaken(id: string) {
-    const wort = zustand.woerter.find((w) => w.id === id);
+    if (gruppe) {
+      const wert = wortwert(geteilt, id);
+      if (wert) abgleich.kreuzwortSetzen(gruppe, [[id, { ...wert, eingetragen: !wert.eingetragen }]]);
+      return;
+    }
+    const wort = lokal.woerter.find((w) => w.id === id);
     if (wort) wort.eingetragen = !wort.eingetragen;
   }
 
   function leeren() {
-    zustand = leererZustand();
+    if (gruppe) {
+      abgleich.kreuzwortSetzen(gruppe, [
+        ['laengen', null],
+        ...zustand.woerter.map((w) => [w.id, null] as const)
+      ]);
+    } else {
+      lokal = leererZustand();
+    }
     hervorgehoben = null;
     leerenGefragt = false;
   }
@@ -76,12 +189,32 @@
 
 <p class="leise">Längen aus dem Gitter abzählen, gefundene Wörter eintippen.</p>
 
+{#if gruppen.length > 0}
+  <label class="ort">
+    <span class="marke">Rätsel</span>
+    <select value={gruppe ?? ''} onchange={(e) => ortWaehlen(e.currentTarget.value)}>
+      <option value="">nur auf diesem Gerät</option>
+      {#each gruppen as g (g.id)}
+        <option value={g.id}>gemeinsam mit {g.name}</option>
+      {/each}
+    </select>
+    {#if verbindung && (verbindung.verbindung === 'offline' || verbindung.verbindung === 'kein-zugang')}
+      <span class="leise">
+        {verbindung.verbindung === 'offline' ? 'offline' : 'kein Zugang'}{verbindung.ausstehend > 0
+          ? ` – ${verbindung.ausstehend} ${verbindung.ausstehend === 1 ? 'Änderung wartet' : 'Änderungen warten'}`
+          : ''}
+      </span>
+    {/if}
+  </label>
+{/if}
+
 <div class="eingaben">
   <label>
     <span class="marke">Längen der gesuchten Wörter</span>
     <Textzeile
       inputmode="numeric"
-      bind:value={zustand.laengenText}
+      value={zustand.laengenText}
+      oninput={(e) => setzeLaengen(e.currentTarget.value)}
       placeholder="z. B. 5, 7, 7, 3, 9"
       spellcheck="false"
     />
@@ -96,13 +229,20 @@
         autocapitalize="characters"
         spellcheck="false"
         enter={hinzufuegen}
+        oninput={() => (hinweis = null)}
       />
-      <button type="button" onclick={hinzufuegen} disabled={entwurf.trim().length === 0}>
+      <button type="button" onclick={hinzufuegen} disabled={entwurf.trim().length === 0 || Boolean(doppelt)}>
         merken
       </button>
     </span>
   </label>
 </div>
+
+{#if doppelt || hinweis}
+  <p class="warnung">
+    {doppelt ? schonGefundenText(doppelt) : hinweis}
+  </p>
+{/if}
 
 {#if gelesen.unlesbar.length > 0}
   <p class="warnung">Keine Länge: {gelesen.unlesbar.join(', ')}</p>
@@ -231,6 +371,23 @@
   .leise {
     color: var(--text-leise);
     font-size: 0.85rem;
+  }
+
+  .ort {
+    display: grid;
+    gap: 2px;
+    margin-top: 10px;
+  }
+
+  .ort select {
+    font: inherit;
+    color: var(--text);
+    background: var(--flaeche);
+    border: 1px solid var(--rand);
+    border-radius: var(--radius);
+    min-height: 44px;
+    padding: 0 8px;
+    max-width: 100%;
   }
 
   .eingaben {
