@@ -21,31 +21,24 @@
     type SpaltenId
   } from '../lib/blatt';
   import { zeichenbar } from '../lib/codeanzeige';
-  import {
-    aktiveWerkbank,
-    amOrt,
-    entferne,
-    freierName,
-    ladeSammlung,
-    neueWerkbank,
-    oeffne,
-    sichereSammlung,
-    uebernimm,
-    werkbankAmOrt
-  } from '../lib/sammlung';
+  import { nimmParameter } from '../lib/router';
   import { ausAdresse } from '../lib/teilen';
-  import { rufe, type GruppenDetails } from '../lib/gruppe/api';
+  import { abgleich, aktiveGruppe, ansicht as gruppenansicht, gruppenliste, mitglied } from '../lib/gruppe/gruppen.svelte';
+  import { zellschluessel } from '../lib/gruppe/schluessel';
   import {
-    abgleich,
-    aktiveGruppe,
-    ansicht as gruppenansicht,
-    empfangeWerkbaenke,
-    gruppenliste,
-    mitglied,
-    setzeAktiveGruppe
-  } from '../lib/gruppe/gruppen.svelte';
-  import { gleich, zellschluessel, zuSchluesseln } from '../lib/gruppe/schluessel';
-  import type { Werkbank as WerkbankEintrag } from '../lib/sammlung';
+    amOrtHier,
+    anlegen,
+    ausLink,
+    beobachte,
+    darfLoeschen,
+    kopierenNach as kopiereNach,
+    loeschen,
+    offene,
+    sammlung,
+    umbenennen,
+    uebernimmOffene,
+    wechseln as oeffneWerkbank
+  } from '../lib/werkbaenke.svelte';
   import { breitNachText, wachsen } from '../lib/wachsen';
   import {
     feldUmschreiben,
@@ -55,7 +48,6 @@
   import Avatar from '../ui/Avatar.svelte';
   import Codeanzeige from '../ui/Codeanzeige.svelte';
   import Protokoll from '../ui/Protokoll.svelte';
-  import Textzeile from '../ui/Textzeile.svelte';
   import Sortierwahl from '../ui/Sortierwahl.svelte';
   import Spalteneinstellung from '../ui/Spalteneinstellung.svelte';
   import Tafeleingabe from '../ui/Tafeleingabe.svelte';
@@ -74,12 +66,11 @@
    * jede Zeile behält dabei ihre Eingabenummer.
    */
 
-  /** Eine eigene Kopie – nie das gespeicherte Objekt selbst; übernommen wird erst über `uebernimm`. */
+  /** Eine eigene Kopie – nie das gespeicherte Objekt selbst; übernommen wird erst über `uebernimmOffene`. */
   const kopie = (b: Blatt): Blatt => JSON.parse(JSON.stringify(b)) as Blatt;
 
-  let sammlung = $state(ladeSammlung());
-  /** Die Arbeitskopie der aktiven Werkbank. Alles in der Tabelle ändert nur sie. */
-  let blatt = $state(kopie(aktiveWerkbank(sammlung).blatt));
+  /** Die Arbeitskopie der offenen Werkbank. Alles in der Tabelle ändert nur sie. */
+  let blatt = $state(kopie(offene().blatt));
   let verwaltungOffen = $state(false);
   let gewaehlt = $state<{ spalte: SpaltenId; zeile: string } | null>(null);
   let einstellung = $state<SpaltenId | null>(null);
@@ -173,9 +164,7 @@
 
   $effect(() => {
     const vonAdresse = () => {
-      if (!/[?&]tour\b/.test(location.hash)) return;
-      history.replaceState(null, '', location.href.replace(/[?&]tour\b/, ''));
-      starteTour();
+      if (nimmParameter('tour').tour !== undefined) starteTour();
     };
     vonAdresse();
     addEventListener('hashchange', vonAdresse);
@@ -214,158 +203,60 @@
     };
   });
 
-  const werkbank = $derived(aktiveWerkbank(sammlung));
+  const werkbank = $derived(offene());
 
   // Ein Stand in der Adresse wird eine eigene, neue Werkbank – er überschreibt
   // nie, woran man gerade sitzt. So öffnet eine Übung ihren Lösungsweg, und
   // Links aus der Zeit, als Werkbänke noch per Link geteilt wurden, gehen
   // weiterhin auf. Auch wenn die App schon offen ist und nur die Adresse wechselt.
-  // Sie liegt immer auf dem Gerät: Eine Übung geht die Gruppe nichts an.
   $effect(() => {
     const oeffnen = () =>
       void ausAdresse().then((geteilt) => {
-        if (!geteilt) return;
-        const lokal = { werkbaenke: sammlung.werkbaenke.filter((w) => amOrt(w, null)) };
-        const neu = neueWerkbank(freierName({ aktiv: '', ...lokal }, geteilt.name ?? 'Geteilte Werkbank'), geteilt.blatt);
-        sammlung.werkbaenke.push(neu);
-        oeffne(sammlung, neu.id);
-        const warInGruppe = ort !== null;
-        setzeAktiveGruppe(null);
-        wechseln(neu.id);
-        meldung = `„${neu.name}“ aus dem Link geöffnet${warInGruppe ? ' – auf diesem Gerät, nicht in der Gruppe' : ''}`;
+        if (geteilt) ausLink(geteilt.blatt, geteilt.name);
       });
     oeffnen();
     addEventListener('hashchange', oeffnen);
     return () => removeEventListener('hashchange', oeffnen);
   });
 
-  // Jede Änderung an der Arbeitskopie geht sofort in die aktive Werkbank.
-  // Gehört sie einer Gruppe, geht sie außerdem in den Ausgang zum Server.
-  // Ein Platzhalter geht erst mit der ersten Änderung an die Gruppe.
+  // Jede Änderung an der Arbeitskopie geht sofort in die offene Werkbank.
   $effect(() => {
     const stand = JSON.stringify(blatt);
-    untrack(() => {
-      const geaendert = uebernimm(sammlung, JSON.parse(stand) as Blatt);
-      const offen = aktiveWerkbank(sammlung);
-      if (geaendert) platzhalter.delete(offen.id);
-      if (offen.gruppe && !platzhalter.has(offen.id)) {
-        abgleich.lokal(offen.gruppe, offen.id, JSON.parse(stand) as Blatt, offen.name);
-      }
-    });
+    untrack(() => uebernimmOffene(JSON.parse(stand) as Blatt));
   });
 
-  /*
-   * Gruppen. Was der Abgleich vom Server hört, landet hier in der passenden
-   * Werkbank – solange die Werkbank offen ist; beim Öffnen holt sie nach.
-   */
+  // Ändert sich die offene Werkbank von außen – anderer Ort, Server, Link –,
+  // lädt die Arbeitskopie neu.
+  $effect(() => {
+    beobachte({
+      gewechselt(text) {
+        blatt = kopie(offene().blatt);
+        gewaehlt = null;
+        einstellung = null;
+        gruppeProtokoll = false;
+        if (text) meldung = text;
+      },
+      neuerStand() {
+        blatt = kopie(offene().blatt);
+        if (gewaehlt && !blatt.zeilen.some((z) => z.id === gewaehlt?.zeile)) gewaehlt = null;
+        if (gewaehlt && !blatt.spalten.some((s) => s.id === gewaehlt?.spalte)) gewaehlt = null;
+        if (einstellung && !blatt.spalten.some((s) => s.id === einstellung)) einstellung = null;
+      }
+    });
+    return () => beobachte(null);
+  });
+
   let gruppeProtokoll = $state(false);
   let zellverlauf = $state(false);
 
-  function vomServer(gruppe: string, id: string, stand: { blatt: Blatt; name: string; geloescht: boolean }) {
-    const vorhanden = sammlung.werkbaenke.find((w) => w.id === id);
-    if (stand.geloescht) {
-      if (vorhanden) {
-        if (id === sammlung.aktiv) meldung = `„${vorhanden.name}“ wurde in der Gruppe gelöscht`;
-        loeschenLokal(id);
-      }
-      return;
-    }
-    if (!vorhanden) {
-      const neu: WerkbankEintrag = { ...neueWerkbank(stand.name, stand.blatt), id, gruppe };
-      sammlung.werkbaenke.push(neu);
-      // Saß man nur am Platzhalter der Gruppe, weicht er der echten Werkbank –
-      // etwa gleich nach dem Beitreten, wenn die Werkbänke erst noch ankommen.
-      const offen = aktiveWerkbank(sammlung);
-      if (platzhalter.has(offen.id) && offen.gruppe === gruppe) {
-        platzhalter.delete(offen.id);
-        entferne(sammlung, offen.id);
-        oeffne(sammlung, id);
-        wechseln(id);
-      }
-      return;
-    }
-    // Die Sortierung ist je Gerät – sie bleibt, solange es ihre Spalten noch gibt.
-    const alt = vorhanden.blatt;
-    const { sortierung } = alt;
-    const passt = (id?: string) => !id || stand.blatt.spalten.some((s) => s.id === id);
-    const neu: Blatt =
-      sortierung && passt(sortierung.spalte) && passt(sortierung.dann?.spalte) ? { ...stand.blatt, sortierung } : stand.blatt;
-    const ohneSortierung: Blatt = { spalten: alt.spalten, zeilen: alt.zeilen };
-    if (gleich(zuSchluesseln(ohneSortierung), zuSchluesseln(stand.blatt)) && vorhanden.name === stand.name) return;
-    vorhanden.name = stand.name;
-    vorhanden.blatt = neu;
-    vorhanden.gruppe = gruppe;
-    vorhanden.geaendert = Date.now();
-    if (id !== sammlung.aktiv) return;
-    blatt = kopie(neu);
-    if (gewaehlt && !blatt.zeilen.some((z) => z.id === gewaehlt?.zeile)) gewaehlt = null;
-    if (gewaehlt && !blatt.spalten.some((s) => s.id === gewaehlt?.spalte)) gewaehlt = null;
-    if (einstellung && !blatt.spalten.some((s) => s.id === einstellung)) einstellung = null;
-  }
-
-  $effect(() => {
-    empfangeWerkbaenke(vomServer);
-    // Was der Abgleich schon weiß, während die Werkbank zu war. Ohne
-    // untrack hinge dieser Effekt an der Sammlung und liefe bei jeder
-    // Änderung neu an.
-    untrack(() => {
-      for (const id of Object.keys(abgleich.speicher.gruppen)) {
-        for (const w of abgleich.werkbaenke(id)) vomServer(id, w.id, w);
-      }
-    });
-    return () => empfangeWerkbaenke(null);
-  });
-
-  /*
-   * Der Ort: die aktive Gruppe oder, ohne sie, dieses Gerät. Die Liste zeigt
-   * nur seine Werkbänke, und neue entstehen dort. Den Abgleich selbst
-   * betreibt die App, egal welche Seite offen ist.
-   */
+  /** Der Ort: die aktive Gruppe oder, ohne sie, dieses Gerät. Die Liste zeigt nur seine Werkbänke. */
   const ort = $derived(aktiveGruppe());
-  const werkbaenkeHier = $derived(sammlung.werkbaenke.filter((w) => amOrt(w, ort)));
-
-  /**
-   * Werkbänke, die nur da sind, weil an einem Ort keine lag. Sie gehen erst
-   * mit der ersten Änderung an die Gruppe – ein bloßes Umschalten legt dort
-   * nichts an. Nach dem Neuladen gilt als Platzhalter, was leer ist und dem
-   * Server noch unbekannt.
-   */
-  const platzhalter = new Set<string>();
-  untrack(() => {
-    const offen = aktiveWerkbank(sammlung);
-    const leer = offen.blatt.zeilen.every((z) => Object.values(z.werte).every((w) => !w?.trim()));
-    if (offen.gruppe && leer && !abgleich.werkbaenke(offen.gruppe).some((w) => w.id === offen.id)) {
-      platzhalter.add(offen.id);
-    }
+  const werkbaenkeHier = $derived.by(() => {
+    void ort;
+    return amOrtHier();
   });
 
-  /** Wie eine neue Werkbank am Ort heißt – die Nummer zählt nur dort. */
-  function nameHier(stamm?: string): string {
-    return freierName({ aktiv: '', werkbaenke: werkbaenkeHier }, stamm);
-  }
-
-  /** Am Ort die zuletzt offene Werkbank öffnen – oder, liegt dort keine, einen Platzhalter. */
-  function oeffneAmOrt() {
-    let ziel = werkbankAmOrt(sammlung, ort);
-    if (!ziel) {
-      ziel = { ...neueWerkbank(nameHier()), ...(ort ? { gruppe: ort } : {}) };
-      sammlung.werkbaenke.push(ziel);
-      if (ort) platzhalter.add(ziel.id);
-    }
-    wechseln(ziel.id);
-  }
-
-  // Beim Wechsel des Orts: dort weitermachen, wo man zuletzt war.
-  $effect(() => {
-    const hier = ort;
-    untrack(() => {
-      if (amOrt(aktiveWerkbank(sammlung), hier)) return;
-      oeffneAmOrt();
-      verwaltungOffen = false;
-    });
-  });
-
-  /** Die aktive Gruppe mit ihrem Verbindungsstand – für das Protokoll. */
+  /** Die Gruppe der offenen Werkbank mit ihrem Verbindungsstand – für das Protokoll. */
   const gruppeHier = $derived.by(() => {
     void gruppenansicht.version;
     const id = werkbank.gruppe;
@@ -373,26 +264,9 @@
     return { id, status: abgleich.status[id] };
   });
 
-  function istAdminVon(gruppe: string | undefined): boolean {
-    void gruppenansicht.version;
-    return Boolean(gruppe && abgleich.details(gruppe)?.rolle === 'admin');
-  }
-
-  /** Die offene Werkbank als Kopie an einen anderen Ort legen. Man bleibt, wo man ist. */
   function kopierenNach(gruppe: string | null) {
-    const dort = { aktiv: '', werkbaenke: sammlung.werkbaenke.filter((w) => amOrt(w, gruppe)) };
-    // Derselbe Name, wenn er dort noch frei ist – sonst als Kopie erkennbar.
-    const vergeben = dort.werkbaenke.some((w) => w.name === werkbank.name);
-    const name = vergeben ? freierName(dort, `${werkbank.name} (Kopie)`) : werkbank.name;
-    const neu: WerkbankEintrag = {
-      ...neueWerkbank(name, kopie(blatt)),
-      ...(gruppe ? { gruppe } : {})
-    };
-    sammlung.werkbaenke.push(neu);
-    if (gruppe) abgleich.lokal(gruppe, neu.id, neu.blatt, neu.name);
+    meldung = kopiereNach(werkbank.name, kopie(blatt), gruppe);
     verwaltungOffen = false;
-    const ziel = gruppe ? `in „${abgleich.speicher.gruppen[gruppe]?.name ?? 'Gruppe'}“` : 'auf diesem Gerät';
-    meldung = `Kopie von „${werkbank.name}“ liegt jetzt ${ziel}`;
   }
 
   /** Alle anderen Orte: dieses Gerät und die übrigen Gruppen. */
@@ -400,66 +274,6 @@
     ...(ort ? [{ id: null, name: 'Nur auf diesem Gerät' }] : []),
     ...gruppenliste().filter((g) => g.id !== ort)
   ]);
-
-  /*
-   * Einladungen kommen über die Adresse: #/werkbank?einladung=…
-   * (Die Rückkehr von der Anmeldung landet auf der Seite „Gruppen“.)
-   */
-  let einladung = $state<{ code: string; gruppe: { id: string; name: string }; schonMitglied: boolean } | null>(null);
-  let gastname = $state('');
-  let beitrittsfehler = $state('');
-
-  async function ausGruppenadresse() {
-    const wert = (name: string) => {
-      const treffer = location.hash.match(new RegExp(`[?&]${name}=([^&]+)`));
-      return treffer ? decodeURIComponent(treffer[1] as string) : null;
-    };
-    const code = wert('einladung');
-    if (!code) return;
-    history.replaceState(null, '', location.href.replace(/[?&]einladung=[^&]+/, ''));
-    try {
-      const info = await rufe<{ gruppe: { id: string; name: string }; schonMitglied: boolean }>(
-        `einladung.php?e=${encodeURIComponent(code)}`,
-        { token: abgleich.speicher.konto?.token ?? null }
-      );
-      einladung = { code, ...info };
-      beitrittsfehler = '';
-    } catch (e) {
-      meldung = e instanceof Error ? e.message : 'Die Einladung ließ sich nicht öffnen';
-    }
-  }
-
-  $effect(() => {
-    const lesen = () => void ausGruppenadresse();
-    lesen();
-    addEventListener('hashchange', lesen);
-    return () => removeEventListener('hashchange', lesen);
-  });
-
-  async function beitreten() {
-    const offen = einladung;
-    if (!offen) return;
-    beitrittsfehler = '';
-    try {
-      const antwort = await rufe<{ token: string | null; gruppe: GruppenDetails }>('einladung.php', {
-        token: abgleich.speicher.konto?.token ?? null,
-        koerper: { e: offen.code, name: gastname.trim() }
-      });
-      abgleich.aufnehmen(antwort.gruppe.id, antwort.gruppe.name, antwort.token ?? undefined, antwort.gruppe);
-      setzeAktiveGruppe(antwort.gruppe.id);
-      meldung = `Du bist jetzt in „${antwort.gruppe.name}“ – alles hier ist ab jetzt gemeinsam`;
-      einladung = null;
-    } catch (e) {
-      beitrittsfehler = e instanceof Error ? e.message : String(e);
-    }
-  }
-
-  // Und die ganze Sammlung aufs Gerät, sobald sich darin etwas ändert.
-  $effect(() => {
-    // Über JSON gelesen, damit jede verschachtelte Änderung hier ankommt.
-    const stand = JSON.stringify(sammlung);
-    untrack(() => sichereSammlung(JSON.parse(stand) as typeof sammlung));
-  });
 
   const berechnung = $derived(rechne(blatt));
   const spalteEinstellung = $derived(blatt.spalten.find((s) => s.id === einstellung));
@@ -706,58 +520,20 @@
     meldungsUhr = setTimeout(() => (meldung = ''), 5000);
   });
 
-  /** Zu einer anderen Werkbank: Ihre Arbeitskopie wird geladen, die Auswahl zurückgesetzt. */
+  /** Zu einer anderen Werkbank: Die Arbeitskopie lädt neu, sobald sie offen ist. */
   function wechseln(id: string) {
-    oeffne(sammlung, id);
-    blatt = kopie(aktiveWerkbank(sammlung).blatt);
-    gewaehlt = null;
-    einstellung = null;
-    gruppeProtokoll = false;
-  }
-
-  /** Eine neue Werkbank am Ort – in einer Gruppe sehen die anderen sie gleich. */
-  function anlegen(name: string, stand?: Blatt) {
-    const neu: WerkbankEintrag = { ...neueWerkbank(name, stand), ...(ort ? { gruppe: ort } : {}) };
-    sammlung.werkbaenke.push(neu);
-    if (ort) abgleich.lokal(ort, neu.id, neu.blatt, neu.name);
-    wechseln(neu.id);
+    oeffneWerkbank(id);
   }
 
   function neueAnlegen() {
-    anlegen(nameHier());
+    anlegen();
     verwaltungOffen = false;
   }
 
   function kopieAnlegen(id: string) {
     const vorlage = sammlung.werkbaenke.find((w) => w.id === id);
     if (!vorlage) return;
-    const stand = id === sammlung.aktiv ? blatt : vorlage.blatt;
-    anlegen(nameHier(`${vorlage.name} (Kopie)`), kopie(stand));
-  }
-
-  /** Aus der Liste nehmen. War sie offen, geht die nächste am Ort auf – oder eine neue. */
-  function loeschenLokal(id: string) {
-    const warAktiv = id === sammlung.aktiv;
-    platzhalter.delete(id);
-    entferne(sammlung, id);
-    if (warAktiv) oeffneAmOrt();
-  }
-
-  /** Eine Werkbank einer Gruppe löschen Admins für alle; sonst gibt es den Knopf nicht. */
-  function loeschen(id: string) {
-    const ziel = sammlung.werkbaenke.find((w) => w.id === id);
-    if (ziel?.gruppe) {
-      if (!istAdminVon(ziel.gruppe)) return;
-      abgleich.loeschen(ziel.gruppe, id);
-    }
-    loeschenLokal(id);
-  }
-
-  function umbenennen(id: string, name: string) {
-    const ziel = sammlung.werkbaenke.find((w) => w.id === id);
-    if (!ziel) return;
-    ziel.name = name;
-    if (ziel.gruppe) abgleich.lokal(ziel.gruppe, ziel.id, id === sammlung.aktiv ? blatt : ziel.blatt, name);
+    anlegen(`${vorlage.name} (Kopie)`, kopie(id === sammlung.aktiv ? blatt : vorlage.blatt));
   }
 
   function leeren() {
@@ -838,32 +614,6 @@
   <p class="meldung">{meldung}</p>
 {/if}
 
-{#if einladung}
-  <section class="einladung">
-    <strong>Gruppe „{einladung.gruppe.name}“ beitreten</strong>
-    {#if einladung.schonMitglied}
-      <p class="hinweis">Du bist schon Mitglied.</p>
-    {:else if abgleich.speicher.konto}
-      <p class="hinweis">Du trittst als {abgleich.speicher.konto.ich.name} bei.</p>
-    {:else}
-      <Textzeile bind:value={gastname} aria-label="Dein Name" placeholder="Dein Name" enter={() => void beitreten()} />
-      <p class="hinweis">Unter diesem Namen sehen dich die anderen im Protokoll.</p>
-    {/if}
-    {#if beitrittsfehler}<p class="hinweis warn">{beitrittsfehler}</p>{/if}
-    <div class="knoepfe">
-      <button
-        type="button"
-        class="speichern"
-        disabled={!einladung.schonMitglied && !abgleich.speicher.konto && !gastname.trim()}
-        onclick={() => void beitreten()}
-      >
-        beitreten
-      </button>
-      <button type="button" onclick={() => (einladung = null)}>abbrechen</button>
-    </div>
-  </section>
-{/if}
-
 {#if gruppeProtokoll && gruppeHier}
   <section class="gruppenprotokoll" data-box>
     <div class="zeile">
@@ -889,7 +639,7 @@
   <Werkbaenke
     werkbaenke={werkbaenkeHier}
     aktiv={sammlung.aktiv}
-    darfLoeschen={(w) => !w.gruppe || istAdminVon(w.gruppe)}
+    {darfLoeschen}
     wechseln={(id) => { wechseln(id); verwaltungOffen = false; }}
     neu={neueAnlegen}
     kopieren={kopieAnlegen}
@@ -1232,7 +982,6 @@
     color: var(--text);
   }
 
-  .einladung,
   .gruppenprotokoll {
     border: 1px solid var(--akzent);
     border-radius: var(--radius);

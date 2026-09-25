@@ -126,7 +126,6 @@
 
 <section class="gruppen">
   <div class="kopf">
-    <strong>Gruppen</strong>
     {#if stand.konto}
       <span class="konto">
         <Avatar name={stand.konto.ich.name} bild={stand.konto.ich.avatar} groesse={22} />
@@ -277,16 +276,11 @@
 </section>
 
 <style>
-  .gruppen {
-    border-top: 1px solid var(--rand);
-    margin-top: 12px;
-    padding-top: 10px;
-  }
-
+  /* Den Titel „Gruppen“ trägt schon der Kopf der App; hier steht rechts nur das Konto. */
   .kopf {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 8px;
     flex-wrap: wrap;
   }

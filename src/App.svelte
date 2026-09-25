@@ -1,6 +1,6 @@
 <script lang="ts">
   import { beobachteVersion, browserUmgebung, type Versionswache } from './lib/neuversion';
-  import { aktuelleSeite, geheZu, SEITEN, type Seite } from './lib/router';
+  import { aktuelleSeite, geheZu, SEITEN, umleitung, type Seite } from './lib/router';
   import Werkbank from './views/Werkbank.svelte';
   import Nachschlagen from './views/Nachschlagen.svelte';
   import Loesungen from './views/Loesungen.svelte';
@@ -115,7 +115,13 @@
   });
 
   $effect(() => {
-    const beiWechsel = () => (seite = aktuelleSeite());
+    // Alte Adressen, etwa Einladungslinks auf die Werkbank, gleich dorthin, wo sie heute hingehören.
+    const beiWechsel = () => {
+      const neu = umleitung(location.hash);
+      if (neu) history.replaceState(null, '', `${location.href.split('#')[0]}${neu}`);
+      seite = aktuelleSeite();
+    };
+    beiWechsel();
     addEventListener('hashchange', beiWechsel);
     return () => removeEventListener('hashchange', beiWechsel);
   });

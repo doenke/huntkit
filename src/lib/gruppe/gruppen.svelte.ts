@@ -110,5 +110,5 @@ export function mitglied(gruppe: string, id: number): Pick<Mitglied, 'id' | 'nam
 
 /** Link, mit dem man der Gruppe beitritt. */
 export function einladungslink(code: string): string {
-  return `${location.href.split('#')[0]}#/werkbank?einladung=${encodeURIComponent(code)}`;
+  return `${location.href.split('#')[0]}#/gruppen?einladung=${encodeURIComponent(code)}`;
 }
