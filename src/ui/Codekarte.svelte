@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { wachsen } from '../lib/wachsen';
+  import { wachsen } from '../lib/ui/wachsen';
   import type { Codec } from '../codecs/types';
   import { standardOptionen } from '../codecs/types';
-  import { einzelzeichen, zeichenbar } from '../lib/codeanzeige';
+  import { einzelzeichen, zeichenbar } from '../lib/ui/codeanzeige';
   import Codeanzeige from './Codeanzeige.svelte';
   import Quellen from './Quellen.svelte';
   import Optionen from './Optionen.svelte';

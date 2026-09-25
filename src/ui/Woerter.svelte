@@ -7,7 +7,7 @@
     woerterbuch,
     type Anagrammfund,
     type Sprache
-  } from '../lib/woerter';
+  } from '../lib/nachschlagen/woerter';
 
   /** Was man vor dem ersten Laden wissen sollte – die Listen sind nicht klein. */
   const LISTEN: Record<Sprache, { titel: string; umfang: string; quelle: string }> = {

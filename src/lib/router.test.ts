@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ausHash } from './router';
+import { ausHash, ohneParameter, parameter, umleitung } from './router';
 
 describe('Hash-Routing', () => {
   it('erkennt bekannte Seiten', () => {
@@ -28,5 +28,27 @@ describe('Hash-Routing', () => {
     // Ein geteilter Link trägt den Werkbank-Stand hinter einem Fragezeichen.
     expect(ausHash('#/werkbank?w=zABC123')).toBe('werkbank');
     expect(ausHash('#/nachschlagen?x=1')).toBe('nachschlagen');
+  });
+});
+
+describe('Parameter im Hash', () => {
+  it('liest Werte, Schalter und fehlende', () => {
+    expect(parameter('anmeldung', '#/gruppen?anmeldung=a%20b')).toBe('a b');
+    expect(parameter('tour', '#/werkbank?tour')).toBe('');
+    expect(parameter('tour', '#/werkbank?w=1&tour')).toBe('');
+    expect(parameter('tour', '#/werkbank?touren=1')).toBeNull();
+    expect(parameter('e', '#/werkbank')).toBeNull();
+  });
+
+  it('nimmt genau die genannten heraus', () => {
+    expect(ohneParameter(['tour'], '#/werkbank?tour')).toBe('#/werkbank');
+    expect(ohneParameter(['anmeldung', 'anmeldefehler'], '#/gruppen?anmeldefehler=x&y=1')).toBe('#/gruppen?y=1');
+    expect(ohneParameter(['a'], '#/werkbank')).toBe('#/werkbank');
+  });
+
+  it('leitet alte Einladungslinks auf die Gruppen-Seite', () => {
+    expect(umleitung('#/werkbank?einladung=ab-C_1')).toBe('#/gruppen?einladung=ab-C_1');
+    expect(umleitung('#/gruppen?einladung=x')).toBeNull();
+    expect(umleitung('#/werkbank?tour')).toBeNull();
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Blatt } from '../blatt';
+import type { Blatt } from '../werkbank/blatt';
 import { ausSchluesseln, gleich, unterschiede, zuSchluesseln } from './schluessel';
 
 const BLATT: Blatt = {

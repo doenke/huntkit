@@ -1,4 +1,5 @@
-import type { Blatt } from '../blatt';
+import type { Blatt } from '../werkbank/blatt';
+import { ladeSammlung } from '../werkbank/sammlung';
 import type { Mitglied } from './api';
 import { Gruppenabgleich } from './verbindung';
 
@@ -43,6 +44,52 @@ export const abgleich = new Gruppenabgleich({
 // der Speicher schreibt sonst gebündelt mit kurzer Verzögerung.
 if (typeof addEventListener === 'function') addEventListener('pagehide', () => abgleich.sichereJetzt());
 
+/*
+ * Die aktive Gruppe. Alles, was man tut – Werkbänke, Kreuzworträtsel –,
+ * gehört ihr; ohne aktive Gruppe bleibt alles auf dem Gerät. Gewählt wird im
+ * Menü, und der Kopf zeigt sie ständig an, damit nie etwas aus Versehen in
+ * einer Gruppe landet.
+ */
+const AKTIVE_GRUPPE = 'huntkit:aktive-gruppe';
+
+function aktiveGruppeLaden(): string | null {
+  try {
+    const gespeichert = localStorage.getItem(AKTIVE_GRUPPE);
+    if (gespeichert !== null) return gespeichert || null;
+  } catch {
+    return null;
+  }
+  // Noch nie gewählt: Wer zuletzt an einer Werkbank einer Gruppe saß, bleibt in ihr.
+  const sammlung = ladeSammlung();
+  return sammlung.werkbaenke.find((w) => w.id === sammlung.aktiv)?.gruppe ?? null;
+}
+
+const arbeitsort = $state({ gruppe: aktiveGruppeLaden() });
+
+/** Die aktive Gruppe – nur solange man ihr noch angehört, sonst `null`. */
+export function aktiveGruppe(): string | null {
+  void ansicht.version;
+  const id = arbeitsort.gruppe;
+  return id && abgleich.speicher.gruppen[id] ? id : null;
+}
+
+export function setzeAktiveGruppe(gruppe: string | null): void {
+  arbeitsort.gruppe = gruppe;
+  try {
+    localStorage.setItem(AKTIVE_GRUPPE, gruppe ?? '');
+  } catch {
+    // Dann gilt die Wahl bis zum Neuladen.
+  }
+}
+
+/** Die Gruppen, denen man angehört, nach Namen – die Ziele der Auswahl. */
+export function gruppenliste(): Array<{ id: string; name: string }> {
+  void ansicht.version;
+  return Object.values(abgleich.speicher.gruppen)
+    .map((g) => ({ id: g.id, name: g.name }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+}
+
 /** Wer die Werkbank-Meldungen bekommt – die Werkbank-Ansicht, solange sie offen ist. */
 export function empfangeWerkbaenke(f: Werkbankmeldung | null): void {
   empfaenger = f;
@@ -63,5 +110,5 @@ export function mitglied(gruppe: string, id: number): Pick<Mitglied, 'id' | 'nam
 
 /** Link, mit dem man der Gruppe beitritt. */
 export function einladungslink(code: string): string {
-  return `${location.href.split('#')[0]}#/werkbank?einladung=${encodeURIComponent(code)}`;
+  return `${location.href.split('#')[0]}#/gruppen?einladung=${encodeURIComponent(code)}`;
 }

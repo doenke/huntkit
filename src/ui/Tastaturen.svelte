@@ -2,7 +2,7 @@
   import { nachtschicht } from '../codecs/quellen';
   import Quellen from './Quellen.svelte';
   import { handytasten } from '../codecs/chiffren';
-  import { TASTATUREN, reihenbreite, type Tastatur } from '../lib/tastaturen';
+  import { TASTATUREN, reihenbreite, type Tastatur } from '../lib/nachschlagen/tastaturen';
 
   /**
    * Tastaturen zum Nachschlagen. Gezeichnet mit Kästchen statt als Bild, damit

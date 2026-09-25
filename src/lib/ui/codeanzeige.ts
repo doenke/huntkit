@@ -1,4 +1,4 @@
-import type { Codec, Glyph, OptionWerte } from '../codecs/types';
+import type { Codec, Glyph, OptionWerte } from '../../codecs/types';
 
 /**
  * Einen Code-Text in seine Gruppen zerlegen, damit man ihn zeichnen kann.

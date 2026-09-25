@@ -2,7 +2,8 @@
 
 Werkzeugkasten für Rätselrallyes und Puzzle Hunts – Dortmunder Nachtschicht,
 MIT Mystery Hunt. Läuft als PWA auf Handy und Laptop, **vollständig offline**,
-ohne Server und ohne Konto.
+ohne Server und ohne Konto. Nur wer im Team gemeinsam arbeiten will, braucht den
+optionalen Gruppen-Server.
 
 - Konzept: [konzept.md](konzept.md)
 - Ideensammlung: [development.md](development.md)
@@ -12,10 +13,11 @@ ohne Server und ohne Konto.
 
 Phase 0 (Gerüst) und Phase 1 (Textcodes) stehen:
 
-- **Werkbank** – ein gemeinsamer Textpuffer mit einer Kette von Schritten. Jeder
-  Schritt einzeln abschaltbar, verschiebbar und mit eigenen Optionen; jeder
-  Zwischenstand sichtbar.
-- **Codes** – Morse, ABC123, ASCII (dezimal/binär/hexadezimal), NATO,
+- **Werkbank** – eine Tabelle: Eingabespalten zum Tippen, auf Wunsch mit
+  Codetafel, und Werkzeugspalten, die auf früheren Spalten rechnen. Jeder
+  Zwischenstand bleibt sichtbar, sortiert wird nur die Anzeige. Mehrere
+  Werkbänke je Gerät, gespeichert wird automatisch.
+- **Nachschlagen** – Morse, ABC123, ASCII (dezimal/binär/hexadezimal), NATO,
   Caesar, Zahlensysteme (Basis 2–36) und das Periodensystem als Schlüssel,
   jeweils mit Referenztabelle.
 - **Brute-Force-Wand** – alle 26 Caesar-Verschiebungen auf einen Blick, jede
@@ -65,13 +67,17 @@ Rest von Phase 5:
   Nachtschicht Standorte an) und Grad/Minuten/Sekunden.
 - **Element-Speller** – Wörter in Elementsymbolen, mit *allen* Lesarten.
 - **QR- und Barcodes** – über den Codeleser des Browsers, ohne Zusatzpaket.
-- **Link teilen** – der ganze Werkbank-Stand steckt im Fragment der Adresse und
-  erreicht nie einen Server.
+- **Übungen** – kleine Rätsel zum Einüben; der Lösungsweg öffnet sich als
+  Werkbank. Der Stand steckt dafür im Fragment der Adresse und erreicht nie
+  einen Server.
+- **Kreuzworträtsel** – gefundene Lösungswörter sammeln und den Lücken im
+  Gitter zuordnen; ein Wort lässt sich nicht doppelt eintragen.
 
 Dazu, auf Wunsch mit Server:
 
-- **Gruppen** – mehrere Leute arbeiten gleichzeitig an denselben Werkbänken, mit
-  Protokoll, wer welche Zelle geändert hat. Anmeldung über OIDC, Gäste über
+- **Gruppen** – mehrere Leute arbeiten gleichzeitig an denselben Werkbänken und
+  demselben Kreuzworträtsel, mit Protokoll, wer welche Zelle geändert hat. Im
+  Menü wählt man, ob man in einer Gruppe oder nur auf dem Gerät arbeitet. Anmeldung über OIDC, Gäste über
   Einladungslink. Braucht den PHP-Teil in [`server/`](server/) und eine
   `config.php` (Vorlage: [`server/config.beispiel.php`](server/config.beispiel.php));
   ohne ihn läuft die App wie bisher. Details in [konzept.md §7.10](konzept.md).
@@ -106,9 +112,11 @@ Archiv jedes Builds hängt an der jeweiligen Action.
 | Pfad | Inhalt |
 |---|---|
 | `src/` | Anwendung (Svelte, TypeScript) |
+| `src/views/` | eine Komponente je Seite |
+| `src/ui/` | Bausteine der Oberfläche |
 | `src/codecs/` | ein Modul je Code, dazu Registry und Schnittstelle |
-| `src/lib/` | Werkbank, Router, Themes |
-| `src/ui/` | wiederverwendete Bausteine der Oberfläche |
+| `src/lib/` | Logik ohne Oberfläche: Werkbank, Analyse, Nachschlagen, Gruppen |
+| `server/` | optionaler PHP-Teil für Gruppen, mit Tests (`php server/tests/test.php`) |
 | `data/` | Datensätze; Herkunft in [`data/QUELLE.md`](data/QUELLE.md) |
 | `tools/` | Hilfsskripte: Datenimport, Icons, Deployment, Offline-Plugin |
 | `.github/workflows/` | Bauen, Testen, Veröffentlichen |

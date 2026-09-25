@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Bildschirmwaechter, kannWachhalten } from '../lib/nacht';
+  import { Bildschirmwaechter, kannWachhalten } from '../lib/ui/nacht';
 
   /**
    * Was die App für die Nacht mitbringt: Der Bildschirm bleibt an, solange man

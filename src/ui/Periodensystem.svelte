@@ -6,9 +6,9 @@
     auslesen, AUSGABEN, ELEMENTE, finde, LAYOUTS, raster, reihenZahl,
     REIHENFOLGEN, spaltenZahl,
     type Ausgabe, type Element, type Layout, type Reihenfolge
-  } from '../lib/periodensystem';
-  import { EBENENFARBEN, serienfarbe } from '../lib/serienfarben';
-  import { satzZerlegen } from '../lib/elementspeller';
+  } from '../lib/nachschlagen/periodensystem';
+  import { EBENENFARBEN, serienfarbe } from '../lib/nachschlagen/serienfarben';
+  import { satzZerlegen } from '../lib/nachschlagen/elementspeller';
 
   interface Ebene {
     name: string;

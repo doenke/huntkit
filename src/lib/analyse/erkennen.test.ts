@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { codec } from '../codecs/registry';
+import { codec } from '../../codecs/registry';
 import { erkenne, optionenText } from './erkennen';
 
 /** Der erste Vorschlag – das, was die App oben anzeigt. */

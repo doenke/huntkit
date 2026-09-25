@@ -1,5 +1,5 @@
-import { CODECS } from '../codecs/registry';
-import { standardOptionen, type Codec, type OptionWerte } from '../codecs/types';
+import { CODECS } from '../../codecs/registry';
+import { standardOptionen, type Codec, type OptionWerte } from '../../codecs/types';
 import { sprachwert } from './sprachwert';
 
 /**

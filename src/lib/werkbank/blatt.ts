@@ -1,5 +1,5 @@
-import { codec } from '../codecs/registry';
-import { ausSpalteMoeglich, standardOptionen, type Codec, type Luecke, type OptionWerte, type Richtung } from '../codecs/types';
+import { codec } from '../../codecs/registry';
+import { ausSpalteMoeglich, standardOptionen, type Codec, type Luecke, type OptionWerte, type Richtung } from '../../codecs/types';
 
 /**
  * Die Werkbank als Blatt: Zeilen und Spalten.

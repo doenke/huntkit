@@ -1,6 +1,6 @@
 <script lang="ts">
   import { codec as findeCodec } from '../codecs/registry';
-  import { zerlegeCode } from '../lib/codeanzeige';
+  import { zerlegeCode } from '../lib/ui/codeanzeige';
 
   /**
    * Ein Code-Text als Bild: je Gruppe ein Kästchen, dazwischen Abstand.

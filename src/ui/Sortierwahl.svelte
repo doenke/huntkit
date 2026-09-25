@@ -5,7 +5,7 @@
     type Sortierstufe,
     type Sortierung,
     type Spalte
-  } from '../lib/blatt';
+  } from '../lib/werkbank/blatt';
 
   /**
    * Wonach sortiert wird: Spalte, Art, Richtung – und bei Gleichstand eine

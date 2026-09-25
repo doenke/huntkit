@@ -12,7 +12,7 @@
     type Blatt,
     type Sortierung,
     type Spalte
-  } from '../lib/blatt';
+  } from '../lib/werkbank/blatt';
 
   /**
    * Was eine Spalte ist und woher sie ihre Werte nimmt. Der interessante Teil

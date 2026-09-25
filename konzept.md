@@ -612,7 +612,7 @@ davon.
 - Laufender Zustand in `localStorage`, überlebt Neuladen und Akku-Sparmodus.
 - **Mehrere Werkbänke** je Gerät, jede mit Namen und Änderungszeit. Der Name der offenen
   Werkbank ist zugleich der Knopf zur Verwaltung: wechseln, neu anlegen, kopieren,
-  umbenennen, löschen (mit Rückfrage), in eine Gruppe kopieren. Oben im Menü steht „Blatt
+  umbenennen, löschen (mit Rückfrage), an einen anderen Ort kopieren. Oben im Menü steht „Blatt
   leeren“ für die offene Werkbank – unter der Tabelle ist nur noch die Arbeit. Die zuletzt
   bearbeitete steht oben. (Werkbänke per Link verschicken gab es anfangs auch; seit es
   Gruppen gibt, ist das weg.)
@@ -763,13 +763,25 @@ Werkbänke der Gruppe. Den Einladungslink sieht und teilt jedes Mitglied. Wer ih
 tritt mit einem Anzeigenamen als Gast bei, oder, wenn angemeldet, als er selbst. Tokens
 liegen auf dem Server nur als Hash.
 
+**Aktive Gruppe.** Im Menü unter „Arbeiten in“ wählt man eine Gruppe oder „Nur auf diesem
+Gerät“. Alles, was man dann tut, gehört diesem Ort: Die Werkbank-Verwaltung zeigt nur seine
+Werkbänke, neue entstehen dort, und das Kreuzworträtsel ist das der Gruppe. Solange eine
+Gruppe aktiv ist, steht ihr Name mit dem Verbindungsstand oben im Kopf – damit nie etwas aus
+Versehen in einer Gruppe landet oder man glaubt, etwas zu teilen, was nur lokal liegt. Je Ort
+merkt sich die App die zuletzt offene Werkbank. Liegt in einer Gruppe noch keine, entsteht ein
+Platzhalter, der erst mit der ersten Änderung an die Gruppe geht; kommen vorher Werkbänke der
+Gruppe an, weicht er ihnen. „Kopieren nach …“ in der Verwaltung legt die offene Werkbank an
+einen anderen Ort, auch zurück aufs Gerät. Wer einer Gruppe beitritt, arbeitet danach in ihr;
+wer sie verlässt, wieder auf dem Gerät. Der Abgleich läuft, solange die App offen ist, die
+aktive Gruppe im schnellen Takt, die übrigen im langsamen.
+
 **Bedienung.** Anmelden, Gruppen anlegen, einladen, Mitglieder und Verlassen stehen auf
-der eigenen Seite `#/gruppen` (über „Mehr → Gruppen verwalten“), zusammen mit Serverstatus und
-Verbindungstest. In der Werkbank gibt es nur „In Gruppe kopieren …“ in der Verwaltung der
-Werkbänke und die Marke der Gruppe neben dem Namen.
+der eigenen Seite `#/gruppen`, zusammen mit Serverstatus und Verbindungstest. In der Werkbank
+gibt es „Kopieren nach …“ in der Verwaltung der Werkbänke und neben dem Namen den Knopf zum
+Protokoll.
 
 **Protokoll.** Jede Änderung wird mit altem und neuem Wert, Person und Zeit festgehalten. Die
-App zeigt es für die ganze Werkbank (Marke neben dem Namen) und je Zelle (Verlauf in der
+App zeigt es für die ganze Werkbank (Knopf neben dem Namen) und je Zelle (Verlauf in der
 Zellbox). Zellen, die gerade jemand anderes geändert hat, sind kurz markiert, mit dessen
 Bild.
 

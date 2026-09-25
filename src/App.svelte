@@ -1,12 +1,18 @@
 <script lang="ts">
   import { beobachteVersion, browserUmgebung, type Versionswache } from './lib/neuversion';
-  import { aktuelleSeite, geheZu, SEITEN, type Seite } from './lib/router';
+  import { aktuelleSeite, geheZu, SEITEN, umleitung, type Seite } from './lib/router';
   import Werkbank from './views/Werkbank.svelte';
   import Nachschlagen from './views/Nachschlagen.svelte';
   import Loesungen from './views/Loesungen.svelte';
   import Mehr from './views/Mehr.svelte';
   import Gruppenseite from './views/Gruppenseite.svelte';
-  import { abgleich, ansicht as gruppenansicht } from './lib/gruppe/gruppen.svelte';
+  import {
+    abgleich,
+    aktiveGruppe,
+    ansicht as gruppenansicht,
+    gruppenliste,
+    setzeAktiveGruppe
+  } from './lib/gruppe/gruppen.svelte';
   import Avatar from './ui/Avatar.svelte';
   import { ANMELDEADRESSE } from './lib/gruppe/api';
 
@@ -32,6 +38,44 @@
     menueOffen = false;
     geheZu(ziel);
   }
+
+  /*
+   * Die aktive Gruppe. Der Abgleich läuft, solange die App offen ist – egal
+   * welche Seite –, und die aktive Gruppe bekommt den schnellen Takt.
+   */
+  const gruppen = $derived(gruppenliste());
+  const aktiv = $derived.by(() => {
+    const id = aktiveGruppe();
+    if (!id) return null;
+    return {
+      id,
+      name: abgleich.speicher.gruppen[id]?.name ?? 'Gruppe',
+      status: abgleich.status[id]
+    };
+  });
+
+  function arbeitenIn(gruppe: string | null) {
+    menueOffen = false;
+    setzeAktiveGruppe(gruppe);
+  }
+
+  $effect(() => {
+    abgleich.start();
+    const sicht = () => abgleich.setzeSichtbar(document.visibilityState === 'visible');
+    const online = () => abgleich.wiederOnline();
+    document.addEventListener('visibilitychange', sicht);
+    addEventListener('online', online);
+    return () => {
+      document.removeEventListener('visibilitychange', sicht);
+      removeEventListener('online', online);
+      abgleich.sichereJetzt();
+      abgleich.stopp();
+    };
+  });
+
+  $effect(() => {
+    abgleich.setzeAktiv(aktiv?.id ?? null);
+  });
 
   /** Gibt es überhaupt eine Anmeldung? Erst beim Öffnen des Menüs nachfragen. */
   const oidc = $derived.by(() => {
@@ -71,7 +115,13 @@
   });
 
   $effect(() => {
-    const beiWechsel = () => (seite = aktuelleSeite());
+    // Alte Adressen, etwa Einladungslinks auf die Werkbank, gleich dorthin, wo sie heute hingehören.
+    const beiWechsel = () => {
+      const neu = umleitung(location.hash);
+      if (neu) history.replaceState(null, '', `${location.href.split('#')[0]}${neu}`);
+      seite = aktuelleSeite();
+    };
+    beiWechsel();
     addEventListener('hashchange', beiWechsel);
     return () => removeEventListener('hashchange', beiWechsel);
   });
@@ -104,7 +154,7 @@
   });
 </script>
 
-<header>
+<header class:mit-gruppe={Boolean(aktiv)}>
   <h1>
     <!-- Der Titel führt zur Werkbank, der Startseite. -->
     <a class="heim" href="#/werkbank" title="Zur Werkbank" onclick={() => (menueOffen = false)}>
@@ -113,6 +163,20 @@
     </a>
   </h1>
   <div class="rechts">
+    {#if aktiv}
+      <!-- Immer sichtbar, solange eine Gruppe aktiv ist: Was man jetzt tut, sehen alle darin. -->
+      <button
+        type="button"
+        class="gruppenmarke"
+        data-menue
+        title={`Du arbeitest in der Gruppe „${aktiv.name}“ – antippen zum Wechseln`}
+        onclick={menueUmschalten}
+      >
+        <span class="punkt {aktiv.status?.verbindung ?? 'start'}" aria-hidden="true"></span>
+        <span class="gruppenname">{aktiv.name}</span>
+        {#if aktiv.status?.verbindung === 'offline'}<span class="zusatz">offline</span>{:else if aktiv.status?.verbindung === 'kein-zugang'}<span class="zusatz">kein Zugang</span>{/if}
+      </button>
+    {/if}
     {#if angemeldet}
       <a class="konto" href="#/gruppen" title={`Angemeldet als ${angemeldet.name} – Gruppen`}>
         <Avatar name={angemeldet.name} bild={angemeldet.avatar} groesse={28} />
@@ -141,6 +205,21 @@
             </button>
           {/each}
           <hr />
+          {#if gruppen.length > 0}
+            <!-- Wo man arbeitet: auf dem Gerät oder in einer Gruppe. Gilt für Werkbänke und Kreuzworträtsel. -->
+            <p class="menuekopf">Arbeiten in</p>
+            <button type="button" class="ort" aria-pressed={!aktiv} onclick={() => arbeitenIn(null)}>
+              <span class="haken" aria-hidden="true">{aktiv ? '' : '✓'}</span>
+              <span>Nur auf diesem Gerät</span>
+            </button>
+            {#each gruppen as g (g.id)}
+              <button type="button" class="ort" aria-pressed={aktiv?.id === g.id} onclick={() => arbeitenIn(g.id)}>
+                <span class="haken" aria-hidden="true">{aktiv?.id === g.id ? '✓' : ''}</span>
+                <span>{g.name}</span>
+              </button>
+            {/each}
+            <hr />
+          {/if}
           <button
             type="button"
             aria-current={seite === 'gruppen' ? 'page' : undefined}
@@ -210,6 +289,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
   }
 
   .seite {
@@ -266,6 +346,82 @@
     border-top: 1px solid var(--rand);
   }
 
+  .menuekopf {
+    margin: 4px 14px 2px;
+    font-size: 0.75rem;
+    color: var(--text-leise);
+  }
+
+  nav .ort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 8px;
+  }
+
+  .haken {
+    flex: none;
+    width: 1.2em;
+    color: var(--akzent);
+    text-align: center;
+  }
+
+  nav .ort[aria-pressed='true'] {
+    color: var(--akzent);
+  }
+
+  .gruppenmarke {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    min-width: 0;
+    max-width: 40vw;
+    padding: 0 10px;
+    border: 1px solid var(--akzent);
+    border-radius: 999px;
+    background: none;
+    color: var(--text);
+    font-size: 0.78rem;
+  }
+
+  /* Auf dem Handy ist neben der Gruppe kein Platz für den Seitentitel – die Gruppe ist wichtiger. */
+  @media (max-width: 30rem) {
+    .mit-gruppe .seite {
+      display: none;
+    }
+  }
+
+  .gruppenname {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .zusatz {
+    color: var(--warn);
+    white-space: nowrap;
+  }
+
+  .punkt {
+    flex: none;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-leise);
+  }
+
+  .punkt.live,
+  .punkt.abfrage {
+    background: #3a9d5d;
+  }
+
+  .punkt.offline,
+  .punkt.kein-zugang {
+    background: var(--warn);
+  }
+
   .konto-eintrag {
     display: flex;
     align-items: center;
@@ -293,8 +449,12 @@
 
   h1 {
     margin: 0;
+    min-width: 0;
     font-size: 1.1rem;
     letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .heim {

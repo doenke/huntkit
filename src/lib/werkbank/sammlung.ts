@@ -32,6 +32,12 @@ export interface Werkbank {
 export interface Sammlung {
   aktiv: string;
   werkbaenke: Werkbank[];
+  /**
+   * Die zuletzt offene Werkbank je Ort: '' für dieses Gerät, sonst die
+   * Kennung der Gruppe. Wer die aktive Gruppe wechselt und zurückkommt,
+   * sitzt wieder an derselben Werkbank.
+   */
+  zuletzt?: Record<string, string>;
 }
 
 const SPEICHER = 'huntkit:werkbaenke';
@@ -52,6 +58,29 @@ export function freierName(sammlung: Sammlung, stamm = 'Werkbank'): string {
     const name = `${stamm} ${n}`;
     if (!vergeben.has(name)) return name;
   }
+}
+
+/** Gehört die Werkbank an diesen Ort – `null` ist dieses Gerät? */
+export function amOrt(werkbank: Werkbank, gruppe: string | null): boolean {
+  return (werkbank.gruppe ?? null) === gruppe;
+}
+
+/**
+ * Die Werkbank, die an einem Ort aufgehen soll: die dort zuletzt offene,
+ * sonst die zuletzt geänderte. Gibt es dort keine, nichts.
+ */
+export function werkbankAmOrt(sammlung: Sammlung, gruppe: string | null): Werkbank | undefined {
+  const dort = sammlung.werkbaenke.filter((w) => amOrt(w, gruppe));
+  const gemerkt = sammlung.zuletzt?.[gruppe ?? ''];
+  return dort.find((w) => w.id === gemerkt) ?? [...dort].sort((a, b) => b.geaendert - a.geaendert)[0];
+}
+
+/** Eine Werkbank öffnen und sie als die zuletzt offene ihres Orts merken. */
+export function oeffne(sammlung: Sammlung, id: string): void {
+  const werkbank = sammlung.werkbaenke.find((w) => w.id === id);
+  if (!werkbank) return;
+  sammlung.aktiv = id;
+  sammlung.zuletzt = { ...sammlung.zuletzt, [werkbank.gruppe ?? '']: id };
 }
 
 export function aktiveWerkbank(sammlung: Sammlung): Werkbank {
@@ -93,7 +122,11 @@ export function ausGespeichertem(roh: unknown, altesBlatt?: unknown): Sammlung {
       };
     });
     const aktiv = werkbaenke.some((w) => w.id === roh.aktiv) ? roh.aktiv : (werkbaenke[0] as Werkbank).id;
-    return { aktiv, werkbaenke };
+    const zuletzt: Record<string, string> = {};
+    if (roh.zuletzt && typeof roh.zuletzt === 'object') {
+      for (const [ort, id] of Object.entries(roh.zuletzt)) if (typeof id === 'string') zuletzt[ort] = id;
+    }
+    return { aktiv, werkbaenke, ...(Object.keys(zuletzt).length > 0 ? { zuletzt } : {}) };
   }
   // Das eine Blatt von früher wird die erste Werkbank.
   if (istBlatt(altesBlatt)) {
