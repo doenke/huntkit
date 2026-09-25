@@ -2,7 +2,6 @@
   import { beobachteVersion, browserUmgebung, type Versionswache } from './lib/neuversion';
   import { aktuelleSeite, geheZu, SEITEN, type Seite } from './lib/router';
   import Werkbank from './views/Werkbank.svelte';
-  import Codes from './views/Codes.svelte';
   import Nachschlagen from './views/Nachschlagen.svelte';
   import Loesungen from './views/Loesungen.svelte';
   import Mehr from './views/Mehr.svelte';
@@ -171,8 +170,6 @@
 <main>
   {#if seite === 'werkbank'}
     <Werkbank />
-  {:else if seite === 'codes'}
-    <Codes />
   {:else if seite === 'nachschlagen'}
     <Nachschlagen />
   {:else if seite === 'loesungen'}

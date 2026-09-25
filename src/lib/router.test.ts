@@ -3,8 +3,11 @@ import { ausHash } from './router';
 
 describe('Hash-Routing', () => {
   it('erkennt bekannte Seiten', () => {
-    expect(ausHash('#/codes')).toBe('codes');
     expect(ausHash('#/nachschlagen')).toBe('nachschlagen');
+  });
+
+  it('führt die alte Codes-Seite zu Nachschlagen', () => {
+    expect(ausHash('#/codes')).toBe('nachschlagen');
   });
 
   it('faellt bei Unbekanntem und Leerem auf die Werkbank zurueck', () => {
@@ -18,7 +21,7 @@ describe('Hash-Routing', () => {
   });
 
   it('ignoriert weitere Pfadteile', () => {
-    expect(ausHash('#/codes/morse')).toBe('codes');
+    expect(ausHash('#/nachschlagen/morse')).toBe('nachschlagen');
   });
 
   it('ignoriert angehängte Parameter', () => {

@@ -96,7 +96,7 @@ export interface Codec {
   /**
    * Das Gegenstück: ein reines Werkbank-Werkzeug wie „Jeden n-ten“ oder
    * „Länge“. Es hat nichts zum Nachschlagen und fehlt deshalb in der
-   * Codes-Übersicht. Das Periodensystem hat dort eine eigene Seite.
+   * Übersicht unter Nachschlagen. Das Periodensystem steht dort als eigene Tabelle.
    */
   nurWerkbank?: boolean;
 
