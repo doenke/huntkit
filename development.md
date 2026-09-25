@@ -29,3 +29,8 @@ Punkte, die in diese App sollen:
   -  z.B Hexadezimal nach Dezimal
   -  Variable Basis 
    
+
+## Ideen für später
+
+- Copy & Paste nach Excel, inkl. Formeln
+- Copy & Paste einer Textspalte
