@@ -976,11 +976,6 @@
     <strong>Sortieren</strong>
   </div>
   <Sortierwahl {blatt} spalten={blatt.spalten} wert={blatt.sortierung} setzen={sortiereAnzeige} />
-  <p class="hinweis">
-    Sortiert nur die Anzeige – kein Wert ändert sich. Die Nummer links bleibt die der Eingabe,
-    der Pfeil daneben zeigt, wie weit eine Zeile gewandert ist. Soll ein Platz in die Rechnung
-    eingehen, gibt es die Spalte „Platz in einer Reihenfolge“.
-  </p>
 </section>
 
 {#if zelle}
