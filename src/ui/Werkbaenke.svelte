@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Symbol from './Symbol.svelte';
   import Textzeile from './Textzeile.svelte';
   import type { Sammlung, Werkbank } from '../lib/sammlung';
 
@@ -42,12 +43,11 @@
     inGruppeKopieren?: (gruppe: string) => void;
   } = $props();
 
-  let leerenGefragt = $state(false);
-  const offene = $derived(sammlung.werkbaenke.find((w) => w.id === sammlung.aktiv));
+  /** Rückfrage vor Leeren oder Löschen – je Werkbank höchstens eine. */
+  let gefragt = $state<{ id: string; was: 'leeren' | 'loeschen' } | null>(null);
 
   let umbenennend = $state<string | null>(null);
   let neuerName = $state('');
-  let loeschenGefragt = $state<string | null>(null);
 
   // Zuletzt bearbeitete oben – die sucht man meistens.
   const liste = $derived([...sammlung.werkbaenke].sort((a, b) => b.geaendert - a.geaendert));
@@ -69,7 +69,7 @@
   function umbenennenBeginnen(werkbank: Werkbank) {
     umbenennend = werkbank.id;
     neuerName = werkbank.name;
-    loeschenGefragt = null;
+    gefragt = null;
   }
 
   function umbenennenFertig() {
@@ -81,57 +81,19 @@
 <section class="verwaltung">
   <div class="kopf">
     <strong>Werkbänke</strong>
-    <button type="button" onclick={neu}>+ Neue Werkbank</button>
+    <button type="button" class="neu" onclick={neu}>+ Neu</button>
   </div>
 
-  {#if offene}
-    <div class="offene">
-      <span class="marke">Offen: {offene.name}</span>
-      <div class="knoepfe">
-        {#if leerenGefragt}
-          <button type="button" class="ernst" onclick={() => { leeren(); leerenGefragt = false; }}>
-            wirklich alles löschen
-          </button>
-          <button type="button" onclick={() => (leerenGefragt = false)}>abbrechen</button>
-        {:else}
-          <button type="button" onclick={() => (leerenGefragt = true)}>Blatt leeren</button>
-          {#if gruppen.some((g) => g.id !== offene.gruppe)}
-            <select
-              aria-label="Offene Werkbank in eine Gruppe kopieren"
-              value=""
-              onchange={(e) => {
-                const ziel = e.currentTarget.value;
-                e.currentTarget.value = '';
-                if (ziel) inGruppeKopieren(ziel);
-              }}
-            >
-              <option value="">In Gruppe kopieren …</option>
-              {#each gruppen.filter((g) => g.id !== offene.gruppe) as g (g.id)}
-                <option value={g.id}>{g.name}</option>
-              {/each}
-            </select>
-          {:else if gruppen.length === 0}
-            <a class="gruppenlink" href="#/gruppen">Gruppen …</a>
-          {/if}
-        {/if}
-      </div>
-    </div>
-  {/if}
-
-  <button
-    type="button"
-    class="automatik"
-    aria-pressed={sammlung.automatisch}
-    onclick={automatikUmschalten}
-    title="Jede Änderung sofort speichern – oder erst, wenn du auf Speichern tippst"
-  >
-    <span class="schalter" aria-hidden="true"></span>
-    automatisch speichern
-  </button>
-
+  <!--
+    Eine Zeile je Werkbank: links der Name zum Wechseln, rechts kleine
+    Symbol-Knöpfe. Leeren und in eine Gruppe kopieren gibt es nur an der
+    offenen Werkbank, denn beides betrifft die Arbeit, die man vor sich hat.
+  -->
   <ul>
     {#each liste as werkbank (werkbank.id)}
       {@const aktiv = werkbank.id === sammlung.aktiv}
+      {@const frage = gefragt?.id === werkbank.id ? gefragt.was : null}
+      {@const ziele = aktiv ? gruppen.filter((g) => g.id !== werkbank.gruppe) : []}
       <li class:aktiv>
         {#if umbenennend === werkbank.id}
           <div class="umbenennen">
@@ -150,81 +112,144 @@
               {#if aktiv}<span class="offen">· offen</span>{/if}
             </span>
           </button>
-        {/if}
 
-        <div class="knoepfe">
-          {#if loeschenGefragt === werkbank.id}
-            <button type="button" class="ernst" onclick={() => { entfernen(werkbank.id); loeschenGefragt = null; }}>
-              {werkbank.gruppe ? 'für alle löschen' : 'wirklich löschen'}
-            </button>
-            <button type="button" onclick={() => (loeschenGefragt = null)}>abbrechen</button>
-          {:else}
-            <button type="button" onclick={() => umbenennenBeginnen(werkbank)}>umbenennen</button>
-            <button type="button" onclick={() => kopieren(werkbank.id)}>Kopie</button>
-            {#if darfLoeschen(werkbank)}
+          <div class="symbole">
+            {#if frage}
               <button
                 type="button"
-                class="weg"
-                onclick={() => { loeschenGefragt = werkbank.id; umbenennend = null; }}
-                aria-label={werkbank.gruppe ? `${werkbank.name} für die ganze Gruppe löschen` : `${werkbank.name} löschen`}
+                class="ernst klein"
+                onclick={() => {
+                  if (frage === 'leeren') leeren();
+                  else entfernen(werkbank.id);
+                  gefragt = null;
+                }}
               >
-                ✕
+                {frage === 'leeren' ? 'leeren' : werkbank.gruppe ? 'für alle löschen' : 'löschen'}
               </button>
+              <button type="button" class="klein" onclick={() => (gefragt = null)}>abbrechen</button>
+            {:else}
+              {#if aktiv}
+                <button
+                  type="button"
+                  class="symbol"
+                  onclick={() => (gefragt = { id: werkbank.id, was: 'leeren' })}
+                  aria-label="Blatt leeren"
+                  title="Blatt leeren"
+                >
+                  <Symbol name="radierer" />
+                </button>
+                {#if ziele.length > 0}
+                  <!-- Die Auswahl liegt unsichtbar über dem Symbol: ein Tipp öffnet die Liste der Gruppen. -->
+                  <label class="symbol auswahl" title="In eine Gruppe kopieren">
+                    <Symbol name="gruppe" />
+                    <select
+                      aria-label="Offene Werkbank in eine Gruppe kopieren"
+                      value=""
+                      onchange={(e) => {
+                        const ziel = e.currentTarget.value;
+                        e.currentTarget.value = '';
+                        if (ziel) inGruppeKopieren(ziel);
+                      }}
+                    >
+                      <option value="">In Gruppe kopieren …</option>
+                      {#each ziele as g (g.id)}
+                        <option value={g.id}>{g.name}</option>
+                      {/each}
+                    </select>
+                  </label>
+                {/if}
+              {/if}
+              <button
+                type="button"
+                class="symbol"
+                onclick={() => umbenennenBeginnen(werkbank)}
+                aria-label={`${werkbank.name} umbenennen`}
+                title="umbenennen"
+              >
+                <Symbol name="stift" />
+              </button>
+              <button
+                type="button"
+                class="symbol"
+                onclick={() => kopieren(werkbank.id)}
+                aria-label={`${werkbank.name} kopieren`}
+                title="Kopie anlegen"
+              >
+                <Symbol name="kopie" />
+              </button>
+              {#if darfLoeschen(werkbank)}
+                <button
+                  type="button"
+                  class="symbol weg"
+                  onclick={() => { gefragt = { id: werkbank.id, was: 'loeschen' }; umbenennend = null; }}
+                  aria-label={werkbank.gruppe ? `${werkbank.name} für die ganze Gruppe löschen` : `${werkbank.name} löschen`}
+                  title={werkbank.gruppe ? 'für die ganze Gruppe löschen' : 'löschen'}
+                >
+                  <Symbol name="papierkorb" />
+                </button>
+              {/if}
             {/if}
-          {/if}
-        </div>
+          </div>
+        {/if}
       </li>
     {/each}
   </ul>
+
+  <!-- Gilt für alle Werkbänke, deshalb unter der Liste statt an einer Zeile. -->
+    <button
+      type="button"
+      class="automatik"
+      aria-pressed={sammlung.automatisch}
+      onclick={automatikUmschalten}
+      title="Jede Änderung sofort speichern – oder erst, wenn du auf Speichern tippst"
+    >
+      <span class="schalter" aria-hidden="true"></span>
+      automatisch speichern
+    </button>
 </section>
 
 <style>
   .verwaltung {
     border: 1px solid var(--akzent);
     border-radius: var(--radius);
-    padding: 10px 12px;
+    padding: 8px 10px 10px;
     margin-bottom: 12px;
   }
 
   .kopf {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 4px;
+    gap: 6px;
+    margin-bottom: 6px;
   }
 
-  .kopf button {
-    min-height: 36px;
+  .kopf strong {
+    margin-right: auto;
+  }
+
+  .neu {
+    min-height: 34px;
+    padding: 0 10px;
     font-size: 0.8rem;
-  }
-
-  .offene {
-    display: grid;
-    gap: 4px;
-    padding: 6px 0 8px;
-    border-bottom: 1px solid var(--rand);
-    margin-bottom: 4px;
-  }
-
-  .offene .marke {
-    color: var(--text-leise);
-    font-size: 0.78rem;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
   }
 
   ul {
     list-style: none;
-    margin: 6px 0 0;
+    margin: 0;
     padding: 0;
     display: grid;
-    gap: 8px;
+    gap: 6px;
   }
 
   li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
     border: 1px solid var(--rand);
     border-radius: var(--radius);
-    padding: 6px;
+    padding: 2px 4px 2px 2px;
   }
 
   li.aktiv {
@@ -232,9 +257,10 @@
   }
 
   .wahl {
+    flex: 1 1 8rem;
+    min-width: 0;
     display: grid;
-    gap: 2px;
-    width: 100%;
+    gap: 0;
     text-align: left;
     border: none;
     background: none;
@@ -249,7 +275,7 @@
 
   .info {
     color: var(--text-leise);
-    font-size: 0.75rem;
+    font-size: 0.72rem;
   }
 
   .entwurf {
@@ -260,33 +286,53 @@
     color: var(--akzent);
   }
 
-  .knoepfe {
+  /* Rechtsbündig in der Zeile des Namens; bricht nur um, wenn es gar nicht passt. */
+  .symbole {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 4px;
+    gap: 2px;
+    margin-left: auto;
+    align-items: center;
   }
 
-  .knoepfe button {
-    min-height: 36px;
+  .symbol {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text-leise);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .symbol:hover,
+  .symbol:focus-within {
+    color: var(--text);
+    background: var(--flaeche-hoch);
+  }
+
+  .symbol.weg:hover {
+    color: var(--warn);
+  }
+
+  .auswahl select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .klein {
+    min-height: 32px;
+    padding: 0 10px;
     font-size: 0.78rem;
-    flex: 1 1 auto;
-  }
-
-  .knoepfe .weg {
-    flex: 0 0 auto;
-    min-width: 40px;
-  }
-
-  .offene select {
-    min-height: 36px;
-    font-size: 0.8rem;
-  }
-
-  .gruppenlink {
-    align-self: center;
-    font-size: 0.8rem;
-    color: var(--akzent);
   }
 
   .gruppe {
@@ -307,9 +353,11 @@
   }
 
   .umbenennen {
+    flex: 1 1 100%;
     display: flex;
     gap: 6px;
     align-items: flex-start;
+    padding: 2px;
   }
 
   .umbenennen :global(textarea) {
@@ -325,15 +373,16 @@
 
   /* Derselbe kleine Schiebeschalter wie bei den Umlauten. */
   .automatik {
+    margin-top: 6px;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     min-height: 34px;
-    padding: 0 8px 0 4px;
+    padding: 0 6px 0 2px;
     border: none;
     background: none;
     color: var(--text-leise);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .automatik[aria-pressed='true'] {
@@ -342,6 +391,7 @@
 
   .schalter {
     position: relative;
+    flex: 0 0 auto;
     width: 30px;
     height: 18px;
     border-radius: 9px;
