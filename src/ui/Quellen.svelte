@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { Quelle } from '../codecs/types';
 
-  /** Quellenangaben unter einer Tafel – klein, aber zum Nachlesen da. */
+  /** Quellenangaben unter einer Tafel – eingeklappt, aber zum Nachlesen da. */
   let { quellen }: { quellen: ReadonlyArray<Quelle> } = $props();
 </script>
 
-<div class="quellen">
-  <span class="marke">Quellen</span>
+<details class="quellen">
+  <summary class="marke">Quellen</summary>
   <ul>
     {#each quellen as quelle (quelle.titel)}
       <li>
@@ -18,7 +18,7 @@
       </li>
     {/each}
   </ul>
-</div>
+</details>
 
 <style>
   .quellen {
@@ -29,6 +29,24 @@
 
   .marke {
     font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+  }
+
+  .marke::-webkit-details-marker {
+    display: none;
+  }
+
+  .marke::after {
+    content: ' ▸';
+    white-space: pre;
+  }
+
+  .quellen[open] > .marke::after {
+    content: ' ▾';
   }
 
   ul {
