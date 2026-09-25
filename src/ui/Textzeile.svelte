@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { HTMLTextareaAttributes } from 'svelte/elements';
-  import { wachsen } from '../lib/wachsen';
+  import { wachsen } from '../lib/ui/wachsen';
 
   /**
    * Ein Eingabefeld für eine Zeile Text, das bei langem Inhalt nach unten

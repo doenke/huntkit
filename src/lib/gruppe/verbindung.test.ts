@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Blatt } from '../blatt';
-import { wortschluessel, zustandAus } from '../kreuzwortgruppe';
+import type { Blatt } from '../werkbank/blatt';
+import { wortschluessel, zustandAus } from '../kreuzwort/kreuzwortgruppe';
 import type { Abruf, ServerAenderung } from './api';
 import { Gruppenabgleich } from './verbindung';
 

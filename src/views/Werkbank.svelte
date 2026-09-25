@@ -19,10 +19,10 @@
     type Sortierung,
     type Spalte,
     type SpaltenId
-  } from '../lib/blatt';
-  import { zeichenbar } from '../lib/codeanzeige';
+  } from '../lib/werkbank/blatt';
+  import { zeichenbar } from '../lib/ui/codeanzeige';
   import { nimmParameter } from '../lib/router';
-  import { ausAdresse } from '../lib/teilen';
+  import { ausAdresse } from '../lib/werkbank/teilen';
   import { abgleich, aktiveGruppe, ansicht as gruppenansicht, gruppenliste, mitglied } from '../lib/gruppe/gruppen.svelte';
   import { zellschluessel } from '../lib/gruppe/schluessel';
   import {
@@ -38,13 +38,13 @@
     umbenennen,
     uebernimmOffene,
     wechseln as oeffneWerkbank
-  } from '../lib/werkbaenke.svelte';
-  import { breitNachText, wachsen } from '../lib/wachsen';
+  } from '../lib/werkbank/werkbaenke.svelte';
+  import { breitNachText, wachsen } from '../lib/ui/wachsen';
   import {
     feldUmschreiben,
     speichereUmlauteAufloesen,
     umlauteAufloesenGespeichert
-  } from '../lib/umlautschalter';
+  } from '../lib/werkbank/umlautschalter';
   import Avatar from '../ui/Avatar.svelte';
   import Codeanzeige from '../ui/Codeanzeige.svelte';
   import Protokoll from '../ui/Protokoll.svelte';
@@ -54,7 +54,7 @@
   import Symbol from '../ui/Symbol.svelte';
   import Tour from '../ui/Tour.svelte';
   import Werkbaenke from '../ui/Werkbaenke.svelte';
-  import { merkeTourGesehen, tourGesehen, WERKBANK_TOUR, type Tourschritt } from '../lib/tour';
+  import { merkeTourGesehen, tourGesehen, WERKBANK_TOUR, type Tourschritt } from '../lib/ui/tour';
   import Zellenanalyse from '../ui/Zellenanalyse.svelte';
 
   /**

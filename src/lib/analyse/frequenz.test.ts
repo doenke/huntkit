@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { vigenereCodec } from '../codecs/chiffren';
-import { verschiebe } from '../codecs/caesar';
+import { vigenereCodec } from '../../codecs/chiffren';
+import { verschiebe } from '../../codecs/caesar';
 import { analysiere } from './frequenz';
 
 const TEXT =

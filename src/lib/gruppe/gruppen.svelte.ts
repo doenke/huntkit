@@ -1,5 +1,5 @@
-import type { Blatt } from '../blatt';
-import { ladeSammlung } from '../sammlung';
+import type { Blatt } from '../werkbank/blatt';
+import { ladeSammlung } from '../werkbank/sammlung';
 import type { Mitglied } from './api';
 import { Gruppenabgleich } from './verbindung';
 

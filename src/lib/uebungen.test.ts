@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { braille } from '../codecs/braille';
-import { rechne } from './blatt';
+import { rechne } from './werkbank/blatt';
 import { punkteDerZelle, stimmt, UEBUNGEN } from './uebungen';
 
 describe('Übungsrätsel', () => {

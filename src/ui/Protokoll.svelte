@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { spaltenname, type Blatt } from '../lib/blatt';
+  import { spaltenname, type Blatt } from '../lib/werkbank/blatt';
   import { rufe, type Protokolleintrag } from '../lib/gruppe/api';
   import { abgleich, mitglied } from '../lib/gruppe/gruppen.svelte';
   import { ausZellschluessel } from '../lib/gruppe/schluessel';

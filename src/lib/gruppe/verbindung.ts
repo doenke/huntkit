@@ -1,6 +1,6 @@
-import type { Blatt } from '../blatt';
-import { kennung } from '../blatt';
-import { istKreuzwort, kreuzwortKennung } from '../kreuzwortgruppe';
+import type { Blatt } from '../werkbank/blatt';
+import { kennung } from '../werkbank/blatt';
+import { istKreuzwort, kreuzwortKennung } from '../kreuzwort/kreuzwortgruppe';
 import {
   ansicht,
   bestaetige,

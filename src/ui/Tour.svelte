@@ -1,6 +1,6 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import type { Tourschritt } from '../lib/tour';
+  import type { Tourschritt } from '../lib/ui/tour';
 
   /**
    * Die geführte Tour: Das Ziel eines Schritts wird ausgespart, der Rest der

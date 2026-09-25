@@ -2,7 +2,7 @@
   import { rufe, type GruppenDetails } from '../lib/gruppe/api';
   import { abgleich, aktiveGruppe, setzeAktiveGruppe } from '../lib/gruppe/gruppen.svelte';
   import { geheZu, nimmParameter } from '../lib/router';
-  import { gruppeAufsGeraet } from '../lib/werkbaenke.svelte';
+  import { gruppeAufsGeraet } from '../lib/werkbank/werkbaenke.svelte';
   import Gruppen from '../ui/Gruppen.svelte';
   import Serverstatus from '../ui/Serverstatus.svelte';
   import Textzeile from '../ui/Textzeile.svelte';

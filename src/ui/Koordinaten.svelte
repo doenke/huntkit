@@ -2,7 +2,7 @@
   import Textzeile from './Textzeile.svelte';
   import {
     alsDezimalgrad, alsGradMinuten, alsGradMinutenSekunden, lese, osmLink
-  } from '../lib/koordinaten';
+  } from '../lib/nachschlagen/koordinaten';
 
   let eingabe = $state('');
   const lesung = $derived(lese(eingabe));

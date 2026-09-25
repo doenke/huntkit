@@ -1,4 +1,4 @@
-import type { Blatt, Spalte, Zeile } from '../blatt';
+import type { Blatt, Spalte, Zeile } from '../werkbank/blatt';
 
 /**
  * Ein Blatt als flache Tabelle von Schlüsseln – so wird es mit der Gruppe

@@ -2,7 +2,7 @@
   import { nachtschicht, raetselnacht } from '../codecs/quellen';
   import Quellen from './Quellen.svelte';
   import Textzeile from './Textzeile.svelte';
-  import { alsText, FARBEN, farbe, ringeFuer, wert } from '../lib/widerstand';
+  import { alsText, FARBEN, farbe, ringeFuer, wert } from '../lib/nachschlagen/widerstand';
 
   let anzahl = $state<4 | 5 | 6>(4);
   let ringe = $state<string[]>(['blau', 'grau', 'rot', 'gold', 'braun', 'rot']);

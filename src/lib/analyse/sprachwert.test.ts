@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { verschiebe } from '../codecs/caesar';
+import { verschiebe } from '../../codecs/caesar';
 import { nurBuchstaben, sprachwert } from './sprachwert';
 
 const DEUTSCH = [

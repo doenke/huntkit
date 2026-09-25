@@ -1,7 +1,7 @@
 import { untrack } from 'svelte';
 import type { Blatt } from './blatt';
-import { abgleich, aktiveGruppe, ansicht, empfangeWerkbaenke, setzeAktiveGruppe } from './gruppe/gruppen.svelte';
-import { gleich, zuSchluesseln } from './gruppe/schluessel';
+import { abgleich, aktiveGruppe, ansicht, empfangeWerkbaenke, setzeAktiveGruppe } from '../gruppe/gruppen.svelte';
+import { gleich, zuSchluesseln } from '../gruppe/schluessel';
 import {
   aktiveWerkbank,
   amOrt,

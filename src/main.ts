@@ -1,7 +1,7 @@
 import { mount } from 'svelte';
 import App from './App.svelte';
 import './app.css';
-import { gespeichertesThema, setzeThema } from './lib/theme';
+import { gespeichertesThema, setzeThema } from './lib/ui/theme';
 
 setzeThema(gespeichertesThema());
 

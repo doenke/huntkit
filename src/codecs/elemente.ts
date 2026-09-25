@@ -1,5 +1,5 @@
 import elementeDaten from '../../data/elements.json';
-import { periode } from '../lib/periodensystem';
+import { periode } from '../lib/nachschlagen/periodensystem';
 import { ergebnis, text } from './hilfen';
 import type { Codec, Luecke, OptionWerte } from './types';
 import { nachtschicht, raetselnacht, wikipedia } from './quellen';

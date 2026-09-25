@@ -1,7 +1,7 @@
 <script lang="ts">
   import Symbol from './Symbol.svelte';
   import Textzeile from './Textzeile.svelte';
-  import type { Werkbank } from '../lib/sammlung';
+  import type { Werkbank } from '../lib/werkbank/sammlung';
 
   /**
    * Verwaltung der Werkbänke am aktuellen Ort (dieses Gerät oder die aktive

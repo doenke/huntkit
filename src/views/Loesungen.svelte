@@ -1,7 +1,7 @@
 <script lang="ts">
   import Textzeile from '../ui/Textzeile.svelte';
   import { abgleich, aktiveGruppe, ansicht as gruppenansicht, mitglied } from '../lib/gruppe/gruppen.svelte';
-  import { wortschluessel, wortwert, zustandAus } from '../lib/kreuzwortgruppe';
+  import { wortschluessel, wortwert, zustandAus } from '../lib/kreuzwort/kreuzwortgruppe';
   import {
     buchstaben,
     laden,
@@ -13,7 +13,7 @@
     schonGefunden,
     sichern,
     type Zustand
-  } from '../lib/loesungsplan';
+  } from '../lib/kreuzwort/loesungsplan';
 
   /**
    * Lösungswörter für ein Kreuzwort- oder Bilderrätsel sammeln und den Lücken

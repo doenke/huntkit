@@ -1,6 +1,6 @@
 <script lang="ts">
   import { codec as findeCodec } from '../codecs/registry';
-  import { einzelzeichen } from '../lib/codeanzeige';
+  import { einzelzeichen } from '../lib/ui/codeanzeige';
 
   /**
    * Eingabe über eine Codetafel: Tasten und antippbares Raster schreiben in

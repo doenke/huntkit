@@ -2,7 +2,7 @@
   import { ANMELDEADRESSE, rufe, type GruppenDetails } from '../lib/gruppe/api';
   import { abgleich, aktiveGruppe, ansicht, einladungslink, setzeAktiveGruppe } from '../lib/gruppe/gruppen.svelte';
   import type { Verbindungsart } from '../lib/gruppe/verbindung';
-  import { verschicke } from '../lib/teilen';
+  import { verschicke } from '../lib/werkbank/teilen';
   import Avatar from './Avatar.svelte';
   import Textzeile from './Textzeile.svelte';
 

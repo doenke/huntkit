@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { gespeichertesThema, setzeThema, THEMEN, type Thema } from '../lib/theme';
+  import { gespeichertesThema, setzeThema, THEMEN, type Thema } from '../lib/ui/theme';
   import { UEBUNGEN } from '../lib/uebungen';
   import Nachtausruestung from '../ui/Nachtausruestung.svelte';
   import Uebung from '../ui/Uebung.svelte';

@@ -1,9 +1,9 @@
 <script lang="ts">
   import { alleVerschiebungen } from '../codecs/caesar';
   import type { OptionWerte } from '../codecs/types';
-  import { erkenne, optionenText, type Fund } from '../lib/erkennen';
-  import { analysiere } from '../lib/frequenz';
-  import { sprachwert } from '../lib/sprachwert';
+  import { erkenne, optionenText, type Fund } from '../lib/analyse/erkennen';
+  import { analysiere } from '../lib/analyse/frequenz';
+  import { sprachwert } from '../lib/analyse/sprachwert';
 
   /**
    * Die Untersuchung einer einzelnen Zelle: Was ist das überhaupt, wie sind die

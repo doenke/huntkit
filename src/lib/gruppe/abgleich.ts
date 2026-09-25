@@ -1,4 +1,4 @@
-import type { Blatt } from '../blatt';
+import type { Blatt } from '../werkbank/blatt';
 import type { GruppenDetails, Ich, ServerAenderung } from './api';
 import { ausSchluesseln, gleich, unterschiede, zuSchluesseln, type Schluessel, type Wert } from './schluessel';
 

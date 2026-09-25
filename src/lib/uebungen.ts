@@ -1,7 +1,7 @@
 import { braille } from '../codecs/braille';
 import { ohneUmlaute } from '../codecs/hilfen';
-import { begleiteTafel, neueEingabespalte, neueWerkzeugspalte, neueZeile, type Blatt } from './blatt';
-import type { Geteilt } from './teilen';
+import { begleiteTafel, neueEingabespalte, neueWerkzeugspalte, neueZeile, type Blatt } from './werkbank/blatt';
+import type { Geteilt } from './werkbank/teilen';
 
 /**
  * Übungsrätsel: kleine, echte Rätsel, an denen man die Werkzeuge der App

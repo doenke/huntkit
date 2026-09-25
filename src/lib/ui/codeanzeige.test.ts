@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { codec } from '../codecs/registry';
+import { codec } from '../../codecs/registry';
 import { zeichenbar, zerlegeCode } from './codeanzeige';
 
 const morse = codec('morse')!;

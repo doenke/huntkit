@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { alsLink } from '../lib/teilen';
+  import { alsLink } from '../lib/werkbank/teilen';
   import { geloeste, merkeGeloest, punkteDerZelle, stimmt, type Uebung } from '../lib/uebungen';
   import Textzeile from './Textzeile.svelte';
 

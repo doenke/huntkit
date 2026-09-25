@@ -1,4 +1,4 @@
-import elementeDaten from '../../data/elements.json';
+import elementeDaten from '../../../data/elements.json';
 
 /**
  * Das Periodensystem als Gitter.
