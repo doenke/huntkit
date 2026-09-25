@@ -134,7 +134,7 @@ export interface Codec {
    * Visual Picker: Glyphe antippen statt tippen – die einzige Bedienung, die bei
    * Braille, Winker oder Flaggen am Handy überhaupt praktikabel ist.
    */
-  zeichne?(zeichen: string): Glyph | null;
+  zeichne?(zeichen: string, optionen?: OptionWerte): Glyph | null;
 
   /**
    * Zeichnet eine Codegruppe so, wie sie dasteht – etwa „.-“ als Punkt und

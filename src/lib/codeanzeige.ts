@@ -1,4 +1,4 @@
-import type { Codec, Glyph } from '../codecs/types';
+import type { Codec, Glyph, OptionWerte } from '../codecs/types';
 
 /**
  * Einen Code-Text in seine Gruppen zerlegen, damit man ihn zeichnen kann.
@@ -27,9 +27,11 @@ export interface Codeteil {
  * sich? Dieselbe Frage wie auf der Codekarte: Wo eine Darstellung länger als
  * ein Zeichen ist, braucht es einen Trenner.
  */
-export function einzelzeichen(codec: Codec): boolean {
+export function einzelzeichen(codec: Codec, optionen?: OptionWerte): boolean {
   if (codec.zeichenweise !== undefined) return codec.zeichenweise;
-  const eintraege = codec.tabelle?.() ?? [];
+  // Mit Einstellungen, weil sie die Frage entscheiden können: Die
+  // Handytastatur mit T9 schreibt eine Ziffer je Buchstabe.
+  const eintraege = codec.tabelle?.(optionen) ?? [];
   return eintraege.length > 0 && eintraege.every((e) => [...e.darstellung].length === 1);
 }
 

@@ -27,6 +27,15 @@ describe('Ländercodes', () => {
 });
 
 describe('HTML-Farben', () => {
+  it('stehen alle auf einer Seite, nach Wert sortiert', () => {
+    const tabelle = farben.tabelle!();
+    expect(tabelle.every((e) => e.gruppe === undefined)).toBe(true);
+    expect(tabelle[0]?.zeichen).toBe('Black');
+    expect(tabelle.at(-1)?.zeichen).toBe('White');
+    const werte = tabelle.map((e) => e.darstellung);
+    expect(werte).toEqual([...werte].sort());
+  });
+
   it('liest Werte in jeder Schreibweise', () => {
     expect(farben.decode('#FF7F50 ff7f50 #0ff #FFFFFF').text).toBe('Coral Coral Aqua White');
   });

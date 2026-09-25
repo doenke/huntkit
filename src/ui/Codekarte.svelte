@@ -33,7 +33,7 @@
    * Trennzeichen zwischen zwei Zeichen: Wo eine Darstellung mehr als ein
    * Zeichen lang ist, braucht es eins – sonst liefe alles ineinander.
    */
-  const trenner = $derived(einzelzeichen(codec) ? '' : ' ');
+  const trenner = $derived(einzelzeichen(codec, werte) ? '' : ' ');
   /** Codes mit Bild bekommen unter dem Feld eine gezeichnete Fassung. */
   const malbar = $derived(zeichenbar(codec));
 
@@ -46,6 +46,9 @@
     kodiert = wert;
     klartext = codec.decode(wert, werte).text;
   }
+
+  /** Lange Namen wie „DarkTurquoise“ dürfen zwischen den Wortteilen umbrechen, nicht mitten darin. */
+  const umbrechbar = (name: string) => name.replace(/([a-zäöüß])([A-ZÄÖÜ])/g, '$1\u200B$2');
 
   /** Tasten und Raster lassen den Fokus im Codefeld, wie in der Werkbank. */
   const behalteFokus = (e: MouseEvent) => e.preventDefault();
@@ -179,7 +182,7 @@
     </figure>
   {/if}
   {#each sichtbar as eintrag, stelle (stelle)}
-    {@const glyph = codec.zeichne?.(eintrag.zeichen) ?? null}
+    {@const glyph = codec.zeichne?.(eintrag.zeichen, werte) ?? null}
     {@const codebild = glyph ? null : (codec.zeichneCode?.(eintrag.darstellung) ?? null)}
     <button type="button" onmousedown={behalteFokus} onclick={() => anhaengen(eintrag.darstellung)}>
       {#if glyph}
@@ -187,17 +190,17 @@
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           {@html glyph.inhalt}
         </svg>
-        <span class="zeichen">{eintrag.zeichen}</span>
+        <span class="zeichen">{umbrechbar(eintrag.zeichen)}</span>
         {#if eintrag.hinweis}<span class="hinweis">{eintrag.hinweis}</span>{/if}
       {:else if eintrag.hinweis}
         <!-- Nachschlagetafel mit Erklärung: das Codezeichen groß, daneben was es bedeutet. -->
         <span class="gross">{eintrag.darstellung}</span>
         <span class="erklaerung">
-          <span class="zeichen">{eintrag.zeichen}</span>
+          <span class="zeichen">{umbrechbar(eintrag.zeichen)}</span>
           <span class="hinweis">{eintrag.hinweis}</span>
         </span>
       {:else}
-        <span class="zeichen">{eintrag.zeichen}</span>
+        <span class="zeichen">{umbrechbar(eintrag.zeichen)}</span>
         {#if codebild}
           <!-- Der Code steht auch in der Tabelle als Bild: bei Morse liest sich
                die Balkenreihe schneller als eine Folge von Satzzeichen. -->

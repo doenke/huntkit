@@ -51,19 +51,29 @@ export async function woerterbuch(sprache: Sprache = 'de'): Promise<string[]> {
 
 /**
  * Wandelt ein Suchmuster in einen regulären Ausdruck.
- *   ?  ein beliebiger Buchstabe
- *   *  beliebig viele
+ *   ?      ein beliebiger Buchstabe
+ *   *      beliebig viele
+ *   [ABC]  einer dieser Buchstaben – so schreibt die Handytastatur mit T9
+ *          ihre Mehrdeutigkeit, etwa [GHI][ABC][JKL][JKL][MNO] für 42556
  *   sonst der Buchstabe selbst
  */
 export function musterAlsRegel(muster: string): RegExp {
-  const regel = [...muster]
-    .map((zeichen) => {
-      if (zeichen === '?') return '.';
-      if (zeichen === '*') return '.*';
-      return vereinfacht(zeichen); // Buchstaben; alles Übrige fällt weg
-    })
-    .join('');
-  return new RegExp(`^${regel}$`);
+  const teile: string[] = [];
+  for (let i = 0; i < muster.length; i++) {
+    const zeichen = muster[i]!;
+    if (zeichen === '[') {
+      const ende = muster.indexOf(']', i);
+      // Umlaute in einer Auswahl lassen sich nicht auflösen (Ä wäre zwei
+      // Buchstaben) – dort gelten nur A–Z.
+      const auswahl = [...new Set(muster.slice(i + 1, ende < 0 ? undefined : ende).toUpperCase().replace(/[^A-Z]/g, ''))].join('');
+      if (auswahl) teile.push(`[${auswahl}]`);
+      if (ende < 0) break;
+      i = ende;
+    } else if (zeichen === '?') teile.push('.');
+    else if (zeichen === '*') teile.push('.*');
+    else teile.push(vereinfacht(zeichen)); // Buchstaben; alles Übrige fällt weg
+  }
+  return new RegExp(`^${teile.join('')}$`);
 }
 
 export interface Suchergebnis {

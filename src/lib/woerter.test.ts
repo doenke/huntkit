@@ -13,6 +13,11 @@ describe('Muster', () => {
     expect(musterAlsRegel('GO*').source).toBe('^GO.*$');
   });
 
+  it('versteht eine Auswahl in eckigen Klammern', () => {
+    expect(musterAlsRegel('[GHI][ABC]?').source).toBe('^[GHI][ABC].$');
+    expect(suchenIn(LISTE, '[MNO][ABC][ABC][GHI][TUV]').treffer).toEqual(['nacht']);
+  });
+
   it('löst Umlaute im Muster auf', () => {
     expect(vereinfacht('Größe')).toBe('GROESSE');
     expect(musterAlsRegel('grö?e').source).toBe('^GROE.E$');

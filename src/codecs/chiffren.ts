@@ -280,49 +280,89 @@ function tastenfeld(): Glyph {
   };
 }
 
+/** Die Taste zu einem Buchstaben und wie oft man sie klassisch drückt. */
+function tasteFuer(zeichen: string): { ziffer: string; druecke: number } | null {
+  const taste = TASTEN.find(([, buchstaben]) => buchstaben.includes(zeichen));
+  return taste ? { ziffer: taste[0], druecke: taste[1].indexOf(zeichen) + 1 } : null;
+}
+
 export const handytasten: Codec = {
   id: 'handytasten',
   name: 'Handytastatur',
   quellen: [{ titel: 'ITU-T E.161: Anordnung von Ziffern und Buchstaben auf Telefontastaturen', url: 'https://www.itu.int/rec/T-REC-E.161' }, wikipedia('Text on 9 keys', 'https://de.wikipedia.org/wiki/Text_on_9_keys')],
-  beschreibung: 'Alte Handytasten: A ist 2, B ist 22, C ist 222.',
+  beschreibung: 'Alte Handytasten: klassisch ist A 2, B 22, C 222. Mit T9 drückt man jede Taste nur einmal – dann ist 2 A, B oder C.',
   uebersicht: { titel: 'Tastenfeld nach ITU-T E.161', bild: tastenfeld() },
-  encode(eingabe) {
+  optionen: [
+    {
+      id: 'verfahren',
+      titel: 'Tippen',
+      art: 'auswahl',
+      werte: [
+        { wert: 'klassisch', titel: 'klassisch (mehrfach drücken)' },
+        { wert: 't9', titel: 'T9 (einmal drücken)' }
+      ],
+      standard: 'klassisch'
+    }
+  ],
+  encode(eingabe, optionen) {
     const luecken: Luecke[] = [];
+    if (text(optionen, 'verfahren', 'klassisch') === 't9') {
+      // Eine Ziffernfolge je Wort, sonst verschwimmen die Wortgrenzen.
+      const woerter = eingabe
+        .split(/\s+/)
+        .map((wort) => nurAZ(wort))
+        .filter((wort) => wort.length > 0)
+        .map((wort) => [...wort].map((zeichen) => tasteFuer(zeichen)?.ziffer ?? '').join(''));
+      return ergebnis(woerter.join(' '), luecken);
+    }
     const teile: string[] = [];
     [...nurAZ(eingabe)].forEach((zeichen, i) => {
-      const taste = TASTEN.find(([, buchstaben]) => buchstaben.includes(zeichen));
+      const taste = tasteFuer(zeichen);
       if (!taste) luecken.push({ position: i, zeichen });
-      else teile.push(taste[0].repeat(taste[1].indexOf(zeichen) + 1));
+      else teile.push(taste.ziffer.repeat(taste.druecke));
     });
     return ergebnis(teile.join(' '), luecken);
   },
-  decode(eingabe) {
+  decode(eingabe, optionen) {
     const luecken: Luecke[] = [];
-    const heraus = eingabe
+    const gruppen = eingabe
       .trim()
       .split(/[^2-9]+/)
-      .filter((s) => s.length > 0)
-      .map((gruppe, i) => {
-        const taste = TASTEN.find(([ziffer]) => ziffer === gruppe[0]);
-        const buchstabe = taste?.[1][gruppe.length - 1];
-        if (!taste || buchstabe === undefined || new Set(gruppe).size !== 1) {
-          luecken.push({ position: i, zeichen: gruppe });
-          return '';
-        }
-        return buchstabe;
-      });
+      .filter((s) => s.length > 0);
+    if (text(optionen, 'verfahren', 'klassisch') === 't9') {
+      // Ohne Wörterbuch bleibt T9 mehrdeutig: Jede Ziffer wird zur Auswahl
+      // ihrer Buchstaben. In dieser Schreibweise versteht auch die
+      // Wortmustersuche das Ergebnis.
+      const woerter = gruppen.map((gruppe) =>
+        [...gruppe].map((ziffer) => `[${TASTEN.find(([z]) => z === ziffer)?.[1] ?? ''}]`).join('')
+      );
+      return ergebnis(woerter.join(' '), luecken);
+    }
+    const heraus = gruppen.map((gruppe, i) => {
+      const taste = TASTEN.find(([ziffer]) => ziffer === gruppe[0]);
+      const buchstabe = taste?.[1][gruppe.length - 1];
+      if (!taste || buchstabe === undefined || new Set(gruppe).size !== 1) {
+        luecken.push({ position: i, zeichen: gruppe });
+        return '';
+      }
+      return buchstabe;
+    });
     return ergebnis(heraus.join(''), luecken);
   },
-  tabelle: () =>
+  tabelle: (optionen) =>
     TASTEN.flatMap(([ziffer, buchstaben]) =>
-      [...buchstaben].map((zeichen, i) => ({ zeichen, darstellung: ziffer.repeat(i + 1) }))
+      [...buchstaben].map((zeichen, i) => ({
+        zeichen,
+        darstellung: text(optionen, 'verfahren', 'klassisch') === 't9' ? ziffer : ziffer.repeat(i + 1)
+      }))
     ),
-  zeichne(gesucht) {
+  zeichne(gesucht, optionen) {
     const zeichen = gesucht.toUpperCase();
     const taste = TASTEN.find(([, buchstaben]) => buchstaben.includes(zeichen));
     if (!taste) return null;
     const [ziffer, buchstaben] = taste;
-    const druecke = buchstaben.indexOf(zeichen) + 1;
+    // Mit T9 drückt man jede Taste einmal – dann gibt es auch nichts zu zählen.
+    const druecke = text(optionen, 'verfahren', 'klassisch') === 't9' ? 0 : buchstaben.indexOf(zeichen) + 1;
     // Die Taste, wie sie auf dem Gerät aussah: Ziffer groß, Buchstaben klein,
     // darunter so viele Punkte wie Tastendrücke.
     const punkte = Array.from({ length: druecke }, (_, i) =>

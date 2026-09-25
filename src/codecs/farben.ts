@@ -180,15 +180,6 @@ function feld(wert: string): Glyph {
   };
 }
 
-function gruppe(name: string): string {
-  const erster = name[0] ?? 'A';
-  if (erster <= 'C') return 'A–C';
-  if (erster <= 'D') return 'D';
-  if (erster <= 'L') return 'E–L';
-  if (erster <= 'O') return 'M–O';
-  return 'P–Z';
-}
-
 export const farben: Codec = {
   id: 'farben',
   name: 'HTML-Farben',
@@ -219,8 +210,13 @@ export const farben: Codec = {
     }
     return ergebnis(namen.join(' '), luecken);
   },
+  // Alle Farben auf einer Seite, nach Wert sortiert: So stehen Schwarz und
+  // die dunklen Blautöne vorn, Weiß hinten, und wer nur den Wert kennt, findet
+  // ihn wie im Telefonbuch.
   tabelle: (): ReadonlyArray<TabellenEintrag> =>
-    FARBEN.map(([name, wert]) => ({ zeichen: name, darstellung: `#${wert}`, gruppe: gruppe(name), hinweis: `#${wert}` })),
+    [...FARBEN]
+      .sort(([, a], [, b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([name, wert]) => ({ zeichen: name, darstellung: `#${wert}`, hinweis: `#${wert}` })),
   zeichne(name) {
     const wert = NACH_NAME.get(name.toLowerCase());
     return wert ? feld(wert) : null;

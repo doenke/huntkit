@@ -101,7 +101,8 @@
 {#if art === 'muster'}
   <p class="hinweis">
     <span class="mono">?</span> steht für einen Buchstaben,
-    <span class="mono">*</span> für beliebig viele.{#if sprache === 'de'} Umlaute werden aufgelöst,
+    <span class="mono">*</span> für beliebig viele, <span class="mono">[ABC]</span> für einen
+    dieser Buchstaben.{#if sprache === 'de'} Umlaute werden aufgelöst,
       „GROESSE“ findet also „Größe“.{/if}
   </p>
 {:else}

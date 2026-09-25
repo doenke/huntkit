@@ -85,6 +85,24 @@ describe('Zaunmuster', () => {
   });
 });
 
+describe('Handytastatur mit T9', () => {
+  const t9 = { verfahren: 't9' };
+
+  it('drückt jede Taste nur einmal, ein Block je Wort', () => {
+    expect(handytasten.encode('Hallo Welt', t9).text).toBe('42556 9358');
+    expect(handytasten.encode('Grüße', t9).text).toBe('4783773');
+  });
+
+  it('liest jede Ziffer als Auswahl ihrer Buchstaben', () => {
+    expect(handytasten.decode('42556 9358', t9).text).toBe('[GHI][ABC][JKL][JKL][MNO] [WXYZ][DEF][JKL][TUV]');
+  });
+
+  it('zeigt in der Tabelle nur die Ziffer', () => {
+    const c = handytasten.tabelle?.(t9).find((e) => e.zeichen === 'C');
+    expect(c?.darstellung).toBe('2');
+  });
+});
+
 describe('Handytastatur', () => {
   it('schreibt Buchstaben als Tastenwiederholung', () => {
     expect(handytasten.encode('ABC').text).toBe('2 22 222');

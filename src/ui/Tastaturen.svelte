@@ -1,6 +1,7 @@
 <script lang="ts">
   import { nachtschicht } from '../codecs/quellen';
   import Quellen from './Quellen.svelte';
+  import { handytasten } from '../codecs/chiffren';
   import { TASTATUREN, reihenbreite, type Tastatur } from '../lib/tastaturen';
 
   /**
@@ -9,8 +10,11 @@
    * Die PC-Tastatur ist breiter als ein Handy – sie rollt als Ganzes seitlich,
    * damit jede Taste lesbar bleibt und die Nachbarschaft stimmt.
    */
+  // Das Tastentelefon ist schon als Bild der Handytastatur gezeichnet – dasselbe Bild steht hier.
+  const TASTENTELEFON = 'tastentelefon';
+  const tastenfeld = handytasten.uebersicht?.bild;
   let gewaehlt = $state<Tastatur['id']>(TASTATUREN[0]?.id ?? 'pc');
-  const tastatur = $derived(TASTATUREN.find((t) => t.id === gewaehlt) ?? TASTATUREN[0]);
+  const tastatur = $derived(TASTATUREN.find((t) => t.id === gewaehlt));
   const einheiten = $derived(tastatur ? Math.max(...tastatur.reihen.map(reihenbreite)) : 15);
 </script>
 
@@ -20,7 +24,23 @@
       {eintrag.titel}
     </button>
   {/each}
+  <button type="button" aria-pressed={gewaehlt === TASTENTELEFON} onclick={() => (gewaehlt = TASTENTELEFON)}>
+    Tastentelefon (T9)
+  </button>
 </div>
+
+{#if gewaehlt === TASTENTELEFON && tastenfeld}
+  <figure class="tastenfeld">
+    <svg viewBox={tastenfeld.viewBox} role="img" aria-label="Tastentelefon nach ITU-T E.161">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      {@html tastenfeld.inhalt}
+    </svg>
+  </figure>
+  <p class="hinweis">
+    Klassisch drückt man eine Taste so oft, wie der Buchstabe auf ihr steht: C ist 222. Mit
+    T9 nur einmal – 42556 ist HALLO, aber auch jedes andere Wort aus diesen Tasten.
+  </p>
+{/if}
 
 {#if tastatur}
   <div class="rahmen" class:breit={tastatur.id === 'pc'}>
@@ -63,7 +83,11 @@
   {/if}
 {/if}
 
-<Quellen quellen={[nachtschicht('H', 'Tastaturlayouts'), { titel: 'Wikimedia Commons: Tastaturbelegung E1 (Karl432, CC BY-SA 4.0)', url: 'https://commons.wikimedia.org/w/index.php?curid=135146062' }]} />
+{#if gewaehlt === TASTENTELEFON}
+  <Quellen quellen={handytasten.quellen ?? []} />
+{:else}
+  <Quellen quellen={[nachtschicht('H', 'Tastaturlayouts'), { titel: 'Wikimedia Commons: Tastaturbelegung E1 (Karl432, CC BY-SA 4.0)', url: 'https://commons.wikimedia.org/w/index.php?curid=135146062' }]} />
+{/if}
 
 <style>
   .wahl {
@@ -82,6 +106,19 @@
   .wahl button[aria-pressed='true'] {
     border-color: var(--akzent);
     color: var(--akzent);
+  }
+
+  .tastenfeld {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    color: var(--text);
+  }
+
+  .tastenfeld svg {
+    width: 100%;
+    max-width: 16rem;
+    height: auto;
   }
 
   /* Die PC-Tastatur rollt als Bild seitlich – kleiner gezeichnet wäre sie unlesbar. */
