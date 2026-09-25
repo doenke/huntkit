@@ -23,13 +23,11 @@
   import { zeichenbar } from '../lib/codeanzeige';
   import {
     aktiveWerkbank,
-    arbeitsstand,
     entferne,
     freierName,
     ladeSammlung,
     neueWerkbank,
     sichereSammlung,
-    speichere,
     uebernimm
   } from '../lib/sammlung';
   import { ausAdresse } from '../lib/teilen';
@@ -64,12 +62,12 @@
    * jede Zeile behält dabei ihre Eingabenummer.
    */
 
-  /** Eine eigene Kopie – nie das gespeicherte Objekt selbst, sonst wäre ein Entwurf nicht möglich. */
+  /** Eine eigene Kopie – nie das gespeicherte Objekt selbst; übernommen wird erst über `uebernimm`. */
   const kopie = (b: Blatt): Blatt => JSON.parse(JSON.stringify(b)) as Blatt;
 
   let sammlung = $state(ladeSammlung());
   /** Die Arbeitskopie der aktiven Werkbank. Alles in der Tabelle ändert nur sie. */
-  let blatt = $state(kopie(arbeitsstand(aktiveWerkbank(sammlung))));
+  let blatt = $state(kopie(aktiveWerkbank(sammlung).blatt));
   let verwaltungOffen = $state(false);
   let gewaehlt = $state<{ spalte: SpaltenId; zeile: string } | null>(null);
   let einstellung = $state<SpaltenId | null>(null);
@@ -197,9 +195,8 @@
     return () => removeEventListener('hashchange', oeffnen);
   });
 
-  // Jede Änderung an der Arbeitskopie geht in die aktive Werkbank – gespeichert
-  // oder als Entwurf, je nach Einstellung. Gehört sie einer Gruppe, geht sie
-  // außerdem in den Ausgang zum Server.
+  // Jede Änderung an der Arbeitskopie geht sofort in die aktive Werkbank.
+  // Gehört sie einer Gruppe, geht sie außerdem in den Ausgang zum Server.
   $effect(() => {
     const stand = JSON.stringify(blatt);
     untrack(() => {
@@ -237,7 +234,7 @@
       return;
     }
     // Die Sortierung ist je Gerät – sie bleibt, solange es ihre Spalten noch gibt.
-    const alt = arbeitsstand(vorhanden);
+    const alt = vorhanden.blatt;
     const { sortierung } = alt;
     const passt = (id?: string) => !id || stand.blatt.spalten.some((s) => s.id === id);
     const neu: Blatt =
@@ -246,7 +243,6 @@
     if (gleich(zuSchluesseln(ohneSortierung), zuSchluesseln(stand.blatt)) && vorhanden.name === stand.name) return;
     vorhanden.name = stand.name;
     vorhanden.blatt = neu;
-    delete vorhanden.entwurf;
     vorhanden.gruppe = gruppe;
     vorhanden.geaendert = Date.now();
     if (id !== sammlung.aktiv) return;
@@ -637,7 +633,7 @@
   /** Zu einer anderen Werkbank: Ihre Arbeitskopie wird geladen, die Auswahl zurückgesetzt. */
   function wechseln(id: string) {
     sammlung.aktiv = id;
-    blatt = kopie(arbeitsstand(aktiveWerkbank(sammlung)));
+    blatt = kopie(aktiveWerkbank(sammlung).blatt);
     gewaehlt = null;
     einstellung = null;
     gruppeProtokoll = false;
@@ -653,7 +649,7 @@
   function kopieAnlegen(id: string) {
     const vorlage = sammlung.werkbaenke.find((w) => w.id === id);
     if (!vorlage) return;
-    const stand = id === sammlung.aktiv ? blatt : arbeitsstand(vorlage);
+    const stand = id === sammlung.aktiv ? blatt : vorlage.blatt;
     const neu = neueWerkbank(freierName(sammlung, `${vorlage.name} (Kopie)`), kopie(stand));
     sammlung.werkbaenke.push(neu);
     wechseln(neu.id);
@@ -679,25 +675,7 @@
     const ziel = sammlung.werkbaenke.find((w) => w.id === id);
     if (!ziel) return;
     ziel.name = name;
-    if (ziel.gruppe) abgleich.lokal(ziel.gruppe, ziel.id, id === sammlung.aktiv ? blatt : arbeitsstand(ziel), name);
-  }
-
-  function automatikUmschalten() {
-    sammlung.automatisch = !sammlung.automatisch;
-    // Wieder eingeschaltet: Was offen ist, wird jetzt gespeichert.
-    if (sammlung.automatisch) uebernimm(sammlung, kopie(blatt));
-  }
-
-  function speichern() {
-    speichere(werkbank);
-  }
-
-  /** Zurück zum gespeicherten Stand. */
-  function verwerfen() {
-    delete werkbank.entwurf;
-    blatt = kopie(werkbank.blatt);
-    gewaehlt = null;
-    einstellung = null;
+    if (ziel.gruppe) abgleich.lokal(ziel.gruppe, ziel.id, id === sammlung.aktiv ? blatt : ziel.blatt, name);
   }
 
   function leeren() {
@@ -764,16 +742,6 @@
   </div>
 </div>
 
-{#if werkbank.entwurf}
-  <div class="entwurf">
-    <span>Ungespeicherte Änderungen</span>
-    <button type="button" class="speichern" onclick={speichern}>Speichern</button>
-    <button type="button" onclick={verwerfen}>Verwerfen</button>
-  </div>
-{:else if !sammlung.automatisch}
-  <p class="stand">gespeichert</p>
-{/if}
-
 {#if meldung}
   <p class="meldung">{meldung}</p>
 {/if}
@@ -828,7 +796,6 @@
     kopieren={kopieAnlegen}
     entfernen={loeschen}
     {umbenennen}
-    {automatikUmschalten}
     {leeren}
     gruppen={gruppenZumKopieren}
     {inGruppeKopieren}
@@ -1160,31 +1127,6 @@
     color: var(--text-leise);
   }
 
-  .entwurf {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 8px;
-    color: var(--warn);
-    font-size: 0.85rem;
-  }
-
-  .entwurf span {
-    flex: 1 1 auto;
-  }
-
-  .entwurf button {
-    min-height: 36px;
-    font-size: 0.8rem;
-  }
-
-  .entwurf .speichern {
-    border-color: var(--akzent);
-    color: var(--akzent);
-  }
-
-  .stand,
   .meldung {
     margin: 0 0 8px;
     font-size: 0.8rem;

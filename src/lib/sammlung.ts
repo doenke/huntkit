@@ -11,11 +11,9 @@ import {
  * Mehrere Werkbänke auf einem Gerät.
  *
  * Jede Werkbank ist ein Blatt mit Namen. Gearbeitet wird immer an genau
- * einer, der aktiven. Automatisches Speichern ist ab Werk an: Jede Änderung
- * landet sofort in ihrer Werkbank. Wer es ausschaltet, arbeitet an einem
- * Entwurf – der hängt an der Werkbank, übersteht Neuladen und Wechseln, und
- * wird erst mit „Speichern“ zum gespeicherten Stand. So lässt sich an einer
- * Werkbank herumprobieren, ohne den bewährten Stand zu verlieren.
+ * einer, der aktiven, und jede Änderung landet sofort in ihr – gespeichert
+ * wird immer automatisch. (Früher ließ sich das abschalten, dann entstand ein
+ * Entwurf; ein solcher wird beim Laden zum gespeicherten Stand.)
  */
 
 export interface Werkbank {
@@ -24,12 +22,9 @@ export interface Werkbank {
   /** Zeitpunkt der letzten gespeicherten Änderung, ms seit 1970. */
   geaendert: number;
   blatt: Blatt;
-  /** Nur bei ausgeschaltetem automatischem Speichern: ungespeicherte Änderungen. */
-  entwurf?: Blatt;
   /**
    * Gehört die Werkbank einer Gruppe, steht hier deren Kennung. Dann ist die
-   * Kennung der Werkbank auch die auf dem Server, und gespeichert wird
-   * immer automatisch – einen Entwurf, den nur einer sieht, gibt es dort nicht.
+   * Kennung der Werkbank auch die auf dem Server.
    */
   gruppe?: string;
 }
@@ -37,8 +32,6 @@ export interface Werkbank {
 export interface Sammlung {
   aktiv: string;
   werkbaenke: Werkbank[];
-  /** Ab Werk an. */
-  automatisch: boolean;
 }
 
 const SPEICHER = 'huntkit:werkbaenke';
@@ -65,14 +58,9 @@ export function aktiveWerkbank(sammlung: Sammlung): Werkbank {
   return (sammlung.werkbaenke.find((w) => w.id === sammlung.aktiv) ?? sammlung.werkbaenke[0]) as Werkbank;
 }
 
-/** Was man vor sich hat: der Entwurf, falls es einen gibt, sonst der gespeicherte Stand. */
-export function arbeitsstand(werkbank: Werkbank): Blatt {
-  return werkbank.entwurf ?? werkbank.blatt;
-}
-
 function frisch(): Sammlung {
   const erste = neueWerkbank('Werkbank 1');
-  return { aktiv: erste.id, werkbaenke: [erste], automatisch: true };
+  return { aktiv: erste.id, werkbaenke: [erste] };
 }
 
 function istSammlung(wert: unknown): wert is Sammlung {
@@ -92,21 +80,25 @@ function istSammlung(wert: unknown): wert is Sammlung {
  */
 export function ausGespeichertem(roh: unknown, altesBlatt?: unknown): Sammlung {
   if (istSammlung(roh)) {
-    const werkbaenke = roh.werkbaenke.map((w) => ({
-      id: w.id,
-      name: typeof w.name === 'string' && w.name.trim() ? w.name : 'Werkbank',
-      geaendert: typeof w.geaendert === 'number' ? w.geaendert : Date.now(),
-      blatt: inHeutigerForm(w.blatt),
-      ...(w.entwurf && istBlatt(w.entwurf) ? { entwurf: inHeutigerForm(w.entwurf) } : {}),
-      ...(typeof w.gruppe === 'string' ? { gruppe: w.gruppe } : {})
-    }));
+    const werkbaenke = roh.werkbaenke.map((w) => {
+      // Ein Entwurf aus der Zeit, als man das Speichern abschalten konnte, ist
+      // die jüngste Arbeit – er wird der Stand der Werkbank.
+      const { entwurf } = w as Werkbank & { entwurf?: unknown };
+      return {
+        id: w.id,
+        name: typeof w.name === 'string' && w.name.trim() ? w.name : 'Werkbank',
+        geaendert: typeof w.geaendert === 'number' ? w.geaendert : Date.now(),
+        blatt: inHeutigerForm(istBlatt(entwurf) ? entwurf : w.blatt),
+        ...(typeof w.gruppe === 'string' ? { gruppe: w.gruppe } : {})
+      };
+    });
     const aktiv = werkbaenke.some((w) => w.id === roh.aktiv) ? roh.aktiv : (werkbaenke[0] as Werkbank).id;
-    return { aktiv, werkbaenke, automatisch: roh.automatisch !== false };
+    return { aktiv, werkbaenke };
   }
   // Das eine Blatt von früher wird die erste Werkbank.
   if (istBlatt(altesBlatt)) {
     const erste = neueWerkbank('Werkbank 1', inHeutigerForm(altesBlatt));
-    return { aktiv: erste.id, werkbaenke: [erste], automatisch: true };
+    return { aktiv: erste.id, werkbaenke: [erste] };
   }
   return frisch();
 }
@@ -140,38 +132,16 @@ export function sichereSammlung(sammlung: Sammlung): void {
 }
 
 /**
- * Den Stand der Arbeitskopie in die aktive Werkbank übernehmen. Mit
- * automatischem Speichern wird er der gespeicherte Stand, ohne wird er zum
- * Entwurf – oder der Entwurf verschwindet, wenn alles wieder so ist wie
- * gespeichert. Gibt zurück, ob sich etwas geändert hat.
+ * Den Stand der Arbeitskopie in die aktive Werkbank übernehmen. Gibt zurück,
+ * ob sich etwas geändert hat – nur dann rückt die Änderungszeit vor.
  */
 export function uebernimm(sammlung: Sammlung, stand: Blatt, jetzt = Date.now()): boolean {
   const werkbank = aktiveWerkbank(sammlung);
   const neu = JSON.stringify(stand);
-  const gespeichert = JSON.stringify(werkbank.blatt);
-  if (sammlung.automatisch || werkbank.gruppe) {
-    if (neu === gespeichert && !werkbank.entwurf) return false;
-    werkbank.blatt = JSON.parse(neu) as Blatt;
-    delete werkbank.entwurf;
-    werkbank.geaendert = jetzt;
-    return true;
-  }
-  if (neu === gespeichert) {
-    if (!werkbank.entwurf) return false;
-    delete werkbank.entwurf;
-    return true;
-  }
-  if (werkbank.entwurf && JSON.stringify(werkbank.entwurf) === neu) return false;
-  werkbank.entwurf = JSON.parse(neu) as Blatt;
-  return true;
-}
-
-/** Entwurf zum gespeicherten Stand machen. */
-export function speichere(werkbank: Werkbank, jetzt = Date.now()): void {
-  if (!werkbank.entwurf) return;
-  werkbank.blatt = werkbank.entwurf;
-  delete werkbank.entwurf;
+  if (neu === JSON.stringify(werkbank.blatt)) return false;
+  werkbank.blatt = JSON.parse(neu) as Blatt;
   werkbank.geaendert = jetzt;
+  return true;
 }
 
 /** Eine Werkbank entfernen. Die letzte wird durch eine leere ersetzt, nie ist gar keine da. */

@@ -604,11 +604,10 @@ davon.
   bearbeitete steht oben. (Werkbänke per Link verschicken gab es anfangs auch; seit es
   Gruppen gibt, ist das weg.)
   Gelöscht wird nie die letzte – dann entsteht eine leere.
-- **Automatisch speichern ist ab Werk an**: Jede Änderung landet sofort in ihrer Werkbank.
-  Ausgeschaltet arbeitet man an einem **Entwurf**, der an der Werkbank hängt und Neuladen
-  wie Wechseln übersteht; „Speichern“ macht ihn zum gespeicherten Stand, „Verwerfen“ kehrt
-  zu diesem zurück. So lässt sich herumprobieren, ohne den bewährten Stand zu verlieren.
-  Die Tabelle arbeitet deshalb immer an einer Kopie, nie am gespeicherten Objekt selbst.
+- **Gespeichert wird immer automatisch**: Jede Änderung landet sofort in ihrer Werkbank.
+  (Anfangs ließ sich das abschalten, dann entstand ein Entwurf mit „Speichern“ und
+  „Verwerfen“. Das ist wieder weg; ein alter Entwurf wird beim Laden der Stand der Werkbank.)
+  Die Tabelle arbeitet an einer Kopie, die sofort übernommen wird.
 - Das eine Blatt aus der Zeit vor der Verwaltung wird beim ersten Öffnen „Werkbank 1“.
 - Teilen: Werkbank-Zustand samt Namen als JSON → komprimieren → **URL-Fragment**
   (`#w=…`). Das Fragment wird nie an einen Server geschickt; die App funktioniert dadurch
@@ -732,8 +731,7 @@ eine fortlaufende Nummer. Für jeden Schlüssel gilt die zuletzt angekommene Än
 Verschiedene Zellen verschmelzen deshalb von selbst; bei derselben Zelle gewinnt, wer
 später beim Server ist. Mehr braucht es nicht, weil jede Eingabezelle schon eine feste
 Adresse hat. Werkzeugspalten werden gerechnet, nur ihre Einstellungen gehen über die
-Leitung. Die **Sortierung bleibt je Gerät**, sie ist reine Ansicht. Einen Entwurfsmodus gibt es
-bei Gruppen-Werkbänken nicht.
+Leitung. Die **Sortierung bleibt je Gerät**, sie ist reine Ansicht.
 
 Im Gerät liegt je Werkbank der bestätigte Stand und darüber ein **Ausgang** mit eigenen
 Änderungen, die noch unterwegs sind. Angezeigt wird beides übereinander. So springt eine

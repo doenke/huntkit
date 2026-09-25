@@ -2,19 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { leeresBlatt, type Blatt } from './blatt';
 import {
   aktiveWerkbank,
-  arbeitsstand,
   ausGespeichertem,
   entferne,
   freierName,
   neueWerkbank,
-  speichere,
   uebernimm,
   type Sammlung
 } from './sammlung';
 
 function sammlungMit(...namen: string[]): Sammlung {
   const werkbaenke = namen.map((name) => neueWerkbank(name));
-  return { aktiv: werkbaenke[0]!.id, werkbaenke, automatisch: true };
+  return { aktiv: werkbaenke[0]!.id, werkbaenke };
 }
 
 /** Ein Blatt mit einem Wert in der ersten Zelle – genug, um Stände zu unterscheiden. */
@@ -48,7 +46,7 @@ describe('Automatisch speichern', () => {
     const stand = mitWert('A');
     uebernimm(sammlung, stand);
     stand.zeilen[0]!.werte[stand.spalten[0]!.id] = 'B';
-    expect(arbeitsstand(aktiveWerkbank(sammlung))).toEqual(mitWertGleich('A', stand));
+    expect(aktiveWerkbank(sammlung).blatt).toEqual(mitWertGleich('A', stand));
   });
 });
 
@@ -58,49 +56,6 @@ function mitWertGleich(wert: string, vorlage: Blatt): Blatt {
   kopie.zeilen[0]!.werte[kopie.spalten[0]!.id] = wert;
   return kopie;
 }
-
-describe('Ohne automatisches Speichern', () => {
-  it('sammelt Änderungen als Entwurf, bis gespeichert wird', () => {
-    const sammlung = sammlungMit('Eins');
-    sammlung.automatisch = false;
-    const werkbank = aktiveWerkbank(sammlung);
-    const vorher = structuredClone(werkbank.blatt);
-    const stand = mitWertGleich('NEU', vorher);
-
-    expect(uebernimm(sammlung, stand)).toBe(true);
-    expect(werkbank.blatt).toEqual(vorher);
-    expect(werkbank.entwurf).toEqual(stand);
-    expect(arbeitsstand(werkbank)).toEqual(stand);
-
-    speichere(werkbank, 5000);
-    expect(werkbank.blatt).toEqual(stand);
-    expect(werkbank.entwurf).toBeUndefined();
-    expect(werkbank.geaendert).toBe(5000);
-  });
-
-  it('lässt den Entwurf verschwinden, wenn alles wieder wie gespeichert ist', () => {
-    const sammlung = sammlungMit('Eins');
-    sammlung.automatisch = false;
-    const werkbank = aktiveWerkbank(sammlung);
-    const gespeichert = structuredClone(werkbank.blatt);
-    uebernimm(sammlung, mitWertGleich('ZWISCHENDURCH', gespeichert));
-    expect(werkbank.entwurf).toBeDefined();
-    uebernimm(sammlung, structuredClone(gespeichert));
-    expect(werkbank.entwurf).toBeUndefined();
-  });
-
-  it('übernimmt einen offenen Entwurf, sobald wieder automatisch gespeichert wird', () => {
-    const sammlung = sammlungMit('Eins');
-    sammlung.automatisch = false;
-    const werkbank = aktiveWerkbank(sammlung);
-    const stand = mitWertGleich('ENTWURF', werkbank.blatt);
-    uebernimm(sammlung, stand);
-    sammlung.automatisch = true;
-    uebernimm(sammlung, stand);
-    expect(werkbank.blatt).toEqual(stand);
-    expect(werkbank.entwurf).toBeUndefined();
-  });
-});
 
 describe('Verwaltung', () => {
   it('vergibt freie Namen', () => {
@@ -137,7 +92,6 @@ describe('Laden', () => {
     expect(sammlung.werkbaenke).toHaveLength(1);
     expect(sammlung.werkbaenke[0]!.name).toBe('Werkbank 1');
     expect(sammlung.werkbaenke[0]!.blatt).toEqual(alt);
-    expect(sammlung.automatisch).toBe(true);
   });
 
   it('übersteht Kaputtes', () => {
@@ -145,12 +99,24 @@ describe('Laden', () => {
     expect(ausGespeichertem(null).werkbaenke).toHaveLength(1);
   });
 
-  it('liest einen gespeicherten Stand samt Entwurf und Einstellung zurück', () => {
+  it('liest einen gespeicherten Stand zurück', () => {
     const sammlung = sammlungMit('Eins', 'Zwei');
     sammlung.aktiv = sammlung.werkbaenke[1]!.id;
-    sammlung.automatisch = false;
-    sammlung.werkbaenke[1]!.entwurf = mitWert('OFFEN');
+    sammlung.werkbaenke[1]!.blatt = mitWert('ZWEI');
     const gelesen = ausGespeichertem(JSON.parse(JSON.stringify(sammlung)));
     expect(gelesen).toEqual(sammlung);
+  });
+
+  it('macht einen Entwurf von früher zum Stand der Werkbank', () => {
+    // Als sich automatisches Speichern noch abschalten ließ, lag ungespeicherte
+    // Arbeit als Entwurf neben dem Stand. Sie ist das Neueste und geht nicht verloren.
+    const sammlung = sammlungMit('Eins');
+    const alt = { ...JSON.parse(JSON.stringify(sammlung)), automatisch: false };
+    const entwurf = mitWert('OFFEN');
+    alt.werkbaenke[0].entwurf = entwurf;
+    const gelesen = ausGespeichertem(alt);
+    expect(gelesen.werkbaenke[0]!.blatt).toEqual(entwurf);
+    expect(gelesen.werkbaenke[0]).not.toHaveProperty('entwurf');
+    expect(gelesen).not.toHaveProperty('automatisch');
   });
 });

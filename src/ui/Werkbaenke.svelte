@@ -5,8 +5,7 @@
 
   /**
    * Verwaltung der gespeicherten Werkbänke: wechseln, neu anlegen, kopieren,
-   * umbenennen, löschen, in eine Gruppe kopieren – und ob automatisch
-   * gespeichert wird.
+   * umbenennen, löschen, in eine Gruppe kopieren.
    * Nur Anzeige und Bedienung; was dabei mit der offenen Arbeit passiert,
    * entscheidet die Werkbank selbst.
    */
@@ -17,7 +16,6 @@
     kopieren,
     entfernen,
     umbenennen,
-    automatikUmschalten,
     leeren,
     gruppenname = () => undefined,
     darfLoeschen = () => true,
@@ -30,7 +28,6 @@
     kopieren: (id: string) => void;
     entfernen: (id: string) => void;
     umbenennen: (id: string, name: string) => void;
-    automatikUmschalten: () => void;
     /** Die offene Werkbank leeren. */
     leeren: () => void;
     /** Name der Gruppe, der eine Werkbank gehört – oder nichts. */
@@ -62,7 +59,7 @@
   }
 
   function zeilen(werkbank: Werkbank): string {
-    const anzahl = (werkbank.entwurf ?? werkbank.blatt).zeilen.length;
+    const anzahl = werkbank.blatt.zeilen.length;
     return anzahl === 1 ? '1 Zeile' : `${anzahl} Zeilen`;
   }
 
@@ -108,7 +105,6 @@
             </span>
             <span class="info">
               {zeilen(werkbank)} · {zeit(werkbank.geaendert)}
-              {#if werkbank.entwurf}<span class="entwurf">· ungespeichert</span>{/if}
               {#if aktiv}<span class="offen">· offen</span>{/if}
             </span>
           </button>
@@ -194,18 +190,6 @@
       </li>
     {/each}
   </ul>
-
-  <!-- Gilt für alle Werkbänke, deshalb unter der Liste statt an einer Zeile. -->
-    <button
-      type="button"
-      class="automatik"
-      aria-pressed={sammlung.automatisch}
-      onclick={automatikUmschalten}
-      title="Jede Änderung sofort speichern – oder erst, wenn du auf Speichern tippst"
-    >
-      <span class="schalter" aria-hidden="true"></span>
-      automatisch speichern
-    </button>
 </section>
 
 <style>
@@ -276,10 +260,6 @@
   .info {
     color: var(--text-leise);
     font-size: 0.72rem;
-  }
-
-  .entwurf {
-    color: var(--warn);
   }
 
   .offen {
@@ -369,56 +349,5 @@
 
   .umbenennen button {
     min-height: 40px;
-  }
-
-  /* Derselbe kleine Schiebeschalter wie bei den Umlauten. */
-  .automatik {
-    margin-top: 6px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 34px;
-    padding: 0 6px 0 2px;
-    border: none;
-    background: none;
-    color: var(--text-leise);
-    font-size: 0.75rem;
-  }
-
-  .automatik[aria-pressed='true'] {
-    color: var(--text);
-  }
-
-  .schalter {
-    position: relative;
-    flex: 0 0 auto;
-    width: 30px;
-    height: 18px;
-    border-radius: 9px;
-    border: 1px solid var(--rand);
-    background: var(--flaeche);
-    transition: background 0.15s;
-  }
-
-  .schalter::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--text-leise);
-    transition: transform 0.15s;
-  }
-
-  .automatik[aria-pressed='true'] .schalter {
-    background: var(--akzent);
-    border-color: var(--akzent);
-  }
-
-  .automatik[aria-pressed='true'] .schalter::after {
-    transform: translateX(12px);
-    background: var(--grund);
   }
 </style>
