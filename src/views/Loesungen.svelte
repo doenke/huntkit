@@ -74,7 +74,6 @@
   </div>
 {/snippet}
 
-<h2>Lösungswörter</h2>
 <p class="leise">Längen aus dem Gitter abzählen, gefundene Wörter eintippen.</p>
 
 <div class="eingaben">

@@ -48,6 +48,7 @@
   import Sortierwahl from '../ui/Sortierwahl.svelte';
   import Spalteneinstellung from '../ui/Spalteneinstellung.svelte';
   import Tafeleingabe from '../ui/Tafeleingabe.svelte';
+  import Symbol from '../ui/Symbol.svelte';
   import Tour from '../ui/Tour.svelte';
   import Werkbaenke from '../ui/Werkbaenke.svelte';
   import { merkeTourGesehen, tourGesehen, WERKBANK_TOUR, type Tourschritt } from '../lib/tour';
@@ -79,10 +80,16 @@
    * wer eine öffnet, schließt die andere. Ein Klick außerhalb schließt sie
    * ganz; was als Teil einer Box oder als ihr Öffner zählt, trägt `data-box`.
    */
+  /*
+   * Der Fokus allein wählt nur die Zelle; die übrigen Boxen schließt erst der
+   * Tipp. Sonst verschwindet eine Box über der Tabelle schon beim Fokus, die
+   * Tabelle rutscht nach oben, und der Tipp landet daneben.
+   */
   function zeigeZelle(ziel: { spalte: SpaltenId; zeile: string }) {
     gewaehlt = ziel;
     einstellung = null;
     verwaltungOffen = false;
+    sortierungOffen = false;
   }
 
   function zeigeEinstellung(id: SpaltenId | null) {
@@ -90,6 +97,7 @@
     if (id === null) return;
     gewaehlt = null;
     verwaltungOffen = false;
+    sortierungOffen = false;
   }
 
   function verwaltungUmschalten() {
@@ -98,12 +106,32 @@
     if (!verwaltungOffen) return;
     gewaehlt = null;
     einstellung = null;
+    sortierungOffen = false;
   }
+
+  /** Die Sortierung ist die vierte Box – über den Knopf in der Leiste. */
+  let sortierungOffen = $state(false);
+
+  function sortierungUmschalten() {
+    sortierungOffen = !sortierungOffen;
+    if (!sortierungOffen) return;
+    gewaehlt = null;
+    einstellung = null;
+    verwaltungOffen = false;
+  }
+
+  /** Was der Knopf zeigt: nach welcher Spalte gerade sortiert ist. */
+  const sortierText = $derived(
+    blatt.sortierung
+      ? `${spaltenname(blatt, blatt.sortierung.spalte)} ${blatt.sortierung.richtung === 'auf' ? '↑' : '↓'}`
+      : 'Eingabe'
+  );
 
   function alleSchliessen() {
     gewaehlt = null;
     einstellung = null;
     verwaltungOffen = false;
+    sortierungOffen = false;
   }
   /*
    * Die Tour durch die Werkbank. Sie startet von selbst, wenn jemand die App
@@ -739,6 +767,17 @@
       <option value="werkzeug">Werkzeug auf eine Spalte</option>
       <option value="position">Platz in einer Reihenfolge</option>
     </select>
+    <button
+      type="button"
+      class="sortknopf"
+      data-box
+      data-tour="sortieren"
+      aria-expanded={sortierungOffen}
+      onclick={sortierungUmschalten}
+      title="Sortieren"
+    >
+      ↕ {sortierText}
+    </button>
   </div>
 </div>
 
@@ -782,6 +821,13 @@
       <p class="hinweis warn">{gruppeHier.status.fehler}</p>
     {/if}
     <Protokoll gruppe={gruppeHier.id} werkbank={werkbank.id} {blatt} />
+  </section>
+{/if}
+
+{#if sortierungOffen}
+  <section class="sortierung" data-box>
+    <strong>Sortieren</strong>
+    <Sortierwahl {blatt} spalten={blatt.spalten} wert={blatt.sortierung} setzen={sortiereAnzeige} />
   </section>
 {/if}
 
@@ -896,7 +942,7 @@
                     use:breitNachText={reihe.zeile.werte[spalte.id] ?? ''}
                     oninput={(e) => setzeWert(reihe.zeile.id, spalte.id, e.currentTarget.value)}
                     onkeydown={(e) => beiTaste(e, reihe.zeile.id, spalte)}
-                    onfocus={() => zeigeZelle({ spalte: spalte.id, zeile: reihe.zeile.id })}
+                    onfocus={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
                     onclick={() => zeigeZelle({ spalte: spalte.id, zeile: reihe.zeile.id })}
                   />
                 </div>
@@ -922,7 +968,7 @@
                   oninput={(e) => getippt(e.currentTarget, reihe.zeile.id, spalte)}
                   onblur={(e) => getippt(e.currentTarget, reihe.zeile.id, spalte, true)}
                   onkeydown={(e) => beiTaste(e, reihe.zeile.id, spalte)}
-                  onfocus={() => zeigeZelle({ spalte: spalte.id, zeile: reihe.zeile.id })}
+                  onfocus={() => (gewaehlt = { spalte: spalte.id, zeile: reihe.zeile.id })}
                   onclick={() => zeigeZelle({ spalte: spalte.id, zeile: reihe.zeile.id })}
                 />
               {:else}
@@ -971,12 +1017,6 @@
   </div>
 {/if}
 
-<section class="sortierung" data-tour="sortieren">
-  <div class="zeile">
-    <strong>Sortieren</strong>
-  </div>
-  <Sortierwahl {blatt} spalten={blatt.spalten} wert={blatt.sortierung} setzen={sortiereAnzeige} />
-</section>
 
 {#if zelle}
   <section class="zelle" data-box data-tour="zellenbox">
@@ -985,10 +1025,19 @@
         {spaltenname(blatt, zelle.spalte.id)} · Zeile {zelle.reihe.zeile.nummer}
       </strong>
       <span class="knoepfe">
-        <button type="button" onclick={() => kopieren(zelle.inhalt.text)} disabled={!zelle.inhalt.text}>
-          kopieren
+        <button
+          type="button"
+          class="symbol"
+          onclick={() => kopieren(zelle.inhalt.text)}
+          disabled={!zelle.inhalt.text}
+          aria-label="kopieren"
+          title="kopieren"
+        >
+          <Symbol name="kopie" />
         </button>
-        <button type="button" onclick={() => (gewaehlt = null)}>schließen</button>
+        <button type="button" class="symbol" onclick={() => (gewaehlt = null)} aria-label="schließen" title="schließen">
+          <Symbol name="schliessen" />
+        </button>
       </span>
     </div>
 
@@ -1037,15 +1086,6 @@
           ä → ae, ß → ss
         </button>
       {/if}
-      {#if tafelVon(zelle.spalte)}
-        <div class="vorschau">
-          <Codeanzeige
-            codecId={tafelVon(zelle.spalte) ?? ''}
-            text={zelle.reihe.zeile.werte[zelle.spalte.id] ?? ''}
-            mitZeichen
-          />
-        </div>
-      {/if}
       {#if zelle.spalte.tafel}
         <Tafeleingabe
           codecId={zelle.spalte.tafel}
@@ -1054,11 +1094,6 @@
         />
       {/if}
     {:else}
-      {#if tafelVon(zelle.spalte)}
-        <div class="vorschau">
-          <Codeanzeige codecId={tafelVon(zelle.spalte) ?? ''} text={zelle.inhalt.text} mitZeichen />
-        </div>
-      {/if}
       <output class="mono ergebnis">{zelle.inhalt.text}</output>
       {#if zelle.inhalt.fehler}
         <p class="hinweis warn">{zelle.inhalt.fehler}</p>
@@ -1214,15 +1249,28 @@
     box-shadow: 0 0 0 2px var(--grund);
   }
 
+  /* Nie breiter als der Platz: Dann schrumpft die Spalten-Auswahl, nicht die Knöpfe. */
   .leiste {
     display: flex;
     gap: 6px;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .leiste button,
   .leiste select {
     min-height: 38px;
     font-size: 0.8rem;
+  }
+
+  .leiste button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .leiste select {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .hinweis {
@@ -1436,13 +1484,6 @@
     caret-color: var(--akzent);
   }
 
-  .vorschau {
-    padding: 6px 8px;
-    border: 1px solid var(--rand);
-    border-radius: var(--radius);
-    background: var(--flaeche);
-    margin-bottom: 6px;
-  }
 
   td.aktiv {
     outline: 2px solid var(--akzent);
@@ -1512,8 +1553,43 @@
     opacity: 0.8;
   }
 
-  .sortierung .hinweis {
-    margin: 0;
+  /* Die Sortierung als Box unter der Leiste, wie die Verwaltung. */
+  section.sortierung {
+    margin: 0 0 12px;
+    display: grid;
+    gap: 8px;
+    border: 1px solid var(--akzent);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+
+  .sortknopf {
+    white-space: nowrap;
+  }
+
+  .sortknopf[aria-expanded='true'] {
+    border-color: var(--akzent);
+    color: var(--akzent);
+  }
+
+  /* Kleine Symbol-Knöpfe im Kopf der Zellenbox. */
+  .symbol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text-leise);
+    border-radius: 8px;
+  }
+
+  .symbol:hover:not(:disabled) {
+    color: var(--text);
+    background: var(--flaeche-hoch);
   }
 
   section.zelle {

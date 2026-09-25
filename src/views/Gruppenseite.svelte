@@ -44,8 +44,6 @@
   });
 </script>
 
-<h2>Gruppen</h2>
-
 {#if meldung}<p class="meldung">{meldung}</p>{/if}
 
 {#if anmeldefehler}

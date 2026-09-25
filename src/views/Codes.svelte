@@ -17,7 +17,6 @@
     <Codekarte codec={gewaehlt} zurueck={() => (offen = null)} />
   {/key}
 {:else}
-  <h2>Codes</h2>
   <ul class="liste">
     {#each CODECS as eintrag (eintrag.id)}
       <li>

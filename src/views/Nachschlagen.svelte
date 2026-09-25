@@ -18,8 +18,6 @@
   let bereich = $state<Bereich>('pse');
 </script>
 
-<h2>Nachschlagen</h2>
-
 <div class="reiter">
   {#each BEREICHE as eintrag (eintrag.id)}
     <button

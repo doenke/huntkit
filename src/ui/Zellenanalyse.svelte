@@ -17,6 +17,8 @@
     alsSpalte
   }: { text: string; alsSpalte: (codecId: string, optionen: OptionWerte) => void } = $props();
 
+  /** Alles zusammen hinter einem Knopf – die Zellenbox bleibt sonst kurz. */
+  let analyseOffen = $state(false);
   let erkennungOffen = $state(false);
   let haeufigkeitenOffen = $state(false);
   let wandOffen = $state(false);
@@ -37,91 +39,107 @@
   }
 </script>
 
-<section>
-  <button type="button" class="aufklapp" onclick={() => (erkennungOffen = !erkennungOffen)}>
-    {erkennungOffen ? '▾' : '▸'} Was ist das? · Code erkennen
-  </button>
-  {#if erkennungOffen}
-    {#if funde.length === 0}
-      <p class="hinweis">Dazu fällt mir nichts ein – zu kurz oder kein bekannter Code.</p>
-    {:else}
-      <ol class="funde">
-        {#each funde as fund (fund.codec.id + optionenText(fund))}
-          <li>
-            <button type="button" onclick={() => uebernimmFund(fund)}>
-              <span class="kopfzeile">
-                <strong>{fund.codec.name}</strong>
-                {#if optionenText(fund)}<span class="leise">{optionenText(fund)}</span>{/if}
-                <span class="balken" aria-hidden="true">
-                  <span style="width: {Math.round(fund.bewertung * 100)}%"></span>
-                </span>
-              </span>
-              <span class="mono vorschau">{fund.text.slice(0, 90)}</span>
-            </button>
-          </li>
-        {/each}
-      </ol>
-      <p class="hinweis">
-        Tippen legt daraus eine Spalte für das ganze Blatt an. Der Balken zeigt, wie sehr das
-        Ergebnis nach Sprache aussieht – eine Hilfe, kein Urteil.
-      </p>
-    {/if}
-  {/if}
-</section>
+<button type="button" class="aufklapp haupt" onclick={() => (analyseOffen = !analyseOffen)}>
+  {analyseOffen ? '▾' : '▸'} Analyse
+</button>
+{#if analyseOffen}
+  <div class="analysen">
+    <section>
+      <button type="button" class="aufklapp" onclick={() => (erkennungOffen = !erkennungOffen)}>
+        {erkennungOffen ? '▾' : '▸'} Was ist das? · Code erkennen
+      </button>
+      {#if erkennungOffen}
+        {#if funde.length === 0}
+          <p class="hinweis">Dazu fällt mir nichts ein – zu kurz oder kein bekannter Code.</p>
+        {:else}
+          <ol class="funde">
+            {#each funde as fund (fund.codec.id + optionenText(fund))}
+              <li>
+                <button type="button" onclick={() => uebernimmFund(fund)}>
+                  <span class="kopfzeile">
+                    <strong>{fund.codec.name}</strong>
+                    {#if optionenText(fund)}<span class="leise">{optionenText(fund)}</span>{/if}
+                    <span class="balken" aria-hidden="true">
+                      <span style="width: {Math.round(fund.bewertung * 100)}%"></span>
+                    </span>
+                  </span>
+                  <span class="mono vorschau">{fund.text.slice(0, 90)}</span>
+                </button>
+              </li>
+            {/each}
+          </ol>
+          <p class="hinweis">
+            Tippen legt daraus eine Spalte für das ganze Blatt an. Der Balken zeigt, wie sehr das
+            Ergebnis nach Sprache aussieht – eine Hilfe, kein Urteil.
+          </p>
+        {/if}
+      {/if}
+    </section>
 
-<section>
-  <button type="button" class="aufklapp" onclick={() => (haeufigkeitenOffen = !haeufigkeitenOffen)}>
-    {haeufigkeitenOffen ? '▾' : '▸'} Häufigkeiten · welche Art Chiffre?
-  </button>
-  {#if haeufigkeitenOffen}
-    {@const analyse = analysiere(text)}
-    <p class="hinweis">
-      {analyse.laenge} Buchstaben · Koinzidenzindex {analyse.koinzidenz.toFixed(3)}
-    </p>
-    <p class="deutung">{analyse.deutung}</p>
-    <ol class="saeulen">
-      {#each analyse.haeufigkeiten.slice(0, 26) as eintrag (eintrag.zeichen)}
-        <li>
-          <span class="saeule" style="height: {Math.round(eintrag.anteil * 400)}px"></span>
-          <span class="buchstabe">{eintrag.zeichen}</span>
-          <span class="anzahl">{eintrag.anzahl}</span>
-        </li>
-      {/each}
-    </ol>
-  {/if}
-</section>
+    <section>
+      <button type="button" class="aufklapp" onclick={() => (haeufigkeitenOffen = !haeufigkeitenOffen)}>
+        {haeufigkeitenOffen ? '▾' : '▸'} Häufigkeiten · welche Art Chiffre?
+      </button>
+      {#if haeufigkeitenOffen}
+        {@const analyse = analysiere(text)}
+        <p class="hinweis">
+          {analyse.laenge} Buchstaben · Koinzidenzindex {analyse.koinzidenz.toFixed(3)}
+        </p>
+        <p class="deutung">{analyse.deutung}</p>
+        <ol class="saeulen">
+          {#each analyse.haeufigkeiten.slice(0, 26) as eintrag (eintrag.zeichen)}
+            <li>
+              <span class="saeule" style="height: {Math.round(eintrag.anteil * 400)}px"></span>
+              <span class="buchstabe">{eintrag.zeichen}</span>
+              <span class="anzahl">{eintrag.anzahl}</span>
+            </li>
+          {/each}
+        </ol>
+      {/if}
+    </section>
 
-<section>
-  <button type="button" class="aufklapp" onclick={() => (wandOffen = !wandOffen)}>
-    {wandOffen ? '▾' : '▸'} Brute-Force-Wand · alle 26 Verschiebungen
-  </button>
-  {#if wandOffen}
-    {#if text.length === 0}
-      <p class="hinweis">Noch kein Text da.</p>
-    {:else}
-      <ol class="verschiebungen">
-        {#each wand as reihe (reihe.schritte)}
-          <li>
-            <button
-              type="button"
-              class:beste={reihe.beste}
-              onclick={() => alsSpalte('caesar', { verschiebung: reihe.schritte })}
-              title={`Sprachwert ${reihe.wert.toFixed(2)} – als Spalte anlegen`}
-            >
-              <span class="nummer">{reihe.schritte}</span>
-              <span class="mono">{reihe.text}</span>
-            </button>
-          </li>
-        {/each}
-      </ol>
-      <p class="hinweis">Tippen legt eine Caesar-Spalte mit dieser Verschiebung an.</p>
-    {/if}
-  {/if}
-</section>
+    <section>
+      <button type="button" class="aufklapp" onclick={() => (wandOffen = !wandOffen)}>
+        {wandOffen ? '▾' : '▸'} Brute-Force-Wand · alle 26 Verschiebungen
+      </button>
+      {#if wandOffen}
+        {#if text.length === 0}
+          <p class="hinweis">Noch kein Text da.</p>
+        {:else}
+          <ol class="verschiebungen">
+            {#each wand as reihe (reihe.schritte)}
+              <li>
+                <button
+                  type="button"
+                  class:beste={reihe.beste}
+                  onclick={() => alsSpalte('caesar', { verschiebung: reihe.schritte })}
+                  title={`Sprachwert ${reihe.wert.toFixed(2)} – als Spalte anlegen`}
+                >
+                  <span class="nummer">{reihe.schritte}</span>
+                  <span class="mono">{reihe.text}</span>
+                </button>
+              </li>
+            {/each}
+          </ol>
+          <p class="hinweis">Tippen legt eine Caesar-Spalte mit dieser Verschiebung an.</p>
+        {/if}
+      {/if}
+    </section>
+  </div>
+{/if}
 
 <style>
-  section {
+  .haupt {
     margin-top: 10px;
+  }
+
+  /* Die einzelnen Untersuchungen eingerückt unter „Analyse“. */
+  .analysen {
+    padding-left: 12px;
+  }
+
+  section {
+    margin-top: 0;
   }
 
   .aufklapp {
