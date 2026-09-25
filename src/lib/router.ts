@@ -9,7 +9,7 @@ export const SEITEN: ReadonlyArray<{ id: Seite; titel: string }> = [
   { id: 'werkbank', titel: 'Werkbank' },
   { id: 'codes', titel: 'Codes' },
   { id: 'nachschlagen', titel: 'Nachschlagen' },
-  { id: 'loesungen', titel: 'Lösungen' },
+  { id: 'loesungen', titel: 'Kreuzworträtsel' },
   { id: 'mehr', titel: 'Mehr' }
 ];
 
