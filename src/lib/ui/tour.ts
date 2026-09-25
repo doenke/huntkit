@@ -60,6 +60,11 @@ export const WERKBANK_TOUR: ReadonlyArray<Tourschritt> = [
     text: 'Sortiert nur die Anzeige, kein Wert ändert sich. Soll der Platz in die Rechnung eingehen, nimm eine Spalte „Platz in einer Reihenfolge“.'
   },
   {
+    ziel: 'tabelle',
+    titel: 'In Tabelle kopieren',
+    text: 'Die ganze Werkbank für Excel oder Google Sheets. Werkzeuge werden zu Formeln, wo es geht; Codes und alles andere kommen als Text. In Zelle A1 einfügen.'
+  },
+  {
     titel: 'Los geht’s',
     text: 'Am besten lernst du es an einem Rätsel: Unter „Mehr“ warten Übungen, samt Lösungsweg als fertige Werkbank. Diese Tour gibt es jederzeit wieder im Menü ☰ oben rechts.'
   }

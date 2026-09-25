@@ -3,7 +3,7 @@
    * Kleine Strich-Symbole für Knöpfe, selbst gezeichnet in der Textfarbe –
    * damit sie auch im Rotlicht-Design lesbar sind und nichts nachgeladen wird.
    */
-  type Name = 'stift' | 'kopie' | 'papierkorb' | 'radierer' | 'gruppe' | 'schliessen';
+  type Name = 'stift' | 'kopie' | 'papierkorb' | 'radierer' | 'gruppe' | 'schliessen' | 'tabelle';
   let { name, groesse = 18 }: { name: Name; groesse?: number } = $props();
 
   const PFADE: Record<Name, string> = {
@@ -12,6 +12,8 @@
     papierkorb: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5',
     radierer: 'M15 4l5 5-9 9H7l-3-3 11-11zM9 9l6 6M11 20h9',
     schliessen: 'M6 6l12 12M18 6L6 18',
+    // Ein Tabellenblatt: Rahmen, Kopfzeile, eine Spaltenlinie.
+    tabelle: 'M4 5h16v14H4zM4 10h16M4 14.5h16M10 5v14',
     gruppe: 'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M16 11a2.5 2.5 0 1 0 0-5M17 15c2.5.3 4 1.8 4 4.5'
   };
 </script>

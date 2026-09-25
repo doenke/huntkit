@@ -158,6 +158,28 @@ damit für alle Zeilen, nicht nur für die, an der man ihn gefunden hat.
 Eine Zeile mit einer Spalte ist genau der frühere Fall „ein Text, eine Kette von
 Schritten“; alte Stände und geteilte Links werden beim Öffnen in ein Blatt übersetzt.
 
+### 3.1a In Tabelle kopieren (Excel, Google Sheets)
+
+Die ganze Werkbank geht per Zwischenablage in eine Tabellenkalkulation: Kopfzeile, darunter
+die Zeilen in Eingabereihenfolge, Tabs dazwischen – einzufügen in Zelle A1. Das Ziel ist
+wählbar, weil Formeln sprachabhängig sind: deutsches Excel will `LÄNGE` und `;`,
+englisches `LEN` und `,`; Google Sheets nimmt englische Namen, mit `;` im deutschen
+Gebietsschema, und rechnet mit Listen nur in `ARRAYFORMULA`.
+
+- **Formeln, wo es geht:** Länge, Zeichen zählen, Buchstaben an Stellen, Jeden n-ten (ganzer
+  Text), Ersetzen, Caesar, Atbash, ABC123 (verschlüsseln), Römische Zahlen, Zahlensysteme und
+  Platz nach einer Zahlenspalte. Optionen aus einer Spalte werden zu Zellbezügen. Die
+  Formeln brauchen Excel 2021/365 (`SEQUENZ`, `TEXTVERKETTEN`) oder Google Sheets.
+- **Fester Text für alles andere:** Eingaben, Codes, alle übrigen Werkzeuge. Ganze Zahlen und
+  schlichte Wörter bleiben, wie sie sind; alles, was die Tabelle umdeuten würde („0101“,
+  „-.-“, „1.2“), kommt als `="…"`.
+- **Nachgerechnet:** Die Formeln entstehen als Baum (`src/lib/werkbank/formel.ts`), der sich
+  in jede Zielsprache schreiben *und* nachrechnen lässt – mit Excels Eigenheiten (`=` ohne
+  Rücksicht auf Groß/klein, `LÄNGE` in UTF-16). Eine Formel wird nur genommen, wenn sie für
+  diese Zelle genau das ergibt, was die Werkbank zeigt; wo Programme sich unterscheiden
+  könnten (`GROSS("ß")`), in beiden Varianten. Sonst kommt der feste Text. Gegengeprüft mit
+  HyperFormula: 434 Formeln über 30 Werkzeugeinstellungen, alle gleich.
+
 ### 3.2 Codec-Registry (die Bausteine)
 
 Jeder Code aus `development.md` ist kein eigener Bildschirm, sondern ein **Plugin mit

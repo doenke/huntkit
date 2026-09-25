@@ -52,6 +52,7 @@
   import Spalteneinstellung from '../ui/Spalteneinstellung.svelte';
   import Tafeleingabe from '../ui/Tafeleingabe.svelte';
   import Symbol from '../ui/Symbol.svelte';
+  import Tabellenexport from '../ui/Tabellenexport.svelte';
   import Tour from '../ui/Tour.svelte';
   import Werkbaenke from '../ui/Werkbaenke.svelte';
   import { merkeTourGesehen, tourGesehen, WERKBANK_TOUR, type Tourschritt } from '../lib/ui/tour';
@@ -92,6 +93,7 @@
     einstellung = null;
     verwaltungOffen = false;
     sortierungOffen = false;
+    exportOffen = false;
   }
 
   function zeigeEinstellung(id: SpaltenId | null) {
@@ -100,6 +102,7 @@
     gewaehlt = null;
     verwaltungOffen = false;
     sortierungOffen = false;
+    exportOffen = false;
   }
 
   function verwaltungUmschalten() {
@@ -109,6 +112,7 @@
     gewaehlt = null;
     einstellung = null;
     sortierungOffen = false;
+    exportOffen = false;
   }
 
   /** Die Sortierung ist die vierte Box – über den Knopf in der Leiste. */
@@ -120,6 +124,19 @@
     gewaehlt = null;
     einstellung = null;
     verwaltungOffen = false;
+    exportOffen = false;
+  }
+
+  /** Die ganze Werkbank für Excel oder Google Sheets – über den Knopf in der Leiste. */
+  let exportOffen = $state(false);
+
+  function exportUmschalten() {
+    exportOffen = !exportOffen;
+    if (!exportOffen) return;
+    gewaehlt = null;
+    einstellung = null;
+    verwaltungOffen = false;
+    sortierungOffen = false;
   }
 
   /** Was der Knopf zeigt: nach welcher Spalte gerade sortiert ist. */
@@ -134,6 +151,7 @@
     einstellung = null;
     verwaltungOffen = false;
     sortierungOffen = false;
+    exportOffen = false;
   }
   /*
    * Die Tour durch die Werkbank. Sie startet von selbst, wenn jemand die App
@@ -607,6 +625,18 @@
     >
       ↕ {sortierText}
     </button>
+    <button
+      type="button"
+      class="exportknopf"
+      data-box
+      data-tour="tabelle"
+      aria-expanded={exportOffen}
+      onclick={exportUmschalten}
+      title="In Tabelle kopieren – für Excel oder Google Sheets"
+      aria-label="In Tabelle kopieren"
+    >
+      <Symbol name="tabelle" />
+    </button>
   </div>
 </div>
 
@@ -625,6 +655,10 @@
     {/if}
     <Protokoll gruppe={gruppeHier.id} werkbank={werkbank.id} {blatt} />
   </section>
+{/if}
+
+{#if exportOffen}
+  <Tabellenexport {blatt} />
 {/if}
 
 {#if sortierungOffen}
@@ -1347,6 +1381,18 @@
 
   .sortknopf {
     white-space: nowrap;
+  }
+
+  .exportknopf {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+  }
+
+  .exportknopf[aria-expanded='true'] {
+    border-color: var(--akzent);
+    color: var(--akzent);
   }
 
   .sortknopf[aria-expanded='true'] {
