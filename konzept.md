@@ -281,7 +281,7 @@ Nach Nutzen-pro-Aufwand sortiert – die oberen zahlen sich im Hunt am schnellst
 | **Anagramm-Löser** | über dasselbe Wörterbuch | S |
 | **Koordinaten-Umrechner** | DD ↔ DMS ↔ UTM, Peilung/Kompass – für einen Stadt-Hunt naheliegend | S |
 | **Römische Zahlen, Base64/32** | Kleinkram, oft gebraucht | S |
-| **Team-Sharing per Link** | kompletter Werkbank-Zustand im URL-Fragment → per Messenger teilen, ganz ohne Server | M |
+| **Team-Sharing per Link** | kompletter Werkbank-Zustand im URL-Fragment → per Messenger teilen, ganz ohne Server (später durch Gruppen ersetzt) | M |
 | **Nacht-Ausrüstung** | Wake Lock, Rotlicht-Theme | S |
 
 ### 4.3 Bewusst außen vor
@@ -599,8 +599,10 @@ davon.
 - Laufender Zustand in `localStorage`, überlebt Neuladen und Akku-Sparmodus.
 - **Mehrere Werkbänke** je Gerät, jede mit Namen und Änderungszeit. Der Name der offenen
   Werkbank ist zugleich der Knopf zur Verwaltung: wechseln, neu anlegen, kopieren,
-  umbenennen, löschen (mit Rückfrage), verschicken. Oben im Menü stehen „Link verschicken“
-  und „Blatt leeren“ für die offene Werkbank – unter der Tabelle ist nur noch die Arbeit. Die zuletzt bearbeitete steht oben.
+  umbenennen, löschen (mit Rückfrage), in eine Gruppe kopieren. Oben im Menü steht „Blatt
+  leeren“ für die offene Werkbank – unter der Tabelle ist nur noch die Arbeit. Die zuletzt
+  bearbeitete steht oben. (Werkbänke per Link verschicken gab es anfangs auch; seit es
+  Gruppen gibt, ist das weg.)
   Gelöscht wird nie die letzte – dann entsteht eine leere.
 - **Automatisch speichern ist ab Werk an**: Jede Änderung landet sofort in ihrer Werkbank.
   Ausgeschaltet arbeitet man an einem **Entwurf**, der an der Werkbank hängt und Neuladen

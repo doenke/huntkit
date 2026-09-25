@@ -4,8 +4,9 @@ import { ausAlterKette, inHeutigerForm, istBlatt, type Blatt } from './blatt';
  * Werkbank-Zustand als Link.
  *
  * Alles steckt im Fragment hinter dem Doppelkreuz – das schickt der Browser
- * nie an einen Server. Damit ist Teilen im Team möglich, ohne dass die App ein
- * Backend bekäme.
+ * nie an einen Server. Werkbänke teilt das Team inzwischen über Gruppen; ein
+ * Stand in der Adresse dient noch den Übungen, die so ihren Lösungsweg als
+ * Werkbank öffnen, und lässt alte geteilte Links weiter aufgehen.
  */
 
 function alsBase64(daten: Uint8Array): string {

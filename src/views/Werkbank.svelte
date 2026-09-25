@@ -32,7 +32,7 @@
     speichere,
     uebernimm
   } from '../lib/sammlung';
-  import { alsLink, ausAdresse, verschicke } from '../lib/teilen';
+  import { ausAdresse } from '../lib/teilen';
   import { rufe, type GruppenDetails } from '../lib/gruppe/api';
   import { abgleich, ansicht as gruppenansicht, empfangeWerkbaenke, mitglied } from '../lib/gruppe/gruppen.svelte';
   import { gleich, zellschluessel, zuSchluesseln } from '../lib/gruppe/schluessel';
@@ -73,7 +73,6 @@
   let verwaltungOffen = $state(false);
   let gewaehlt = $state<{ spalte: SpaltenId; zeile: string } | null>(null);
   let einstellung = $state<SpaltenId | null>(null);
-  let linkStand = $state('');
   let umlauteAufloesen = $state(umlauteAufloesenGespeichert());
 
   /*
@@ -180,10 +179,10 @@
 
   const werkbank = $derived(aktiveWerkbank(sammlung));
 
-  // Ein geteilter Link wird eine eigene, neue Werkbank – er überschreibt nie,
-  // woran man gerade sitzt.
-  // Auch wenn die App schon offen ist und nur die Adresse wechselt – etwa weil
-  // ein Link im selben Tab angetippt wird.
+  // Ein Stand in der Adresse wird eine eigene, neue Werkbank – er überschreibt
+  // nie, woran man gerade sitzt. So öffnet eine Übung ihren Lösungsweg, und
+  // Links aus der Zeit, als Werkbänke noch per Link geteilt wurden, gehen
+  // weiterhin auf. Auch wenn die App schon offen ist und nur die Adresse wechselt.
   $effect(() => {
     const oeffnen = () =>
       void ausAdresse().then((geteilt) => {
@@ -701,18 +700,6 @@
     einstellung = null;
   }
 
-  async function verschicken(id: string) {
-    const ziel = sammlung.werkbaenke.find((w) => w.id === id);
-    if (!ziel) return;
-    // Verschickt wird, was man vor sich sieht – bei der offenen die Arbeitskopie.
-    const stand = id === sammlung.aktiv ? blatt : arbeitsstand(ziel);
-    const link = await alsLink(stand, ziel.name);
-    const ergebnis = await verschicke(link, `Werkbank „${ziel.name}“`);
-    if (ergebnis === 'kopiert') meldung = `Link zu „${ziel.name}“ kopiert`;
-    else if (ergebnis === 'geteilt') meldung = '';
-    else if (ergebnis === 'nichts') linkStand = link;
-  }
-
   function leeren() {
     blatt = leeresBlatt();
     gewaehlt = null;
@@ -829,10 +816,6 @@
     <Protokoll gruppe={gruppeHier.id} werkbank={werkbank.id} {blatt} />
   </section>
 {/if}
-{#if linkStand}
-  <!-- Ließ sich der Link weder teilen noch kopieren, steht er hier zum Markieren. -->
-  <p class="linkstand mono">{linkStand}</p>
-{/if}
 
 {#if verwaltungOffen}
   <div data-box>
@@ -845,7 +828,6 @@
     kopieren={kopieAnlegen}
     entfernen={loeschen}
     {umbenennen}
-    verschicken={(id) => void verschicken(id)}
     {automatikUmschalten}
     {leeren}
     gruppen={gruppenZumKopieren}
@@ -1666,12 +1648,5 @@
 
   .warn {
     color: var(--warn);
-  }
-
-  .linkstand {
-    margin-top: 8px;
-    font-size: 0.75rem;
-    color: var(--text-leise);
-    overflow-wrap: anywhere;
   }
 </style>

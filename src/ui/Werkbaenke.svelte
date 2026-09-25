@@ -4,7 +4,8 @@
 
   /**
    * Verwaltung der gespeicherten Werkbänke: wechseln, neu anlegen, kopieren,
-   * umbenennen, löschen, verschicken – und ob automatisch gespeichert wird.
+   * umbenennen, löschen, in eine Gruppe kopieren – und ob automatisch
+   * gespeichert wird.
    * Nur Anzeige und Bedienung; was dabei mit der offenen Arbeit passiert,
    * entscheidet die Werkbank selbst.
    */
@@ -15,7 +16,6 @@
     kopieren,
     entfernen,
     umbenennen,
-    verschicken,
     automatikUmschalten,
     leeren,
     gruppenname = () => undefined,
@@ -29,7 +29,6 @@
     kopieren: (id: string) => void;
     entfernen: (id: string) => void;
     umbenennen: (id: string, name: string) => void;
-    verschicken: (id: string) => void;
     automatikUmschalten: () => void;
     /** Die offene Werkbank leeren. */
     leeren: () => void;
@@ -95,7 +94,6 @@
           </button>
           <button type="button" onclick={() => (leerenGefragt = false)}>abbrechen</button>
         {:else}
-          <button type="button" onclick={() => verschicken(offene.id)}>Link verschicken</button>
           <button type="button" onclick={() => (leerenGefragt = true)}>Blatt leeren</button>
           {#if gruppen.some((g) => g.id !== offene.gruppe)}
             <select
@@ -161,7 +159,6 @@
             </button>
             <button type="button" onclick={() => (loeschenGefragt = null)}>abbrechen</button>
           {:else}
-            <button type="button" onclick={() => verschicken(werkbank.id)}>Link</button>
             <button type="button" onclick={() => umbenennenBeginnen(werkbank)}>umbenennen</button>
             <button type="button" onclick={() => kopieren(werkbank.id)}>Kopie</button>
             {#if darfLoeschen(werkbank)}
