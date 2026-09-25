@@ -34,4 +34,5 @@ Punkte, die in diese App sollen:
 
 - Copy & Paste nach Excel, inkl. Formeln
   - dabei auf die Sprache achten (z.B. deutsches Excel: `SUMME` statt `SUM`, `;` statt `,` als Trennzeichen)
+  - Zielformat wählbar, auch Google Sheets (eigene Funktionsnamen/Trennzeichen je nach Gebietsschema)
 - Copy & Paste einer Textspalte
