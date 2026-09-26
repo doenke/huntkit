@@ -54,7 +54,9 @@ function sammleDateien(wurzel: string, verzeichnis: string): string[] {
       // was nicht offline geht.
       if (relative(wurzel, pfad) === 'api') continue;
       gefunden.push(...sammleDateien(wurzel, pfad));
-    } else if (eintrag !== 'sw.js') {
+    } else if (eintrag !== 'sw.js' && !eintrag.startsWith('.')) {
+      // Punktdateien wie .htaccess liefert der Webserver nie aus – im Cache
+      // ließe ihr 403 die Installation des Service Workers scheitern.
       gefunden.push(relative(wurzel, pfad).split(sep).join(posix.sep));
     }
   }
