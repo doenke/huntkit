@@ -3,7 +3,7 @@
  * Rewrite-Regel, die Deep-Links auf index.html umbiegt. Mit Hash braucht es
  * keine – die App laeuft auch in einem Unterverzeichnis.
  */
-export type Seite = 'werkbank' | 'nachschlagen' | 'loesungen' | 'mehr' | 'gruppen';
+export type Seite = 'werkbank' | 'nachschlagen' | 'loesungen' | 'mehr' | 'gruppen' | 'datenschutz' | 'kontakt';
 
 export const SEITEN: ReadonlyArray<{ id: Seite; titel: string }> = [
   { id: 'werkbank', titel: 'Werkbank' },
@@ -15,7 +15,7 @@ export const SEITEN: ReadonlyArray<{ id: Seite; titel: string }> = [
 const STANDARD: Seite = 'werkbank';
 
 /** Seiten, die im Menü unter den Hauptbereichen stehen. */
-const WEITERE: ReadonlyArray<Seite> = ['gruppen'];
+const WEITERE: ReadonlyArray<Seite> = ['gruppen', 'datenschutz', 'kontakt'];
 
 export function ausHash(hash: string): Seite {
   // Alles ab ? gehört zu den Parametern – geteilte Links hängen dort den

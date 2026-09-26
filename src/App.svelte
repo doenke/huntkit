@@ -6,6 +6,8 @@
   import Loesungen from './views/Loesungen.svelte';
   import Mehr from './views/Mehr.svelte';
   import Gruppenseite from './views/Gruppenseite.svelte';
+  import Datenschutz from './views/Datenschutz.svelte';
+  import Kontakt from './views/Kontakt.svelte';
   import {
     abgleich,
     aktiveGruppe,
@@ -30,8 +32,9 @@
    * daneben, mit Escape oder mit der Wahl eines Bereichs.
    */
   let menueOffen = $state(false);
+  const WEITERE_TITEL: Partial<Record<Seite, string>> = { gruppen: 'Gruppen', datenschutz: 'Datenschutz', kontakt: 'Kontakt' };
   const seitentitel = $derived(
-    SEITEN.find((s) => s.id === seite)?.titel ?? (seite === 'gruppen' ? 'Gruppen' : '')
+    SEITEN.find((s) => s.id === seite)?.titel ?? WEITERE_TITEL[seite] ?? ''
   );
 
   function waehle(ziel: Seite) {
@@ -240,6 +243,11 @@
             <!-- Ohne eingerichteten Anmeldedienst gibt es nichts anzumelden. -->
             <button type="button" onclick={anmelden}>Anmelden</button>
           {/if}
+          <hr />
+          <p class="rechtliches">
+            <a href="#/datenschutz" onclick={() => (menueOffen = false)}>Datenschutz</a> ·
+            <a href="#/kontakt" onclick={() => (menueOffen = false)}>Kontakt</a>
+          </p>
         </nav>
       {/if}
     </div>
@@ -255,6 +263,10 @@
     <Loesungen />
   {:else if seite === 'gruppen'}
     <Gruppenseite />
+  {:else if seite === 'datenschutz'}
+    <Datenschutz />
+  {:else if seite === 'kontakt'}
+    <Kontakt />
   {:else}
     <Mehr />
   {/if}
@@ -432,6 +444,17 @@
     display: block;
     color: var(--text-leise);
     font-size: 0.75rem;
+  }
+
+  .rechtliches {
+    margin: 0;
+    padding: 6px 14px 4px;
+    font-size: 0.8rem;
+    color: var(--text-leise);
+  }
+
+  .rechtliches a {
+    color: var(--text-leise);
   }
 
   nav button[aria-current='page'] {

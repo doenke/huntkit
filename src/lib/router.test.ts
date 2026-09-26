@@ -16,6 +16,11 @@ describe('Hash-Routing', () => {
     expect(ausHash('#/gibtesnicht')).toBe('werkbank');
   });
 
+  it('kennt Datenschutz und Kontakt', () => {
+    expect(ausHash('#/datenschutz')).toBe('datenschutz');
+    expect(ausHash('#/kontakt')).toBe('kontakt');
+  });
+
   it('kennt die Gruppen-Seite', () => {
     expect(ausHash('#/gruppen?anmeldung=abc')).toBe('gruppen');
   });

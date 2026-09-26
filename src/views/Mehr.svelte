@@ -51,6 +51,9 @@
   <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noreferrer">
     CC BY-SA 4.0</a>. Alle übrigen Zeichen sind eigene Zeichnungen.
 </p>
+<p class="leise">
+  <a href="#/datenschutz">Datenschutz</a> · <a href="#/kontakt">Kontakt</a>
+</p>
 
 <style>
   h2 {
