@@ -20,49 +20,49 @@ export const WERKBANK_TOUR: ReadonlyArray<Tourschritt> = [
   {
     ziel: 'werkbank-name',
     titel: 'Deine Werkbank',
-    text: 'Hier löst du Rätsel – als Tabelle. Ein Tipp auf den Namen öffnet die Verwaltung: Werkbänke wechseln, neu anlegen, kopieren oder an einen anderen Ort kopieren.'
+    text: 'Hier löst du Rätsel – als Tabelle. Tippst du auf den Namen, öffnet sich die Verwaltung: Dort wechselst du Werkbänke, legst neue an oder kopierst eine an einen anderen Ort.'
   },
   {
     ziel: 'neue-zeile',
     titel: 'Zeilen',
-    text: 'Eine Zeile je Fundstück: eine Station, ein Foto, ein Wort. Neue Zeilen gibt es hier – oder einfach mit Enter in der letzten Zeile.'
+    text: 'Eine Zeile je Fundstück: eine Station, ein Foto, ein Wort. Neue Zeilen legst du hier an – oder du drückst Enter in der letzten Zeile.'
   },
   {
     ziel: 'neue-spalte',
     titel: 'Spalten',
-    text: 'Eingabe für das, was du abtippst. Werkzeug für alles, was aus einer anderen Spalte gerechnet wird: Morse lesen, Länge, jeden n-ten Buchstaben … Und Platz in einer Reihenfolge.'
+    text: 'Eine Eingabe nimmst du für alles, was du abtippst, ein Werkzeug für alles, was du aus einer anderen Spalte rechnen lässt: Morse lesen, Länge, jeden n-ten Buchstaben … Dazu kommt der Platz in einer Reihenfolge.'
   },
   {
     ziel: 'zelle',
     titel: 'Zellen',
-    text: 'Hineintippen, Enter, weiter in der nächsten Zeile. Jede Zelle rechnet nur aus ihrer eigenen Zeile.'
+    text: 'Du tippst hinein, drückst Enter und bist in der nächsten Zeile. Jede Zelle rechnet nur aus ihrer eigenen Zeile.'
   },
   {
     ziel: 'zellenbox',
     oeffne: 'zelle',
     titel: 'Die Zellenbox',
-    text: 'Zur gewählten Zelle: die Codetafel zum Antippen, wenn die Spalte eine hat, dazu Analyse und kopieren. Ein Tipp daneben schließt sie wieder.'
+    text: 'Zur gewählten Zelle findest du hier die Codetafel zum Antippen, wenn die Spalte eine hat, dazu die Analyse und Kopieren. Tippst du daneben, geht die Box wieder zu.'
   },
   {
     ziel: 'spaltenkopf',
     titel: 'Spaltenkopf',
-    text: 'Ein Tipp auf den Kopf einer Spalte öffnet ihre Einstellungen.'
+    text: 'Tippst du auf den Kopf einer Spalte, öffnen sich ihre Einstellungen.'
   },
   {
     ziel: 'spalteneinstellung',
     oeffne: 'einstellung',
     titel: 'Spalteneinstellung',
-    text: 'Bei einer Eingabe wählst du die Codetafel – Morse, Braille, Flaggen … –, und was schon drinsteht, wird umgewandelt. Bei einem Werkzeug: welches, woraus, mit welchen Optionen. Zahlen und Texte dürfen je Zeile aus einer anderen Spalte kommen.'
+    text: 'Bei einer Eingabe wählst du die Codetafel – Morse, Braille, Flaggen … –, und was schon drinsteht, wird umgewandelt. Bei einem Werkzeug wählst du, welches, woraus und mit welchen Optionen. Zahlen und Texte kannst du je Zeile aus einer anderen Spalte holen.'
   },
   {
     ziel: 'sortieren',
     titel: 'Sortieren',
-    text: 'Sortiert nur die Anzeige, kein Wert ändert sich. Soll der Platz in die Rechnung eingehen, nimm eine Spalte „Platz in einer Reihenfolge“.'
+    text: 'Damit sortierst du nur die Anzeige, kein Wert ändert sich. Soll der Platz in die Rechnung eingehen, nimm eine Spalte „Platz in einer Reihenfolge“.'
   },
   {
     ziel: 'tabelle',
     titel: 'In Tabelle kopieren',
-    text: 'Die ganze Werkbank für Excel oder Google Sheets. Werkzeuge werden zu Formeln, wo es geht; Codes und alles andere kommen als Text. In Zelle A1 einfügen.'
+    text: 'Hier kopierst du die ganze Werkbank für Excel oder Google Sheets. Werkzeuge werden zu Formeln, wo es geht; Codes und alles andere kommen als Text. Füge alles in Zelle A1 ein.'
   },
   {
     titel: 'Los geht’s',
