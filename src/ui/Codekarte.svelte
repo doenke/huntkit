@@ -6,6 +6,8 @@
   import Codeanzeige from './Codeanzeige.svelte';
   import Quellen from './Quellen.svelte';
   import Optionen from './Optionen.svelte';
+  import Tastaturschalter from './Tastaturschalter.svelte';
+  import { codeInputmode } from '../lib/ui/codetastatur.svelte';
 
   /**
    * Eine Codekarte: Nachschlagen und Umrechnen in einem.
@@ -117,11 +119,13 @@
         {/if}
         <button type="button" onclick={() => ausKodiert('')} disabled={!kodiert}>leeren</button>
         <button type="button" onclick={() => kopieren(kodiert)} disabled={!kodiert}>kopieren</button>
+        {#if eintraege.length > 0 || codec.eingabetasten}<Tastaturschalter kurz />{/if}
       </span>
     </span>
     <textarea
       class="mono"
       rows="2"
+      inputmode={eintraege.length > 0 || codec.eingabetasten ? codeInputmode() : undefined}
       value={kodiert}
       use:wachsen={kodiert}
       placeholder={eintraege[0] ? `z.B. ${eintraege[0].darstellung}` : ''}
@@ -303,7 +307,8 @@
     gap: 4px;
   }
 
-  .knoepfe button {
+  .knoepfe button,
+  .knoepfe :global(.tastaturschalter) {
     min-height: 32px;
     padding: 0 8px;
     font-size: 0.75rem;

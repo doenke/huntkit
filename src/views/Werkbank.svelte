@@ -53,6 +53,7 @@
   import Tafeleingabe from '../ui/Tafeleingabe.svelte';
   import Symbol from '../ui/Symbol.svelte';
   import Tabellenexport from '../ui/Tabellenexport.svelte';
+  import { codeInputmode } from '../lib/ui/codetastatur.svelte';
   import Tour from '../ui/Tour.svelte';
   import Werkbaenke from '../ui/Werkbaenke.svelte';
   import { merkeTourGesehen, tourGesehen, WERKBANK_TOUR, type Tourschritt } from '../lib/ui/tour';
@@ -769,6 +770,7 @@
                   </span>
                   <input
                     class="mono ueber"
+                    inputmode={codeInputmode()}
                     value={reihe.zeile.werte[spalte.id] ?? ''}
                     spellcheck="false"
                     autocomplete="off"
@@ -795,6 +797,7 @@
               {:else if spalte.art === 'eingabe'}
                 <input
                   class="mono"
+                  inputmode={spalte.tafel ? codeInputmode() : undefined}
                   value={reihe.zeile.werte[spalte.id] ?? ''}
                   spellcheck="false"
                   autocomplete="off"

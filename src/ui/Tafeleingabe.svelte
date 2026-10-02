@@ -1,6 +1,7 @@
 <script lang="ts">
   import { codec as findeCodec } from '../codecs/registry';
   import { einzelzeichen } from '../lib/ui/codeanzeige';
+  import Tastaturschalter from './Tastaturschalter.svelte';
 
   /**
    * Eingabe über eine Codetafel: Tasten und antippbares Raster schreiben in
@@ -90,6 +91,7 @@
   <div class="fuss">
     <button type="button" onmousedown={behalteFokus} onclick={loeschen} disabled={wert.length === 0}>⌫ letztes</button>
     <button type="button" onmousedown={behalteFokus} onclick={() => setzen('')} disabled={wert.length === 0}>leeren</button>
+    <Tastaturschalter />
   </div>
 {/if}
 
@@ -112,7 +114,8 @@
   }
 
   .abschnitte button,
-  .fuss button {
+  .fuss button,
+  .fuss :global(.tastaturschalter) {
     flex: 1 1 0;
     min-height: 34px;
     padding: 0 6px;
