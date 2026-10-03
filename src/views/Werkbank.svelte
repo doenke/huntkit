@@ -295,6 +295,30 @@
   ]);
 
   const berechnung = $derived(rechne(blatt));
+
+  /*
+   * Solange eine Zelle gewählt ist, steht die Reihenfolge still. Sonst
+   * rutschte eine Zeile in einer sortierten Tabelle mit jedem getippten
+   * Zeichen an einen neuen Platz – und das Feld verlöre dabei den Fokus.
+   * Enter geht dann in die Zeile, die man gerade darunter sieht. Neu
+   * sortiert wird, sobald keine Zelle mehr gewählt ist.
+   */
+  let eingefroren = $state<string[] | null>(null);
+  $effect(() => {
+    if (gewaehlt === null) {
+      eingefroren = null;
+      return;
+    }
+    if (untrack(() => eingefroren) === null) eingefroren = untrack(() => berechnung.zeilen.map((r) => r.zeile.id));
+  });
+  const angezeigt = $derived.by(() => {
+    const reihenfolge = eingefroren;
+    if (!reihenfolge) return berechnung.zeilen;
+    const stelle = new Map(reihenfolge.map((id, i) => [id, i]));
+    // Was seither dazukam, steht hinten – in der Reihenfolge der Sortierung.
+    const rang = new Map(berechnung.zeilen.map((r, i) => [r.zeile.id, stelle.get(r.zeile.id) ?? reihenfolge.length + i]));
+    return [...berechnung.zeilen].sort((a, b) => (rang.get(a.zeile.id) ?? 0) - (rang.get(b.zeile.id) ?? 0));
+  });
   const spalteEinstellung = $derived(blatt.spalten.find((s) => s.id === einstellung));
   const zelle = $derived.by(() => {
     const wahl = gewaehlt;
@@ -473,7 +497,7 @@
   ) {
     // Wie beim Verlassen des Felds: Ein offenes Ü am Ende wird jetzt aufgelöst.
     getippt(feld, zeileId, spalte, true);
-    const reihen = berechnung.zeilen;
+    const reihen = angezeigt;
     const stelle = reihen.findIndex((r) => r.zeile.id === zeileId);
     let ziel = reihen[hoch ? stelle - 1 : stelle + 1]?.zeile.id;
     if (!ziel) {
@@ -730,13 +754,15 @@
       </tr>
     </thead>
     <tbody>
-      {#each berechnung.zeilen as reihe, zi (reihe.zeile.id)}
+      {#each angezeigt as reihe, zi (reihe.zeile.id)}
+        <!-- Der Platz, an dem die Zeile gerade steht – auch während die Reihenfolge ruht. -->
+        {@const platz = zi + 1}
         <tr>
           <th class="nr">
             <span class="nummer">{reihe.zeile.nummer}</span>
-            {#if reihe.eingabeplatz !== reihe.platz}
+            {#if reihe.eingabeplatz !== platz}
               <span class="bewegung" title="Verschiebung gegenüber der Eingabereihenfolge">
-                {reihe.eingabeplatz > reihe.platz ? '↑' : '↓'}{Math.abs(reihe.eingabeplatz - reihe.platz)}
+                {reihe.eingabeplatz > platz ? '↑' : '↓'}{Math.abs(reihe.eingabeplatz - platz)}
               </span>
             {/if}
           </th>
